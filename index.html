@@ -241,6 +241,10 @@
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span> Đối soát giao ca
     </div>
 
+    <div class="side-item nav-item" data-view="giaocatt" data-label="Đối soát ca trực tiếp">
+      <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Đối soát ca trực tiếp
+    </div>
+
     <div class="side-item nav-item" data-view="gmv" data-label="Báo cáo GMV">
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span> Báo cáo GMV
     </div>
@@ -260,7 +264,7 @@
     </div>
 
     <div class="side-divider"></div>
-    <div class="side-note">Công cụ được thiết kế bởi: Hậu Lê Khắc, lấy trực tiếp logic của file Excel của GSM</div>
+    <div class="side-note">Được xây dựng bởi: Hậu Lê Khắc IT, lấy trực tiếp logic của file Excel của GSM</div>
   </div>
 
   <div class="main">
@@ -336,6 +340,92 @@
       </div>
 
       <footer class="foot" id="foot"></footer>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 1B: ĐỐI SOÁT CA TRỰC TIẾP (Vehicle + Driver vs Handover Report) -->
+    <!-- ======================================================= -->
+    <div class="view" id="view-giaocatt">
+      <div class="card">
+        <div class="card-head"><h2>Bộ dữ liệu đối soát ca trực tiếp</h2><span class="refresh" title="Làm mới" onclick="location.reload()">⟳</span></div>
+        <div class="hint" style="margin-bottom:12px;">
+          Ghép <b>File Xe</b> + <b>File Tài xế</b> lấy toàn bộ xe đang có tài xế Active, đối chiếu với <b>File Handover Report</b> (Biển số + Mã SAP) — trùng thì "Đã giao ca", không trùng thì "Chưa giao ca".
+        </div>
+        <div class="filter-grid">
+          <div class="field">
+            <label>Bước 1 · File Xe</label>
+            <div class="upload-box" id="dz-ttVehicle">
+              <span class="placeholder" id="ph-ttVehicle">Chọn file .xlsx…</span>
+              <span class="fname" id="fname-ttVehicle" style="display:none"></span>
+              <span class="clear" id="clear-ttVehicle" style="display:none" onclick="clearFileTT('ttVehicle',event)">×</span>
+              <input type="file" id="file-ttVehicle" accept=".xlsx,.xls">
+            </div>
+          </div>
+          <div class="field">
+            <label>Bước 2 · File Tài xế</label>
+            <div class="upload-box" id="dz-ttDriver">
+              <span class="placeholder" id="ph-ttDriver">Chọn file .xlsx…</span>
+              <span class="fname" id="fname-ttDriver" style="display:none"></span>
+              <span class="clear" id="clear-ttDriver" style="display:none" onclick="clearFileTT('ttDriver',event)">×</span>
+              <input type="file" id="file-ttDriver" accept=".xlsx,.xls">
+            </div>
+          </div>
+          <div class="field">
+            <label>Bước 3 · File Handover Report</label>
+            <div class="upload-box" id="dz-ttHandover">
+              <span class="placeholder" id="ph-ttHandover">Chọn file .xlsx…</span>
+              <span class="fname" id="fname-ttHandover" style="display:none"></span>
+              <span class="clear" id="clear-ttHandover" style="display:none" onclick="clearFileTT('ttHandover',event)">×</span>
+              <input type="file" id="file-ttHandover" accept=".xlsx,.xls">
+            </div>
+          </div>
+          <div class="field"><label>Quy tắc đối soát</label><div class="fake-select disabled">Trùng Biển số = Đã giao ca <span class="caret">▾</span></div></div>
+        </div>
+        <div class="action-row">
+          <button class="btn btn-primary" id="btn-process-tt" disabled onclick="processFilesTT()">Đối soát ngay</button>
+          <button class="btn btn-ghost" onclick="exportExcelTT()" id="btn-export-tt" disabled>⬇ Tải file kết quả (.xlsx)</button>
+          <span class="hint" id="go-hint-tt">tải đủ 3 file để bắt đầu</span>
+        </div>
+      </div>
+
+      <div class="notice gold">
+        Đã sẳn sàng...
+      </div>
+
+      <div class="stats" id="summary-tt" style="display:none">
+        <div class="stat"><div class="num" id="tt-total">0</div><div class="lbl">Tài xế Active có xe</div></div>
+        <div class="stat ok"><div class="num" id="tt-ok">0</div><div class="lbl">Đã giao ca</div></div>
+        <div class="stat warn"><div class="num" id="tt-warn">0</div><div class="lbl">Chưa giao ca</div></div>
+        <div class="stat"><div class="num" id="tt-skip">0</div><div class="lbl">Không khớp được xe (Số khung lạ)</div></div>
+      </div>
+
+      <div class="toolbar2" id="toolbar-tt" style="display:none">
+        <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="search-tt" placeholder="Tìm theo tên tài xế, mã SAP, biển số, số khung, đội, tổ…" oninput="renderTableTT()"></div></div>
+        <label class="toggle"><input type="checkbox" id="only-warn-tt" onchange="renderTableTT()"> Chỉ hiện chưa giao ca</label>
+      </div>
+
+      <div class="table-card" id="tablewrap-tt" style="display:none">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>STT</th><th>Số khung</th><th>Dòng xe</th><th>Biển số</th><th>Depot</th><th>Đội</th><th>Tổ</th>
+                <th>Mã SAP</th><th>Họ &amp; tên</th><th>SĐT</th>
+                <th class="derived">Số lần bàn giao trực tiếp</th><th class="derived">Trạng thái</th>
+                <th class="derived">GSVH giải trình</th><th class="derived">Hình thức xử lý</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-tt"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="empty-state" id="empty-tt">
+        <div class="glyph2">＋</div>
+        Tải lên đủ 3 file rồi bấm <b>Đối soát ngay</b> để bắt đầu.
+      </div>
+
+      <footer class="foot" id="foot-tt"></footer>
     </div>
 
     <!-- ======================================================= -->
@@ -657,7 +747,7 @@ const AUTH_KEY = 'gmv_authed';
 })();
 
 /* =========================================================================
-   NAV giữa 2 view — dùng chung 1 shell/1 hệ giao diện
+   NAV giữa các view — dùng chung 1 shell/1 hệ giao diện
 ========================================================================= */
 document.querySelectorAll('.nav-item').forEach(item=>{
   item.addEventListener('click', ()=>{
@@ -834,6 +924,171 @@ async function exportExcel(){
   a.href = url; a.download = `doi_soat_giao_ca_${new Date().toISOString().slice(0,10)}.xlsx`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   MODULE 1B: ĐỐI SOÁT CA TRỰC TIẾP (Vehicle + Driver [ghép qua Số khung] vs Handover Report)
+========================================================================= */
+let ttVehicleWB=null, ttDriverWB=null, ttHandoverWB=null;
+let rowsTT=[];
+
+function setupDropTT(kind){
+  const dz = document.getElementById('dz-'+kind);
+  const input = document.getElementById('file-'+kind);
+  input.addEventListener('change', e=>{ if(e.target.files[0]) handleFileTT(kind, e.target.files[0]); });
+  ['dragover','dragenter'].forEach(ev=>dz.addEventListener(ev, e=>{e.preventDefault(); dz.classList.add('drag');}));
+  ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev, e=>{e.preventDefault(); dz.classList.remove('drag');}));
+  dz.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) handleFileTT(kind,f); });
+}
+['ttVehicle','ttDriver','ttHandover'].forEach(setupDropTT);
+
+function handleFileTT(kind, file){
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const data = new Uint8Array(ev.target.result);
+    const wb = XLSX.read(data, {type:'array', dense:true, cellNF:false, cellHTML:false, cellStyles:false});
+    if(kind==='ttVehicle') ttVehicleWB = wb;
+    else if(kind==='ttDriver') ttDriverWB = wb;
+    else ttHandoverWB = wb;
+    document.getElementById('ph-'+kind).style.display='none';
+    document.getElementById('fname-'+kind).style.display='inline';
+    document.getElementById('fname-'+kind).textContent = file.name;
+    document.getElementById('clear-'+kind).style.display='inline';
+    document.getElementById('dz-'+kind).classList.add('filled');
+    checkReadyTT();
+  };
+  reader.readAsArrayBuffer(file);
+}
+function clearFileTT(kind, e){
+  e.preventDefault(); e.stopPropagation();
+  if(kind==='ttVehicle') ttVehicleWB=null;
+  else if(kind==='ttDriver') ttDriverWB=null;
+  else ttHandoverWB=null;
+  document.getElementById('ph-'+kind).style.display='inline';
+  document.getElementById('fname-'+kind).style.display='none';
+  document.getElementById('clear-'+kind).style.display='none';
+  document.getElementById('dz-'+kind).classList.remove('filled');
+  document.getElementById('file-'+kind).value='';
+  checkReadyTT();
+}
+function checkReadyTT(){
+  const ready = ttVehicleWB && ttDriverWB && ttHandoverWB;
+  document.getElementById('btn-process-tt').disabled = !ready;
+  document.getElementById('go-hint-tt').textContent = ready ? 'sẵn sàng đối soát' : 'tải đủ 3 file để bắt đầu';
+}
+function normPlateTT(p){ return String(p||'').toUpperCase().replace(/[-.\s]/g,''); }
+
+function processFilesTT(){
+  const xeRows = sheetToRows(ttVehicleWB, ['Result','Sheet1']);
+  const txRows = sheetToRows(ttDriverWB, ['Sheet1','Result']);
+  const hoRows = sheetToRows(ttHandoverWB, ['Result','data off','Sheet1']);
+
+  // 1) Xe: map Số khung -> thông tin xe
+  const xeBySoKhung = new Map();
+  xeRows.forEach(r=>{
+    const sk = String(pick(r,['Số khung','So khung'])).trim();
+    if(!sk) return;
+    xeBySoKhung.set(sk, {
+      bienSo: pick(r,['Biển số','Bien so']), dongXe: pick(r,['Dòng xe','Dong xe']),
+      depot: pick(r,['Depot']), doi: pick(r,['Đội','Doi']), to: pick(r,['Tổ','To'])
+    });
+  });
+
+  // 2) Handover Report: đếm số lần theo Biển số + Mã SAP
+  const countMap = new Map();
+  hoRows.forEach(r=>{
+    const plate = normPlateTT(pick(r,['Biển số','Bien so']));
+    const sap = String(pick(r,['Mã SAP','Ma SAP','MaSAP'])).trim();
+    if(!plate || !sap) return;
+    const key = plate+'|'+sap;
+    countMap.set(key, (countMap.get(key)||0)+1);
+  });
+
+  // 3) Tài xế: chỉ lấy Active + có Số khung, ghép với Xe theo Số khung
+  rowsTT = []; let skipped = 0;
+  txRows.forEach(r=>{
+    const trangThai = String(pick(r,['Trạng thái'])).trim();
+    if(trangThai !== 'Active') return;
+    const sk = String(pick(r,['Số khung','So khung'])).trim();
+    if(!sk) return;
+    const xe = xeBySoKhung.get(sk);
+    if(!xe){ skipped++; return; }
+    const sap = String(pick(r,['Mã SAP','Ma SAP','MaSAP'])).trim();
+    const hoTen = pick(r,['Họ & tên','Ho ten']);
+    const sdt = pick(r,['Số điện thoại','So dien thoai']);
+    const plateKey = normPlateTT(xe.bienSo);
+    const key = plateKey+'|'+sap;
+    const count = sap ? (countMap.get(key)||0) : 0;
+    const status = count>=1 ? 'Đã giao ca' : 'Chưa giao ca';
+    rowsTT.push({
+      soKhung: sk, dongXe: xe.dongXe, bienSo: xe.bienSo, depot: xe.depot, doi: xe.doi, to: xe.to,
+      sap, hoTen, sdt, count, status, gsvh:'', xuLy:''
+    });
+  });
+
+  document.getElementById('tt-total').textContent = rowsTT.length;
+  document.getElementById('tt-ok').textContent = rowsTT.filter(r=>r.status==='Đã giao ca').length;
+  document.getElementById('tt-warn').textContent = rowsTT.filter(r=>r.status==='Chưa giao ca').length;
+  document.getElementById('tt-skip').textContent = skipped;
+  document.getElementById('summary-tt').style.display='grid';
+  document.getElementById('toolbar-tt').style.display='flex';
+  document.getElementById('tablewrap-tt').style.display='block';
+  document.getElementById('empty-tt').classList.add('hidden');
+  document.getElementById('btn-export-tt').disabled = rowsTT.length===0;
+  document.getElementById('foot-tt').textContent = `Đối soát lúc ${new Date().toLocaleString('vi-VN')} — ${rowsTT.length} tài xế Active có xe, ${skipped} tài xế bị bỏ qua (Số khung không khớp file Xe).`;
+  renderTableTT();
+}
+function renderTableTT(){
+  const q = document.getElementById('search-tt').value.trim().toLowerCase();
+  const onlyWarn = document.getElementById('only-warn-tt').checked;
+  const tbody = document.getElementById('tbody-tt');
+  tbody.innerHTML = '';
+  let visible = rowsTT.filter(r=>{
+    if(onlyWarn && r.status!=='Chưa giao ca') return false;
+    if(!q) return true;
+    return [r.soKhung,r.bienSo,r.depot,r.doi,r.to,r.sap,r.hoTen,r.sdt].join(' ').toLowerCase().includes(q);
+  });
+  visible.forEach((r, idx)=>{
+    const tr = document.createElement('tr');
+    if(r.status==='Chưa giao ca') tr.classList.add('row-warn');
+    const badgeCls = r.status==='Đã giao ca' ? 'ok' : 'warn';
+    tr.innerHTML = `
+      <td class="idx">${idx+1}</td><td class="mono">${esc(r.soKhung)}</td><td>${esc(r.dongXe)}</td>
+      <td class="mono">${esc(r.bienSo)}</td><td>${esc(r.depot)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td>
+      <td class="mono">${esc(r.sap)}</td><td>${esc(r.hoTen)}</td><td class="mono">${esc(r.sdt)}</td>
+      <td style="text-align:center"><span class="cnt">${r.count}</span></td>
+      <td><span class="badge ${badgeCls}">● ${r.status}</span></td>
+      <td class="editable"><input type="text" placeholder="—" data-field="gsvh" value="${esc(r.gsvh)}"></td>
+      <td class="editable"><input type="text" placeholder="—" data-field="xuLy" value="${esc(r.xuLy)}"></td>`;
+    const origIndex = rowsTT.indexOf(r);
+    tr.querySelectorAll('input[data-field]').forEach(inp=>{
+      inp.addEventListener('input', e=>{ rowsTT[origIndex][e.target.dataset.field] = e.target.value; });
+    });
+    tbody.appendChild(tr);
+  });
+}
+async function exportExcelTT(){
+  if(!rowsTT.length) return;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Đối soát ca trực tiếp');
+  const headers = ['STT','Số khung','Dòng xe','Biển số','Depot','Đội','Tổ','Mã SAP','Họ & tên','SĐT','Số lần bàn giao trực tiếp','Trạng thái','GSVH giải trình','Hình thức xử lý'];
+  ws.addRow(headers);
+  const headerRow = ws.getRow(1);
+  headerRow.eachCell((cell, colNumber)=>{
+    cell.font = {bold:true}; cell.alignment = {vertical:'middle', horizontal:'left', wrapText:true};
+    if(colNumber>=11){ cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'}}; }
+  });
+  headerRow.height = 28;
+  rowsTT.forEach((r, i)=>{
+    const row = ws.addRow([i+1, r.soKhung, r.dongXe, r.bienSo, r.depot, r.doi, r.to, r.sap, r.hoTen, r.sdt, r.count, r.status, r.gsvh, r.xuLy]);
+    const statusCell = row.getCell(12);
+    statusCell.font = r.status==='Chưa giao ca' ? {color:{argb:'FFE0553C'}, bold:true} : {color:{argb:'FF0F9D78'}, bold:true};
+  });
+  [6,20,14,12,10,16,18,12,22,14,16,16,26,20].forEach((w,i)=> ws.getColumn(i+1).width = w);
+  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
+  ws.views = [{state:'frozen', ySplit:1}];
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf, `doi_soat_ca_truc_tiep_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 /* =========================================================================
