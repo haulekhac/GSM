@@ -9,6 +9,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
     --teal-1:#0fb8ad; --teal-2:#0a9c92; --teal-dark:#0a2f2c;
@@ -39,6 +40,16 @@
     display:flex;align-items:center;justify-content:center;cursor:pointer;margin-right:2px;
   }
   .theme-toggle:hover{background:rgba(255,255,255,.32);}
+
+  .lang-badge{
+    display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);
+    padding:6px 10px 6px 7px;border-radius:20px;font-size:12.5px;font-weight:600;color:#fff;cursor:pointer;
+    transition:background .12s;user-select:none;
+  }
+  .lang-badge:hover{background:rgba(255,255,255,.28);}
+  .lang-badge .flag-vn{display:flex;align-items:center;border-radius:3px;overflow:hidden;line-height:0;box-shadow:0 0 0 1px rgba(0,0,0,.08);}
+  .lang-badge .caret{font-size:9px;opacity:.75;}
+  body.dark .lang-badge{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.16);}
 
   /* ===== Shell ===== */
   .shell{display:grid;grid-template-columns:240px minmax(0,1fr);grid-template-rows:64px 1fr;min-height:100vh;}
@@ -228,6 +239,13 @@
       <div class="title" id="topTitle">HỆ THỐNG QUẢN LÝ GREEN PORTAL<small id="topSub">ĐỐI SOÁT GIAO CA ONLINE</small></div>
     </div>
     <div class="user">
+      <div class="lang-badge" title="Ngôn ngữ">
+        <span class="flag-vn" aria-hidden="true">
+          <svg width="20" height="14" viewBox="0 0 30 20"><rect width="30" height="20" rx="2" fill="#DA251D"/><path d="M15 4.2 16.76 9.6 22.4 9.6 17.82 12.9 19.6 18.3 15 15 10.4 18.3 12.18 12.9 7.6 9.6 13.24 9.6Z" fill="#FFCD00"/></svg>
+        </span>
+        <span class="lang-text">Tiếng Việt</span>
+        <span class="caret">▾</span>
+      </div>
       <button class="theme-toggle" id="themeToggle" title="Chuyển chế độ sáng/tối">
         <svg id="themeIconMoon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
         <svg id="themeIconSun" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
@@ -349,7 +367,7 @@
       <div class="card">
         <div class="card-head"><h2>Bộ dữ liệu đối soát ca trực tiếp</h2><span class="refresh" title="Làm mới" onclick="location.reload()">⟳</span></div>
         <div class="hint" style="margin-bottom:12px;">
-          Ghép <b>File Xe</b> + <b>File Tài xế</b> lấy toàn bộ xe đang có tài xế Active, đối chiếu với <b>File Handover Report</b> (Biển số + Mã SAP) — trùng thì "Đã giao ca", không trùng thì "Chưa giao ca".
+          Chỉ cần <b>File Xe</b> — lấy toàn bộ xe <b>đang vận doanh</b> (Trạng thái cấp 2 = "Xe vận doanh") và đã có tài xế (cột Tài xế dạng "Họ tên (Mã SAP)"), tách thành Họ &amp; tên + Mã SAP, đối chiếu với <b>File Handover Report</b> (Biển số + Mã SAP) — trùng thì "Đã giao ca", không trùng thì "Chưa giao ca".
         </div>
         <div class="filter-grid">
           <div class="field">
@@ -362,16 +380,7 @@
             </div>
           </div>
           <div class="field">
-            <label>Bước 2 · File Tài xế</label>
-            <div class="upload-box" id="dz-ttDriver">
-              <span class="placeholder" id="ph-ttDriver">Chọn file .xlsx…</span>
-              <span class="fname" id="fname-ttDriver" style="display:none"></span>
-              <span class="clear" id="clear-ttDriver" style="display:none" onclick="clearFileTT('ttDriver',event)">×</span>
-              <input type="file" id="file-ttDriver" accept=".xlsx,.xls">
-            </div>
-          </div>
-          <div class="field">
-            <label>Bước 3 · File Handover Report</label>
+            <label>Bước 2 · File Handover Report</label>
             <div class="upload-box" id="dz-ttHandover">
               <span class="placeholder" id="ph-ttHandover">Chọn file .xlsx…</span>
               <span class="fname" id="fname-ttHandover" style="display:none"></span>
@@ -384,19 +393,19 @@
         <div class="action-row">
           <button class="btn btn-primary" id="btn-process-tt" disabled onclick="processFilesTT()">Đối soát ngay</button>
           <button class="btn btn-ghost" onclick="exportExcelTT()" id="btn-export-tt" disabled>⬇ Tải file kết quả (.xlsx)</button>
-          <span class="hint" id="go-hint-tt">tải đủ 3 file để bắt đầu</span>
+          <span class="hint" id="go-hint-tt">tải đủ 2 file để bắt đầu</span>
         </div>
       </div>
 
       <div class="notice gold">
-        Đã sẳn sàng...
+        Chỉ tính xe có Trạng thái cấp 2 = "Xe vận doanh" và đã có tài xế (cột "Tài xế"). Các xe "Xe nằm", "Xe chờ giao cho khách hàng", "Xe thiếu tx chờ tuyển dụng", hoặc xe vận doanh nhưng chưa gán tài xế… sẽ bị loại khỏi đối soát ca trực tiếp.
       </div>
 
       <div class="stats" id="summary-tt" style="display:none">
-        <div class="stat"><div class="num" id="tt-total">0</div><div class="lbl">Tài xế Active có xe</div></div>
+        <div class="stat"><div class="num" id="tt-total">0</div><div class="lbl">Xe vận doanh đã gán tài xế</div></div>
         <div class="stat ok"><div class="num" id="tt-ok">0</div><div class="lbl">Đã giao ca</div></div>
         <div class="stat warn"><div class="num" id="tt-warn">0</div><div class="lbl">Chưa giao ca</div></div>
-        <div class="stat"><div class="num" id="tt-skip">0</div><div class="lbl">Không khớp được xe (Số khung lạ)</div></div>
+        <div class="stat"><div class="num" id="tt-skip">0</div><div class="lbl">Xe bị loại (không vận doanh / chưa có tài xế)</div></div>
       </div>
 
       <div class="toolbar2" id="toolbar-tt" style="display:none">
@@ -410,7 +419,7 @@
             <thead>
               <tr>
                 <th>STT</th><th>Số khung</th><th>Dòng xe</th><th>Biển số</th><th>Depot</th><th>Đội</th><th>Tổ</th>
-                <th>Mã SAP</th><th>Họ &amp; tên</th><th>SĐT</th>
+                <th>Mã SAP</th><th>Họ &amp; tên</th>
                 <th class="derived">Số lần bàn giao trực tiếp</th><th class="derived">Trạng thái</th>
                 <th class="derived">GSVH giải trình</th><th class="derived">Hình thức xử lý</th>
               </tr>
@@ -422,7 +431,7 @@
 
       <div class="empty-state" id="empty-tt">
         <div class="glyph2">＋</div>
-        Tải lên đủ 3 file rồi bấm <b>Đối soát ngay</b> để bắt đầu.
+        Tải lên đủ 2 file (Xe + Handover Report) rồi bấm <b>Đối soát ngay</b> để bắt đầu.
       </div>
 
       <footer class="foot" id="foot-tt"></footer>
@@ -453,6 +462,7 @@
           </div>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
           <div class="notice">Yêu cầu upload các File theo đúng các cột, để tránh bị lỗi nhé!!!</div>
+          <div class="notice gold">File Order rất lớn (nhiều tuần/tháng, &gt;40-50MB)? Nên xuất/lưu dưới dạng <b>.csv</b> thay vì .xlsx trước khi import — file .csv được đọc theo luồng nên nhẹ bộ nhớ hơn nhiều, tránh lỗi "Array buffer allocation failed" khi trình duyệt hết bộ nhớ.</div>
         </div>
 
         <!-- --- SUB: REPORT --- -->
@@ -500,12 +510,21 @@
         </div>
         <div class="filter-grid" style="margin-bottom:12px;">
           <div class="field">
-            <label>Lọc theo ngày (Completed Time)</label>
+            <label>Kỳ báo cáo</label>
+            <select id="periodType" class="fake-select" style="width:100%;border:1px solid var(--line);appearance:none;cursor:pointer;" onchange="onPeriodTypeChange()">
+              <option value="day">Theo ngày</option>
+              <option value="week">Theo tuần</option>
+              <option value="month">Theo tháng</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Lọc theo kỳ (Completed Time)</label>
             <select id="dateFilter" class="fake-select" style="width:100%;border:1px solid var(--line);appearance:none;cursor:pointer;" onchange="onDateFilterChange()">
               <option value="__ALL__">— Chưa có dữ liệu —</option>
             </select>
           </div>
         </div>
+        <div class="hint" style="margin-bottom:12px;">"Theo ngày" giữ nguyên cách tính cũ (1 ngày). Chọn "Theo tuần"/"Theo tháng" để gộp GMV theo tuần/tháng khi đổ file lớn nhiều ngày — bên dưới sẽ có thêm bảng GMV từng tài xế theo từng kỳ.</div>
         <div class="action-row" style="margin-top:0;">
           <button class="btn btn-primary" onclick="processXe0()">⟳ Xử lý / Refresh All</button>
           <button class="btn btn-ghost" onclick="exportXe0Zero()" id="btn-export-zero" disabled>⬇ Tải danh sách Xe 0 đồng (.xlsx)</button>
@@ -549,8 +568,23 @@
           </div>
         </div>
 
+        <div class="card-head" id="pivotHead" style="display:none;"><h2>GMV tài xế theo <span id="pivotPeriodLabel">Tuần</span></h2></div>
+        <div class="hint" id="pivotHint" style="display:none; margin-bottom:10px;"></div>
+        <div class="toolbar2" id="pivotToolbar" style="display:none;">
+          <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="pivotSearch" placeholder="Tìm theo tên, mã SAP, biển số, đội, tổ…" oninput="renderDriverPivot()"></div></div>
+          <label class="toggle"><input type="checkbox" id="pivot-sort-desc" checked onchange="renderDriverPivot()"> Sắp xếp tổng GMV cao → thấp</label>
+        </div>
+        <div class="table-card" id="pivotCard" style="margin-bottom:20px; display:none;">
+          <div class="table-scroll">
+            <table>
+              <thead id="pivotThead"></thead>
+              <tbody id="pivotTbody"></tbody>
+            </table>
+          </div>
+        </div>
+
         <div class="card-head"><h2>Danh sách tài xế &amp; thu nhập hiện tại</h2></div>
-        <div class="hint" style="margin-bottom:10px;">Toàn bộ tài xế Active + đã gán xe, kèm thu nhập (GMV).</div>
+        <div class="hint" style="margin-bottom:10px;">Toàn bộ tài xế Active + đã gán xe, kèm thu nhập (GMV) của kỳ đang chọn ở trên.</div>
         <div class="toolbar2">
           <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="incomeSearch" placeholder="Tìm theo tên, mã SAP, biển số, đội, tổ…" oninput="renderIncomeTable()"></div></div>
           <label class="toggle"><input type="checkbox" id="income-sort-desc" checked onchange="renderIncomeTable()"> Sắp xếp thu nhập cao → thấp</label>
@@ -795,7 +829,7 @@ function handleFile(kind, file){
   const reader = new FileReader();
   reader.onload = ev=>{
     const data = new Uint8Array(ev.target.result);
-    const wb = XLSX.read(data, {type:'array', dense:true, cellNF:false, cellHTML:false, cellStyles:false});
+    const wb = XLSX.read(data, {type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false});
     if(kind==='vehicle') vehicleWB = wb; else shiftWB = wb;
     document.getElementById('ph-'+kind).style.display='none';
     document.getElementById('fname-'+kind).style.display='inline';
@@ -927,9 +961,9 @@ async function exportExcel(){
 }
 
 /* =========================================================================
-   MODULE 1B: ĐỐI SOÁT CA TRỰC TIẾP (Vehicle + Driver [ghép qua Số khung] vs Handover Report)
+   MODULE 1B: ĐỐI SOÁT CA TRỰC TIẾP (chỉ cần File Xe — cột Tài xế tự tách Họ tên + Mã SAP — vs Handover Report)
 ========================================================================= */
-let ttVehicleWB=null, ttDriverWB=null, ttHandoverWB=null;
+let ttVehicleWB=null, ttHandoverWB=null;
 let rowsTT=[];
 
 function setupDropTT(kind){
@@ -940,15 +974,14 @@ function setupDropTT(kind){
   ['dragleave','drop'].forEach(ev=>dz.addEventListener(ev, e=>{e.preventDefault(); dz.classList.remove('drag');}));
   dz.addEventListener('drop', e=>{ const f=e.dataTransfer.files[0]; if(f) handleFileTT(kind,f); });
 }
-['ttVehicle','ttDriver','ttHandover'].forEach(setupDropTT);
+['ttVehicle','ttHandover'].forEach(setupDropTT);
 
 function handleFileTT(kind, file){
   const reader = new FileReader();
   reader.onload = ev=>{
     const data = new Uint8Array(ev.target.result);
-    const wb = XLSX.read(data, {type:'array', dense:true, cellNF:false, cellHTML:false, cellStyles:false});
+    const wb = XLSX.read(data, {type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false});
     if(kind==='ttVehicle') ttVehicleWB = wb;
-    else if(kind==='ttDriver') ttDriverWB = wb;
     else ttHandoverWB = wb;
     document.getElementById('ph-'+kind).style.display='none';
     document.getElementById('fname-'+kind).style.display='inline';
@@ -962,7 +995,6 @@ function handleFileTT(kind, file){
 function clearFileTT(kind, e){
   e.preventDefault(); e.stopPropagation();
   if(kind==='ttVehicle') ttVehicleWB=null;
-  else if(kind==='ttDriver') ttDriverWB=null;
   else ttHandoverWB=null;
   document.getElementById('ph-'+kind).style.display='inline';
   document.getElementById('fname-'+kind).style.display='none';
@@ -972,31 +1004,21 @@ function clearFileTT(kind, e){
   checkReadyTT();
 }
 function checkReadyTT(){
-  const ready = ttVehicleWB && ttDriverWB && ttHandoverWB;
+  const ready = ttVehicleWB && ttHandoverWB;
   document.getElementById('btn-process-tt').disabled = !ready;
-  document.getElementById('go-hint-tt').textContent = ready ? 'sẵn sàng đối soát' : 'tải đủ 3 file để bắt đầu';
+  document.getElementById('go-hint-tt').textContent = ready ? 'sẵn sàng đối soát' : 'tải đủ 2 file để bắt đầu';
 }
 function normPlateTT(p){ return String(p||'').toUpperCase().replace(/[-.\s]/g,''); }
 
 function processFilesTT(){
   const xeRows = sheetToRows(ttVehicleWB, ['Result','Sheet1']);
-  const txRows = sheetToRows(ttDriverWB, ['Sheet1','Result']);
   const hoRows = sheetToRows(ttHandoverWB, ['Result','data off','Sheet1']);
 
-  // 1) Xe: map Số khung -> thông tin xe
-  const xeBySoKhung = new Map();
-  xeRows.forEach(r=>{
-    const sk = String(pick(r,['Số khung','So khung'])).trim();
-    if(!sk) return;
-    xeBySoKhung.set(sk, {
-      bienSo: pick(r,['Biển số','Bien so']), dongXe: pick(r,['Dòng xe','Dong xe']),
-      depot: pick(r,['Depot']), doi: pick(r,['Đội','Doi']), to: pick(r,['Tổ','To'])
-    });
-  });
-
-  // 2) Handover Report: đếm số lần theo Biển số + Mã SAP
+  // 1) Handover Report: đếm số lần theo Biển số + Mã SAP — bỏ các dòng có trạng thái "Canceled"
   const countMap = new Map();
   hoRows.forEach(r=>{
+    const trangThaiBanGiao = String(pick(r,['Trạng thái','Status'])).trim().toLowerCase();
+    if(trangThaiBanGiao === 'canceled' || trangThaiBanGiao === 'cancelled') return;
     const plate = normPlateTT(pick(r,['Biển số','Bien so']));
     const sap = String(pick(r,['Mã SAP','Ma SAP','MaSAP'])).trim();
     if(!plate || !sap) return;
@@ -1004,25 +1026,27 @@ function processFilesTT(){
     countMap.set(key, (countMap.get(key)||0)+1);
   });
 
-  // 3) Tài xế: chỉ lấy Active + có Số khung, ghép với Xe theo Số khung
+  // 2) File Xe: CHỈ lấy xe đang vận doanh (Trạng thái cấp 2 = "Xe vận doanh") VÀ đã có tài xế.
+  //    Cột "Tài xế" ở dạng "Họ tên (Mã SAP)" — tách thành 2 cột Họ & tên + Mã SAP.
   rowsTT = []; let skipped = 0;
-  txRows.forEach(r=>{
-    const trangThai = String(pick(r,['Trạng thái'])).trim();
-    if(trangThai !== 'Active') return;
+  xeRows.forEach(r=>{
+    const capHai = String(pick(r,['Trạng thái cấp 2'])).trim();
+    if(capHai !== 'Xe vận doanh'){ skipped++; return; }
+    const taiXe = pick(r,['Tài xế','Tai xe']);
+    if(!String(taiXe).trim()){ skipped++; return; }
+
+    const sap = extractMaNV(taiXe);
+    const hoTen = String(taiXe).replace(/\s*\([^()]+\)\s*$/, '').trim();
     const sk = String(pick(r,['Số khung','So khung'])).trim();
-    if(!sk) return;
-    const xe = xeBySoKhung.get(sk);
-    if(!xe){ skipped++; return; }
-    const sap = String(pick(r,['Mã SAP','Ma SAP','MaSAP'])).trim();
-    const hoTen = pick(r,['Họ & tên','Ho ten']);
-    const sdt = pick(r,['Số điện thoại','So dien thoai']);
-    const plateKey = normPlateTT(xe.bienSo);
+    const bienSo = pick(r,['Biển số','Bien so']);
+    const plateKey = normPlateTT(bienSo);
     const key = plateKey+'|'+sap;
     const count = sap ? (countMap.get(key)||0) : 0;
     const status = count>=1 ? 'Đã giao ca' : 'Chưa giao ca';
     rowsTT.push({
-      soKhung: sk, dongXe: xe.dongXe, bienSo: xe.bienSo, depot: xe.depot, doi: xe.doi, to: xe.to,
-      sap, hoTen, sdt, count, status, gsvh:'', xuLy:''
+      soKhung: sk, dongXe: pick(r,['Dòng xe','Dong xe']), bienSo, depot: pick(r,['Depot']),
+      doi: pick(r,['Đội','Doi']), to: pick(r,['Tổ','To']),
+      sap, hoTen, count, status, gsvh:'', xuLy:''
     });
   });
 
@@ -1035,7 +1059,7 @@ function processFilesTT(){
   document.getElementById('tablewrap-tt').style.display='block';
   document.getElementById('empty-tt').classList.add('hidden');
   document.getElementById('btn-export-tt').disabled = rowsTT.length===0;
-  document.getElementById('foot-tt').textContent = `Đối soát lúc ${new Date().toLocaleString('vi-VN')} — ${rowsTT.length} tài xế Active có xe, ${skipped} tài xế bị bỏ qua (Số khung không khớp file Xe).`;
+  document.getElementById('foot-tt').textContent = `Đối soát lúc ${new Date().toLocaleString('vi-VN')} — ${rowsTT.length} xe vận doanh đã gán tài xế, ${skipped} xe bị loại (không phải "Xe vận doanh" hoặc chưa có tài xế).`;
   renderTableTT();
 }
 function renderTableTT(){
@@ -1046,7 +1070,7 @@ function renderTableTT(){
   let visible = rowsTT.filter(r=>{
     if(onlyWarn && r.status!=='Chưa giao ca') return false;
     if(!q) return true;
-    return [r.soKhung,r.bienSo,r.depot,r.doi,r.to,r.sap,r.hoTen,r.sdt].join(' ').toLowerCase().includes(q);
+    return [r.soKhung,r.bienSo,r.depot,r.doi,r.to,r.sap,r.hoTen].join(' ').toLowerCase().includes(q);
   });
   visible.forEach((r, idx)=>{
     const tr = document.createElement('tr');
@@ -1055,7 +1079,7 @@ function renderTableTT(){
     tr.innerHTML = `
       <td class="idx">${idx+1}</td><td class="mono">${esc(r.soKhung)}</td><td>${esc(r.dongXe)}</td>
       <td class="mono">${esc(r.bienSo)}</td><td>${esc(r.depot)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td>
-      <td class="mono">${esc(r.sap)}</td><td>${esc(r.hoTen)}</td><td class="mono">${esc(r.sdt)}</td>
+      <td class="mono">${esc(r.sap)}</td><td>${esc(r.hoTen)}</td>
       <td style="text-align:center"><span class="cnt">${r.count}</span></td>
       <td><span class="badge ${badgeCls}">● ${r.status}</span></td>
       <td class="editable"><input type="text" placeholder="—" data-field="gsvh" value="${esc(r.gsvh)}"></td>
@@ -1071,20 +1095,20 @@ async function exportExcelTT(){
   if(!rowsTT.length) return;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Đối soát ca trực tiếp');
-  const headers = ['STT','Số khung','Dòng xe','Biển số','Depot','Đội','Tổ','Mã SAP','Họ & tên','SĐT','Số lần bàn giao trực tiếp','Trạng thái','GSVH giải trình','Hình thức xử lý'];
+  const headers = ['STT','Số khung','Dòng xe','Biển số','Depot','Đội','Tổ','Mã SAP','Họ & tên','Số lần bàn giao trực tiếp','Trạng thái','GSVH giải trình','Hình thức xử lý'];
   ws.addRow(headers);
   const headerRow = ws.getRow(1);
   headerRow.eachCell((cell, colNumber)=>{
     cell.font = {bold:true}; cell.alignment = {vertical:'middle', horizontal:'left', wrapText:true};
-    if(colNumber>=11){ cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'}}; }
+    if(colNumber>=10){ cell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FFFFFF00'}}; }
   });
   headerRow.height = 28;
   rowsTT.forEach((r, i)=>{
-    const row = ws.addRow([i+1, r.soKhung, r.dongXe, r.bienSo, r.depot, r.doi, r.to, r.sap, r.hoTen, r.sdt, r.count, r.status, r.gsvh, r.xuLy]);
-    const statusCell = row.getCell(12);
+    const row = ws.addRow([i+1, r.soKhung, r.dongXe, r.bienSo, r.depot, r.doi, r.to, r.sap, r.hoTen, r.count, r.status, r.gsvh, r.xuLy]);
+    const statusCell = row.getCell(11);
     statusCell.font = r.status==='Chưa giao ca' ? {color:{argb:'FFE0553C'}, bold:true} : {color:{argb:'FF0F9D78'}, bold:true};
   });
-  [6,20,14,12,10,16,18,12,22,14,16,16,26,20].forEach((w,i)=> ws.getColumn(i+1).width = w);
+  [6,20,14,12,10,16,18,12,22,16,16,26,20].forEach((w,i)=> ws.getColumn(i+1).width = w);
   ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
   ws.views = [{state:'frozen', ySplit:1}];
   const buf = await wb.xlsx.writeBuffer();
@@ -1129,6 +1153,17 @@ async function storageSet(key, value){
     });
   }catch(e){ console.error('Không lưu được (IndexedDB):', e); return null; }
 }
+async function storageDelete(key){
+  try{
+    const db = await getDB();
+    return await new Promise((resolve)=>{
+      const tx = db.transaction('kv','readwrite');
+      tx.objectStore('kv').delete(LS_PREFIX+key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> resolve(false);
+    });
+  }catch(e){ return false; }
+}
 
 const IMPORT_TYPES = [
   { key:'TaiXe', sheetName:'Tải File', label:'Import Thông tin Tài xế', sub:'Thông tin tài xế ở Gp',
@@ -1153,27 +1188,90 @@ const SERVICE_BD = [
 ];
 let depotChartInst=null, serviceChartInst=null;
 
+// ---- Lưu trữ theo "lô" (batch) thay vì 1 khối JSON khổng lồ cho cả lịch sử ----
+// Mỗi lần import chỉ ghi thêm 1 batch mới (đúng bằng dữ liệu của file vừa tải lên) — KHÔNG phải
+// đọc + ghi lại toàn bộ lịch sử đã tích luỹ (nguyên nhân chính gây "Array buffer allocation failed"
+// dù file mới chỉ vài trăm KB: trước đây mỗi lần import, kể cả import file khác loại, app đều nạp lại
+// toàn bộ dữ liệu Order tích luỹ nhiều tuần/tháng vào bộ nhớ để hiển thị bảng tổng quan).
+async function loadLog(key){
+  try{
+    const logR = await storageGet('log:'+key);
+    return logR ? JSON.parse(logR.value) : { count:'Data Emty', time:null, file:'' };
+  }catch(e){ return { count:'Data Emty', time:null, file:'' }; }
+}
 async function loadType(key){
   try{
-    const rowsR = await storageGet('rows:'+key); const logR = await storageGet('log:'+key);
-    return { rows: rowsR ? JSON.parse(rowsR.value) : [], log: logR ? JSON.parse(logR.value) : { count:'Data Emty', time:null, file:'' } };
+    const cfg = IMPORT_TYPES.find(t=>t.key===key);
+    const log = await loadLog(key);
+    let batchesR = await storageGet('batches:'+key);
+    let batchIds;
+    if(batchesR){
+      batchIds = JSON.parse(batchesR.value);
+    } else {
+      // Chưa có cấu trúc batch mới — migrate 1 lần từ khối dữ liệu cũ (nếu người dùng đã import trước đây)
+      const oldR = await storageGet('rows:'+key);
+      if(oldR && oldR.value){
+        batchIds = ['legacy'];
+        await storageSet('batch:'+key+':legacy', oldR.value);
+        await storageSet('batches:'+key, JSON.stringify(batchIds));
+        if(cfg){
+          try{
+            const legacyRows = JSON.parse(oldR.value);
+            const dedupKeys = legacyRows.map(r=>buildKey(r, cfg.requiredHeaders));
+            await storageSet('dedupkeys:'+key, JSON.stringify(dedupKeys));
+          }catch(e){}
+        }
+      } else {
+        batchIds = [];
+        await storageSet('batches:'+key, JSON.stringify(batchIds));
+      }
+    }
+    let rows = [];
+    for(const bid of batchIds){
+      const br = await storageGet('batch:'+key+':'+bid);
+      if(br && br.value){ rows = rows.concat(JSON.parse(br.value)); }
+    }
+    return { rows, log };
   }catch(e){ return { rows: [], log: { count:'Data Emty', time:null, file:'' } }; }
 }
-async function saveType(key, rows, log){ await storageSet('rows:'+key, JSON.stringify(rows)); await storageSet('log:'+key, JSON.stringify(log)); }
 
 function readFileAsRows(file){
+  const isCsv = /\.csv$/i.test(file.name);
+  // CSV: đọc theo luồng (streaming) bằng PapaParse — không cần cấp phát 1 khối bộ nhớ lớn cho cả file,
+  // nên nhẹ hơn nhiều so với .xlsx khi file lớn (nhiều tuần/tháng dữ liệu).
+  if(isCsv && window.Papa){
+    return new Promise((resolve, reject)=>{
+      const rows = [];
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        worker: true,
+        chunkSize: 1024*1024*2,
+        step: (result)=>{ if(result.data) rows.push(result.data); },
+        complete: ()=> resolve(rows),
+        error: (err)=> reject(err instanceof Error ? err : new Error(String(err)))
+      });
+    });
+  }
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = (e)=>{
       try{
         const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, { type:'array', dense:true, cellNF:false, cellHTML:false, cellStyles:false });
+        const wb = XLSX.read(data, { type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false });
         resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'', raw:false }));
       }catch(err){ reject(err); }
     };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
+    reader.onerror = ()=> reject(new Error('Trình duyệt không đọc được file (file lỗi hoặc không đủ quyền truy cập).'));
+    try{
+      reader.readAsArrayBuffer(file);
+    }catch(err){ reject(err); }
   });
+}
+function isOutOfMemoryError(err){
+  const msg = String((err && err.message) || err || '').toLowerCase();
+  return msg.includes('array buffer allocation failed') || msg.includes('out of memory')
+    || msg.includes('allocation size overflow') || msg.includes('invalid array length');
 }
 function buildKey(row, headers){ return headers.map(h => String(row[h] ?? '').trim()).join('\u001e'); }
 
@@ -1191,32 +1289,70 @@ async function doImport(key, file){
   setStatus(`Đang đọc file "${file.name}" (${(file.size/1024/1024).toFixed(1)}MB)${bigFileWarning}`);
   await new Promise(r=>setTimeout(r,20));
   let json;
-  try{ json = await readFileAsRows(file); } catch(err){ setStatus(`Lỗi đọc file: ${err.message}`, true); return; }
+  try{ json = await readFileAsRows(file); } catch(err){
+    if(isOutOfMemoryError(err)){
+      const isXlsx = !/\.csv$/i.test(file.name);
+      const suggestCsv = isXlsx ? ' Cách nhanh nhất: mở file này bằng Excel/Google Sheets rồi "Lưu dưới dạng" .csv, sau đó import lại file .csv (đọc nhẹ hơn .xlsx rất nhiều vì được đọc theo luồng).' : '';
+      setStatus(`File quá lớn (${(file.size/1024/1024).toFixed(1)}MB), trình duyệt không đủ bộ nhớ để đọc.${suggestCsv} Ngoài ra có thể: chia nhỏ file theo từng tuần thay vì cả tháng, dùng Chrome trên máy tính và đóng bớt các tab/ứng dụng khác, hoặc khởi động lại trình duyệt để giải phóng bộ nhớ rồi thử lại.`, true);
+    } else {
+      setStatus(`Lỗi đọc file: ${err.message || err}`, true);
+    }
+    return;
+  }
   if(!json.length){ setStatus('File không có dữ liệu.', true); return; }
   const fileHeaders = Object.keys(json[0]);
   const missing = cfg.requiredHeaders.filter(h => !fileHeaders.includes(h));
   if(missing.length){ setStatus(`Không tìm thấy các cột bắt buộc trong file: ${missing.join(', ')}`, true); return; }
-  const { rows: existingRows } = await loadType(key);
-  const existingKeys = new Set(existingRows.map(r => buildKey(r, cfg.requiredHeaders)));
-  let added = 0; const newRows = [];
+
+  // Lấy index dedup (chỉ các chuỗi khoá, nhẹ hơn nhiều so với nạp toàn bộ dữ liệu lịch sử)
+  let dedupR = await storageGet('dedupkeys:'+key);
+  let existingKeysArr;
+  if(dedupR){
+    existingKeysArr = JSON.parse(dedupR.value);
+  } else {
+    // Lần đầu dùng cấu trúc mới — build index 1 lần (sẽ tự migrate dữ liệu cũ nếu có)
+    const { rows: existingRows } = await loadType(key);
+    existingKeysArr = existingRows.map(r=>buildKey(r, cfg.requiredHeaders));
+  }
+  const existingKeys = new Set(existingKeysArr);
+
+  let added = 0; const newRows = []; const newKeys = [];
   for(const r of json){
     const rowData = {}; cfg.requiredHeaders.forEach(h => rowData[h] = r[h]);
     const k = buildKey(rowData, cfg.requiredHeaders);
-    if(!existingKeys.has(k)){ existingKeys.add(k); newRows.push(rowData); added++; }
+    if(!existingKeys.has(k)){ existingKeys.add(k); newRows.push(rowData); newKeys.push(k); added++; }
   }
   if(added === 0){ setStatus('Tất cả dòng đã tồn tại — không có dòng mới được import.', true); return; }
-  const merged = existingRows.concat(newRows);
-  const prevLog = (await loadType(key)).log;
-  const newLog = { count: merged.length, time: new Date().toISOString(), file: prevLog.file ? prevLog.file + '\n' + file.name : file.name };
-  await saveType(key, merged, newLog);
-  setStatus(`Import hoàn tất: ${added} dòng mới. Tổng hiện tại: ${merged.length} dòng.`);
+
+  // Ghi thêm 1 batch mới — chỉ đúng bằng dữ liệu file vừa tải lên, KHÔNG đụng tới dữ liệu cũ
+  const batchId = 'b'+Date.now()+'_'+Math.random().toString(36).slice(2,7);
+  await storageSet('batch:'+key+':'+batchId, JSON.stringify(newRows));
+  const batchesR2 = await storageGet('batches:'+key);
+  const batchIds = batchesR2 ? JSON.parse(batchesR2.value) : [];
+  batchIds.push(batchId);
+  await storageSet('batches:'+key, JSON.stringify(batchIds));
+  await storageSet('dedupkeys:'+key, JSON.stringify(existingKeysArr.concat(newKeys)));
+
+  const prevLog = await loadLog(key);
+  const prevCount = (typeof prevLog.count === 'number') ? prevLog.count : 0;
+  const newCount = prevCount + added;
+  const newLog = { count: newCount, time: new Date().toISOString(), file: prevLog.file ? prevLog.file + '\n' + file.name : file.name };
+  await storageSet('log:'+key, JSON.stringify(newLog));
+
+  setStatus(`Import hoàn tất: ${added} dòng mới. Tổng hiện tại: ${newCount.toLocaleString('vi-VN')} dòng.`);
   await renderStartTable();
   if(document.getElementById('sub-report').classList.contains('active')) await renderReport();
 }
 async function doDelete(key){
   const cfg = IMPORT_TYPES.find(t=>t.key===key);
   if(!confirm(`Xoá toàn bộ dữ liệu đã import cho "${cfg.label}"? Hành động này không hoàn tác được.`)) return;
-  await saveType(key, [], { count:'Data Emty', time:new Date().toISOString(), file:'' });
+  const batchesR = await storageGet('batches:'+key);
+  const batchIds = batchesR ? JSON.parse(batchesR.value) : [];
+  for(const bid of batchIds){ await storageDelete('batch:'+key+':'+bid); }
+  await storageDelete('batches:'+key);
+  await storageDelete('dedupkeys:'+key);
+  await storageDelete('rows:'+key); // dọn khối dữ liệu cũ (nếu còn) từ trước khi có cấu trúc batch
+  await storageSet('log:'+key, JSON.stringify({ count:'Data Emty', time:new Date().toISOString(), file:'' }));
   setStatus(`Đã xoá dữ liệu "${cfg.label}".`);
   await renderStartTable();
   if(document.getElementById('sub-report').classList.contains('active')) await renderReport();
@@ -1230,7 +1366,11 @@ async function renderStartTable(){
   const tbody = document.getElementById('startTableBody');
   tbody.innerHTML = '';
   for(const cfg of IMPORT_TYPES){
-    const { log } = await loadType(cfg.key);
+    // Chỉ đọc "log" (vài trăm byte) — KHÔNG nạp toàn bộ dữ liệu đã tích luỹ chỉ để hiển thị số dòng.
+    // Đây là điểm mấu chốt: trước đây mỗi lần import (kể cả import 1 file rất nhỏ ở loại khác),
+    // màn hình này sẽ nạp lại toàn bộ lịch sử của CẢ 4 loại — kể cả Order đã tích luỹ nhiều tuần/tháng —
+    // khiến trình duyệt hết bộ nhớ dù file vừa tải lên chỉ vài trăm KB.
+    const log = await loadLog(cfg.key);
     const tr = document.createElement('tr');
     const timeStr = log.time ? new Date(log.time).toLocaleString('vi-VN') : '—';
     const countHtml = (log.count === 'Data Emty' || log.count === 0)
@@ -1338,12 +1478,64 @@ function drawCharts(depotList, totalBD){
 const CHO_STATUSES = ['Xe chờ bấm biển','Xe chờ phù hiệu','Xe chờ nộp thuế, lệ phí','Chờ tuyển dụng TXTX'];
 let teamRowsGlobal = [], zeroListGlobal = [], driverIncomeGlobal = [];
 let xe0Cache = { xeRows:null, txRows:null, orderRowsCompleted:null };
+let currentPeriodType = 'day';
+let dailyPivotCache = { dates: [], rows: [] };
 
 function pick2(obj, keys){ for(const k of keys){ if(obj[k]!==undefined && obj[k]!==null && String(obj[k]).trim()!=='') return obj[k]; } return ''; }
 function mapDepot(code){ const c = String(code||'').trim(); return SAP_DEPOT[c] || c || '—'; }
 function orderDateStr(r){
   const t = r['Completed Time'] || r['Order Time'];
   return String(t||'').slice(0,10);
+}
+// ---- Kỳ báo cáo: ngày / tuần (ISO, Thứ 2 - CN) / tháng ----
+function isoWeekKey(dateStr){
+  const d = new Date(dateStr+'T00:00:00');
+  const dayNr = (d.getDay() + 6) % 7; // Thứ 2 = 0
+  const target = new Date(d.valueOf());
+  target.setDate(target.getDate() - dayNr + 3);
+  const firstThursday = target.valueOf();
+  target.setMonth(0,1);
+  if(target.getDay() !== 4){ target.setMonth(0, 1 + ((4 - target.getDay()) + 7) % 7); }
+  const weekNumber = 1 + Math.round((firstThursday - target) / 604800000);
+  const yearRef = new Date(d.valueOf()); yearRef.setDate(d.getDate() - dayNr + 3);
+  return yearRef.getFullYear() + '-W' + String(weekNumber).padStart(2,'0');
+}
+function weekRangeLabel(sampleDateStr){
+  const d = new Date(sampleDateStr+'T00:00:00');
+  const dayNr = (d.getDay() + 6) % 7;
+  const monday = new Date(d); monday.setDate(d.getDate() - dayNr);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate() + 6);
+  const fmt = x => String(x.getDate()).padStart(2,'0') + '/' + String(x.getMonth()+1).padStart(2,'0');
+  return fmt(monday) + ' - ' + fmt(sunday);
+}
+function periodKeyOf(dateStr, type){
+  if(type === 'week') return isoWeekKey(dateStr);
+  if(type === 'month') return dateStr.slice(0,7);
+  return dateStr;
+}
+function periodLabelOf(type, key, sampleDate){
+  if(type === 'week'){ const wk = key.split('-W')[1]; return `Tuần ${wk} (${weekRangeLabel(sampleDate)})`; }
+  if(type === 'month'){ const [y,m] = key.split('-'); return `Tháng ${parseInt(m,10)}/${y}`; }
+  return key;
+}
+function populatePeriodOptions(type){
+  const { orderRowsCompleted } = xe0Cache;
+  const counts = new Map(), sample = new Map();
+  orderRowsCompleted.forEach(r=>{
+    const d = orderDateStr(r); if(!d) return;
+    const key = periodKeyOf(d, type);
+    counts.set(key, (counts.get(key)||0)+1);
+    if(!sample.has(key)) sample.set(key, d);
+  });
+  const keys = [...counts.keys()].sort();
+  let defaultKey = '__ALL__';
+  if(keys.length){ defaultKey = [...counts.entries()].sort((a,b)=>b[1]-a[1])[0][0]; }
+  const totalLabel = type==='day' ? 'các ngày' : (type==='week' ? 'các tuần' : 'các tháng');
+  const sel = document.getElementById('dateFilter');
+  sel.innerHTML = `<option value="__ALL__">Tất cả ${totalLabel} (${orderRowsCompleted.length.toLocaleString('vi-VN')} đơn COMPLETED)</option>`
+    + keys.map(k => `<option value="${k}" ${k===defaultKey?'selected':''}>${periodLabelOf(type,k,sample.get(k))} (${counts.get(k).toLocaleString('vi-VN')} đơn)</option>`).join('');
+  sel.value = defaultKey;
+  return defaultKey;
 }
 
 async function processXe0(){
@@ -1362,31 +1554,27 @@ async function processXe0(){
   const orderRowsCompleted = orderRowsAll.filter(r => String(r['Status']||'').trim().toUpperCase() === 'COMPLETED');
   xe0Cache = { xeRows, txRows, orderRowsCompleted };
 
-  // Danh sách ngày có trong dữ liệu COMPLETED, để lọc theo đúng ngày như hệ thống gốc (slicer "Ngày")
-  const dateCount = new Map();
-  orderRowsCompleted.forEach(r=>{ const d = orderDateStr(r); if(d) dateCount.set(d, (dateCount.get(d)||0)+1); });
-  const dates = [...dateCount.keys()].sort();
-  let defaultDate = '__ALL__';
-  if(dates.length){
-    // mặc định chọn ngày có nhiều đơn nhất (ngày báo cáo chính), giống slicer chọn 1 ngày trong file gốc
-    defaultDate = [...dateCount.entries()].sort((a,b)=>b[1]-a[1])[0][0];
-  }
-  const sel = document.getElementById('dateFilter');
-  sel.innerHTML = '<option value="__ALL__">Tất cả các ngày (' + orderRowsCompleted.length.toLocaleString('vi-VN') + ' đơn COMPLETED)</option>'
-    + dates.map(d => `<option value="${d}" ${d===defaultDate?'selected':''}>${d} (${dateCount.get(d).toLocaleString('vi-VN')} đơn)</option>`).join('');
-  sel.value = defaultDate;
+  currentPeriodType = document.getElementById('periodType').value || 'day';
+  const defaultKey = populatePeriodOptions(currentPeriodType);
+  recomputeXe0(defaultKey);
+}
 
-  recomputeXe0(defaultDate);
+function onPeriodTypeChange(){
+  currentPeriodType = document.getElementById('periodType').value;
+  const defaultKey = populatePeriodOptions(currentPeriodType);
+  recomputeXe0(defaultKey);
 }
 
 function onDateFilterChange(){
   recomputeXe0(document.getElementById('dateFilter').value);
 }
 
-function recomputeXe0(dateFilter){
+function recomputeXe0(periodFilter){
   const { xeRows, txRows, orderRowsCompleted } = xe0Cache;
   if(!xeRows) return;
-  const orderRows = (dateFilter === '__ALL__') ? orderRowsCompleted : orderRowsCompleted.filter(r => orderDateStr(r) === dateFilter);
+  const type = currentPeriodType;
+  const orderRows = (periodFilter === '__ALL__') ? orderRowsCompleted
+    : orderRowsCompleted.filter(r => { const d = orderDateStr(r); return d && periodKeyOf(d, type) === periodFilter; });
 
   // 1) map biển số (chuẩn hoá) -> record xe
   const plateToXe = new Map();
@@ -1533,14 +1721,94 @@ function recomputeXe0(dateFilter){
   document.getElementById('xe0-results').style.display = 'block';
   document.getElementById('btn-export-zero').disabled = false;
   document.getElementById('btn-export-team').disabled = false;
+  const periodTypeLabel = currentPeriodType==='day' ? 'ngày' : (currentPeriodType==='week' ? 'tuần' : 'tháng');
   document.getElementById('xe0-hint').textContent = 'sẵn sàng — xử lý lúc ' + new Date().toLocaleString('vi-VN')
-    + (dateFilter==='__ALL__' ? ' (tất cả các ngày)' : ' (ngày ' + dateFilter + ')');
+    + (periodFilter==='__ALL__' ? ` (tất cả các ${periodTypeLabel})` : ` (${periodTypeLabel} ${periodFilter==='__ALL__'?'':document.getElementById('dateFilter').selectedOptions[0]?.textContent || periodFilter})`);
   document.getElementById('xe0-foot').textContent = `${orderRows.length.toLocaleString('vi-VN')} đơn COMPLETED · ${xeRows.length.toLocaleString('vi-VN')} xe · ${txRows.length.toLocaleString('vi-VN')} tài xế đã ghép để tính báo cáo. (Đã loại bỏ đơn CANCELLED/không hoàn thành khỏi tính toán.)`;
 
   renderTeamTable();
   renderZeroTable();
   renderIncomeTable();
   renderDriverList();
+
+  // 9) Bảng GMV từng tài xế theo từng ngày trong kỳ đang chọn (Tuần/Tháng) — giống pivot table Excel
+  if(currentPeriodType !== 'day'){
+    dailyPivotCache = buildDailyPivot(orderRows, txRows);
+  } else {
+    dailyPivotCache = { dates: [], rows: [] };
+  }
+  renderDriverPivot();
+}
+
+function buildDailyPivot(orderRows, txRows){
+  const gmvMap = new Map(); // sap|date -> gmv
+  const datesSet = new Set();
+  orderRows.forEach(r=>{
+    const d = orderDateStr(r); if(!d) return;
+    datesSet.add(d);
+    const fee = parseFloat(r['Total Fee Display']) || 0;
+    const insurance = String(r['Insurance Provider Code']||'').trim();
+    const gmv = fee - (insurance === '' ? 2000 : 0);
+    const sap = String(r['Sap Profile Id']||'').trim();
+    if(!sap) return;
+    const key = sap+'|'+d;
+    gmvMap.set(key, (gmvMap.get(key)||0)+gmv);
+  });
+  const dates = [...datesSet].sort();
+  const rows = [];
+  txRows.forEach(r=>{
+    const trangThai = String(r['Trạng thái']||'').trim();
+    const trangThaiGan = String(r['Trạng thái gán']||'').trim();
+    if(trangThai !== 'Active' || trangThaiGan !== 'VehicleAssigned') return;
+    const sap = String(r['Mã SAP']||'').trim();
+    const values = {}; let total = 0;
+    dates.forEach(d=>{ const v = gmvMap.get(sap+'|'+d) || 0; values[d]=v; total+=v; });
+    rows.push({
+      sap, hoTen: pick2(r,['Họ & tên']), bienSo: pick2(r,['Biển số']),
+      depot: mapDepot(r['Depot']), doi: r['Đội'], to: r['Tổ'], values, total
+    });
+  });
+  return { dates, rows };
+}
+
+function renderDriverPivot(){
+  const head = document.getElementById('pivotHead');
+  const hint = document.getElementById('pivotHint');
+  const toolbar = document.getElementById('pivotToolbar');
+  const card = document.getElementById('pivotCard');
+  if(!dailyPivotCache.dates.length){
+    head.style.display='none'; hint.style.display='none'; toolbar.style.display='none'; card.style.display='none';
+    return;
+  }
+  head.style.display='flex'; hint.style.display='block'; toolbar.style.display='flex'; card.style.display='block';
+  document.getElementById('pivotPeriodLabel').textContent = currentPeriodType==='week' ? 'Tuần' : 'Tháng';
+  hint.textContent = `Chi tiết GMV từng ngày (${dailyPivotCache.dates[0]} → ${dailyPivotCache.dates[dailyPivotCache.dates.length-1]}) cho từng tài xế Active + đã gán xe trong kỳ đang chọn — giống bảng Pivot Excel.`;
+
+  const thead = document.getElementById('pivotThead');
+  thead.innerHTML = `<tr><th>Mã SAP</th><th>Họ &amp; tên</th><th>Đội</th><th>Tổ</th>`
+    + dailyPivotCache.dates.map(d=>`<th class="num">${d}</th>`).join('')
+    + `<th class="num">Grand Total</th></tr>`;
+
+  const q = document.getElementById('pivotSearch').value.trim().toLowerCase();
+  const desc = document.getElementById('pivot-sort-desc').checked;
+  let list = dailyPivotCache.rows.filter(r=>{
+    if(!q) return true;
+    return [r.hoTen,r.sap,r.doi,r.to,r.bienSo].join(' ').toLowerCase().includes(q);
+  });
+  list = [...list].sort((a,b)=> desc ? b.total-a.total : a.total-b.total);
+
+  const tbody = document.getElementById('pivotTbody');
+  tbody.innerHTML = '';
+  list.forEach(r=>{
+    const cells = dailyPivotCache.dates.map(d=>{
+      const v = r.values[d]||0;
+      return `<td class="num mono" style="color:${v<=0?'#e0553c':'inherit'}">${Math.round(v).toLocaleString('vi-VN')}</td>`;
+    }).join('');
+    const tr = document.createElement('tr');
+    if(r.total<=0) tr.classList.add('row-warn');
+    tr.innerHTML = `<td class="mono">${esc(r.sap)}</td><td>${esc(r.hoTen)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td>${cells}<td class="num mono" style="font-weight:700;">${Math.round(r.total).toLocaleString('vi-VN')}</td>`;
+    tbody.appendChild(tr);
+  });
 }
 
 function renderIncomeTable(){
@@ -1761,7 +2029,7 @@ function handleMinioFile(kind, file){
   const reader = new FileReader();
   reader.onload = async ev=>{
     const data = new Uint8Array(ev.target.result);
-    const wb = XLSX.read(data, {type:'array', dense:true, cellNF:false, cellHTML:false, cellStyles:false});
+    const wb = XLSX.read(data, {type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false});
     const fullRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
     const keepCols = MINIO_KEEP_COLS[kind];
     const rows = fullRows.map(r=>{ const o={}; keepCols.forEach(h=>o[h]=r[h]); return o; });
