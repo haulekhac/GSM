@@ -6,10 +6,11 @@
 <title>GREEN PORTAL — Đối soát Giao ca &amp; GMV</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js';"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js';"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/fflate/0.8.2/fflate.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/fflate@0.8.2/umd/index.min.js';"></script>
 <style>
   :root{
     --teal-1:#0fb8ad; --teal-2:#0a9c92; --teal-dark:#0a2f2c;
@@ -215,6 +216,29 @@
   tr.team-doi td{background:#eafaf6;font-weight:700;color:var(--teal-dark);border-top:1.5px solid var(--teal-1);border-bottom:1.5px solid var(--teal-1);}
   tr.team-depot td{background:var(--teal-dark);color:#fff;font-weight:800;}
   tr.team-spacer td{background:transparent;border:none;height:6px;padding:0;}
+
+  /* ===== Heatmap D/S ===== */
+  .hm-cell{position:relative;min-width:72px;}
+  .hm-bar{position:absolute;left:0;top:0;bottom:0;background:#dfe6e5;z-index:0;border-radius:3px;}
+  body.dark .hm-bar{background:#26332f;}
+  .hm-bar.hm-bar-supply{background:#cdeee7;}
+  body.dark .hm-bar.hm-bar-supply{background:#123c34;}
+  .hm-cell .hm-val{position:relative;z-index:1;font-family:var(--mono);}
+  .hm-cell input{position:relative;z-index:1;width:70px;border:1px solid transparent;background:transparent;padding:4px 6px;border-radius:5px;font-family:var(--mono);font-size:13px;text-align:right;color:var(--ink);}
+  .hm-cell input:hover{border-color:var(--line);}
+  .hm-cell input:focus{outline:none;border-color:var(--teal-2);background:#fff;}
+  .hm-district-input{width:100%;min-width:80px;border:1px solid transparent;background:transparent;padding:5px 6px;border-radius:5px;font-family:var(--sans);font-size:13.5px;font-weight:600;color:var(--ink);text-overflow:ellipsis;}
+  .hm-district-input:hover{border-color:var(--line);}
+  .hm-district-input:focus{outline:none;border-color:var(--teal-2);background:#fff;}
+  tr.hm-pinned{background:var(--gold-bg) !important;}
+  tr.hm-pinned:hover{background:#fbecc4 !important;}
+  .hm-del{color:var(--warn);font-size:15px;cursor:pointer;text-align:center;}
+  .hm-gap-neg{color:var(--warn);font-weight:700;}
+  .hm-gap-pos{color:var(--ok);font-weight:700;}
+  .badge.hm-prio-high{background:var(--warn-bg);color:var(--warn);}
+  .badge.hm-prio-med{background:var(--gold-bg);color:var(--gold);}
+  .badge.hm-prio-low{background:var(--ok-bg);color:var(--ok);}
+  .hm-masked{color:var(--dim);letter-spacing:2px;}
 </style>
 </head>
 <body>
@@ -274,6 +298,14 @@
 
     <div class="side-item nav-item" data-view="minio" data-label="Xe MinioGreen">
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4M7 17v2M17 17v2"/><circle cx="7.5" cy="13" r="1"/><circle cx="16.5" cy="13" r="1"/></svg></span> Xe MinioGreen
+    </div>
+
+    <div class="side-item nav-item" data-view="heatmap" data-label="Heatmap D/S &amp; Điều xe">
+      <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4a2 2 0 1 0-4 0c0 .74.4 1.39 1 1.73V13a1 1 0 0 0 2 0V5.73c.6-.34 1-.99 1-1.73Z"/><path d="M10 20a2 2 0 1 0 4 0"/><path d="M8 16h8"/></svg></span> Heatmap D/S &amp; Điều xe
+    </div>
+
+    <div class="side-item nav-item" data-view="sacxe" data-label="Sạc xe &amp; Đội/Tổ (Vin/NV)">
+      <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 21h-1l1-7H7l6-11h1l-1 7h4l-6 11Z"/></svg></span> Sạc xe &amp; Đội/Tổ (Vin/NV)
     </div>
 
     <div class="side-divider"></div>
@@ -751,6 +783,188 @@
       <footer class="foot" id="minio-foot"></footer>
     </div>
 
+    <!-- ======================================================= -->
+    <!-- VIEW 6: HEATMAP D/S & ĐIỀU XE                             -->
+    <!-- ======================================================= -->
+    <div class="view" id="view-heatmap">
+      <div class="card">
+        <div class="card-head">
+          <h2>Heatmap Demand/Supply theo khu vực</h2>
+          <div style="display:flex;gap:14px;align-items:center;">
+            <span class="refresh" title="Thêm khu vực" onclick="addHeatmapRow()">＋ Thêm khu vực</span>
+            <span class="refresh" title="Làm mới toàn bộ dữ liệu" onclick="resetHeatmapData()" style="color:var(--warn);">⟳ Làm mới dữ liệu</span>
+          </div>
+        </div>
+        <div class="hint" style="margin-bottom:10px;">Tự nhập/sửa Demand &amp; Supply trực tiếp trên bảng. Tích chọn ô ở cuối dòng để ghim khu vực đó lên đầu bảng (theo dõi nhanh khu đang xử lý).</div>
+        <label class="toggle" style="display:inline-flex;"><input type="checkbox" id="hm-hide-numbers" onchange="renderHeatmap()"> Ẩn số liệu (chỉ hiện nhãn ưu tiên &amp; thanh heatmap — dùng khi chụp màn hình thông báo lên group)</label>
+      </div>
+
+      <div class="stats stats-3" id="hm-stats">
+        <div class="stat"><div class="num" id="hm-total-demand">0</div><div class="lbl">Tổng Demand</div></div>
+        <div class="stat ok"><div class="num" id="hm-total-supply">0</div><div class="lbl">Tổng Supply</div></div>
+        <div class="stat warn"><div class="num" id="hm-total-gap">0</div><div class="lbl">Chênh lệch (Supply − Demand)</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>Điều xe giữa các khu vực</h2></div>
+        <div class="filter-grid">
+          <div class="field">
+            <label>Từ khu vực (Supply sẽ giảm)</label>
+            <select id="hm-from" class="fake-select" style="width:100%;border:1px solid var(--line);appearance:none;cursor:pointer;"></select>
+          </div>
+          <div class="field">
+            <label>Đến khu vực (Supply sẽ tăng)</label>
+            <select id="hm-to" class="fake-select" style="width:100%;border:1px solid var(--line);appearance:none;cursor:pointer;"></select>
+          </div>
+          <div class="field">
+            <label>Số lượng xe điều</label>
+            <div class="fake-select" style="padding:0;"><input type="number" id="hm-qty" min="1" value="1" style="width:100%;border:none;background:transparent;padding:10px 12px;font-family:var(--mono);font-size:13px;outline:none;"></div>
+          </div>
+          <div class="field" style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" style="width:100%;" onclick="dispatchHeatmapVehicles()">🚗 Điều xe ngay</button>
+          </div>
+        </div>
+        <div class="hint" id="hm-dispatch-hint" style="margin-top:10px;">Supply khu đi sẽ trừ đúng số xe điều, Supply khu đến sẽ cộng thêm — heatmap cập nhật ngay lập tức.</div>
+      </div>
+
+      <div class="table-card" style="margin-bottom:18px;">
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Khu vực</th><th class="num" style="width:90px;">Demand</th><th class="num" style="width:90px;">Supply</th><th class="num" style="width:80px;">Chênh lệch</th><th style="text-align:center;width:60px;">Ghim</th><th style="width:30px;"></th>
+              </tr>
+            </thead>
+            <tbody id="hm-tbody"></tbody>
+            <tfoot>
+              <tr><td>Totals</td><td class="num" id="hm-foot-demand">0</td><td class="num" id="hm-foot-supply">0</td><td class="num" id="hm-foot-gap">0</td><td></td><td></td></tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="card-head"><h2>Lịch sử điều xe</h2></div>
+      <div class="table-card" style="margin-bottom:18px;">
+        <div class="table-scroll" style="max-height:260px;">
+          <table>
+            <thead><tr><th>Thời gian</th><th>Từ khu vực</th><th>Đến khu vực</th><th class="num">Số xe</th></tr></thead>
+            <tbody id="hm-history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="empty-state hidden" id="hm-history-empty"><div class="glyph2">🚗</div>Chưa có lượt điều xe nào.</div>
+
+      <footer class="foot" id="hm-foot"></footer>
+    </div>
+
+    <!-- ======================================================= -->
+    <!-- VIEW 7: SẠC XE (theo Vin xe) & ĐỘI/TỔ (theo Mã NV đào tạo) -->
+    <!-- ======================================================= -->
+    <div class="view" id="view-sacxe">
+      <div class="card">
+        <div class="subtabs">
+          <button class="subtab-btn active" data-sub="sxSac">01 · Sạc xe theo VIN</button>
+          <button class="subtab-btn" data-sub="sxDoiTo">02 · Xe theo Đội/Tổ (đào tạo)</button>
+        </div>
+
+        <!-- --- SUB: SẠC XE --- -->
+        <div class="subpanel active" id="sub-sxSac">
+          <div class="hint" style="margin-bottom:12px;">
+            Đối chiếu <b>Vin xe</b> trong file Sạc xe với <b>Số khung</b> trong file Xe (import ở mục "Báo cáo GMV") — chỉ giữ lại các phiên sạc thuộc xe của đội mình, loại bỏ phiên sạc của xe đội/khách hàng khác lẫn trong dữ liệu chung.
+          </div>
+          <div class="action-row" style="margin-top:0;">
+            <button class="btn btn-primary" onclick="processSacXe()">⟳ Đối chiếu Sạc xe</button>
+            <button class="btn btn-ghost" onclick="exportSacXe()" id="btn-export-sac" disabled>⬇ Tải kết quả (.xlsx)</button>
+            <span class="hint" id="sac-hint">chưa xử lý</span>
+          </div>
+        </div>
+
+        <!-- --- SUB: ĐỘI/TỔ --- -->
+        <div class="subpanel" id="sub-sxDoiTo">
+          <div class="hint" style="margin-bottom:12px;">
+            Ghép <b>Tài xế</b> trong file Xe (lấy Mã NV trong ngoặc, ví dụ "Nguyễn Văn A (6121602)") với <b>Mã NV</b> trong file Đội/Tổ (Đào tạo) để suy ra xe đó đang thuộc Đội xe nào theo danh sách đào tạo, so sánh với Đội/Tổ đang gán trong file Xe.
+          </div>
+          <div class="action-row" style="margin-top:0;">
+            <button class="btn btn-primary" onclick="processDoiToDaoTao()">⟳ Đối chiếu Đội/Tổ</button>
+            <button class="btn btn-ghost" onclick="exportDoiToDaoTao()" id="btn-export-doito" disabled>⬇ Tải kết quả (.xlsx)</button>
+            <span class="hint" id="doito-hint">chưa xử lý</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==== KẾT QUẢ: SẠC XE ==== -->
+      <div id="sac-results" style="display:none">
+        <div class="stats stats-3">
+          <div class="stat"><div class="num" id="sac-sessions">0</div><div class="lbl">Phiên sạc khớp VIN đội mình</div></div>
+          <div class="stat ok"><div class="num" id="sac-kwh">0</div><div class="lbl">Tổng số KW sạc</div></div>
+          <div class="stat warn"><div class="num" id="sac-tien">0</div><div class="lbl">Tổng tiền sau KM (VND)</div></div>
+        </div>
+        <div class="notice" id="sac-unmatched-note"></div>
+        <div class="toolbar2">
+          <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="sac-search" placeholder="Tìm theo biển số, số khung, đội, tổ, trạm sạc…" oninput="renderSacXeTable()"></div></div>
+        </div>
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Số khung</th><th>Biển số</th><th>Đội</th><th>Tổ</th><th>Depot</th><th>Tên trạm</th>
+                  <th>Bắt đầu sạc</th><th>Kết thúc sạc</th><th class="num">Số KW</th><th class="num">Tổng tiền sau KM</th><th>Trạng thái TT</th>
+                </tr>
+              </thead>
+              <tbody id="sac-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-head"><h2>Tổng hợp theo xe</h2></div>
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="table-scroll">
+            <table>
+              <thead><tr><th>Biển số</th><th>Đội</th><th>Tổ</th><th class="num">Số phiên sạc</th><th class="num">Tổng KW</th><th class="num">Tổng tiền sau KM</th></tr></thead>
+              <tbody id="sac-vehicle-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" id="sac-empty">
+        <div class="glyph2">⚡</div>
+        Import đủ file <b>Xe</b> (mục Báo cáo GMV) và <b>Sạc xe</b> rồi bấm <b>Đối chiếu Sạc xe</b>.
+      </div>
+
+      <!-- ==== KẾT QUẢ: ĐỘI/TỔ ==== -->
+      <div id="doito-results" style="display:none">
+        <div class="stats stats-3">
+          <div class="stat"><div class="num" id="doito-total">0</div><div class="lbl">Xe có tài xế</div></div>
+          <div class="stat ok"><div class="num" id="doito-matched">0</div><div class="lbl">Khớp được Đội xe (đào tạo)</div></div>
+          <div class="stat warn"><div class="num" id="doito-unmatched">0</div><div class="lbl">Không khớp (Mã NV lạ)</div></div>
+        </div>
+        <div class="toolbar2">
+          <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="doito-search" placeholder="Tìm theo biển số, số khung, tài xế, mã NV, đội, tổ…" oninput="renderDoiToTable()"></div></div>
+          <label class="toggle"><input type="checkbox" id="doito-only-mismatch" onchange="renderDoiToTable()"> Chỉ hiện lệch Đội/Tổ hoặc không khớp</label>
+        </div>
+        <div class="table-card" style="margin-bottom:20px;">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Số khung</th><th>Biển số</th><th>Dòng xe</th><th>Depot</th><th>Đội (file Xe)</th><th>Tổ (file Xe)</th>
+                  <th>Tài xế</th><th>Mã NV</th><th class="derived">Đội xe (Đào tạo)</th><th class="derived">Khớp?</th>
+                </tr>
+              </thead>
+              <tbody id="doito-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="empty-state" id="doito-empty">
+        <div class="glyph2">👥</div>
+        Import đủ file <b>Xe</b> (mục Báo cáo GMV) và <b>Đội/Tổ (Đào tạo)</b> rồi bấm <b>Đối chiếu Đội/Tổ</b>.
+      </div>
+
+      <footer class="foot" id="sacxe-foot"></footer>
+    </div>
+
   </div>
 </div>
 
@@ -793,12 +1007,14 @@ document.querySelectorAll('.nav-item').forEach(item=>{
     document.getElementById('topSub').textContent = item.dataset.label.toUpperCase();
     if(item.dataset.view === 'gmv') renderReport();
     if(item.dataset.view === 'drivers') renderDriverList();
+    if(item.dataset.view === 'heatmap') initHeatmapView();
   });
 });
 document.querySelectorAll('.subtab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.subtab-btn').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.subpanel').forEach(p=>p.classList.remove('active'));
+    const scope = btn.closest('.card') || document;
+    scope.querySelectorAll('.subtab-btn').forEach(b=>b.classList.remove('active'));
+    scope.querySelectorAll('.subpanel').forEach(p=>p.classList.remove('active'));
     btn.classList.add('active');
     document.getElementById('sub-'+btn.dataset.sub).classList.add('active');
     if(btn.dataset.sub === 'report') renderReport();
@@ -858,7 +1074,7 @@ function checkReady(){
 function sheetToRows(wb, preferSheetNames){
   let sheetName = wb.SheetNames[0];
   for(const n of preferSheetNames){ if(wb.SheetNames.includes(n)){ sheetName = n; break; } }
-  return XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {defval:''});
+  return sheetToRowsAuto(wb.Sheets[sheetName]);
 }
 function extractMaNV(taiXeStr){
   const m = String(taiXeStr).match(/\(([^()]+)\)\s*$/);
@@ -1174,6 +1390,10 @@ const IMPORT_TYPES = [
     requiredHeaders:['Mã tài xế','Tên tài xế','Biển kiểm soát','Model','Dòng xe','Ngày phân công','Tổng thời gian online','Doanh số','Tổng giá trị cuốc xe','Thời gian vận doanh','Tỷ lệ nhận chuyến','Tỷ lệ hoàn thành','Số cuốc xe hoàn thành'] },
   { key:'Order', sheetName:'Tải File', label:'Import Order', sub:'',
     requiredHeaders:['Status','Service Name','Distance','Total Fee Display','Total Pay Display','Sap Profile Id','Driver Vehicle Plate','Completed Time','Order ID','Order Time','Insurance Provider Code'] },
+  { key:'SacXe', sheetName:'Tải File', label:'Import Dữ liệu Sạc xe', sub:'Chức năng này đang phát triển...',
+    requiredHeaders:['Mã','Ngày tạo','Thanh toán trước ngày','Mã giao dịch sạc','Mã trạm','Tên trạm','Thời gian bắt đầu sạc','Thời gian kết thúc sạc','Profit Center','Vendor Code','Khách Hàng','Email','Số Điện Thoại','Địa Chỉ','Loại','Vin xe','VF Account','Mã KH SAP','Mã KH B2B','Mã KH SAP B2B','Số hóa đơn','Số KW sạc','Idle Time','Mã SR thanh toán','Tên SR thanh toán','Phương thức thanh toán','Mã thanh toán','Thời gian thanh toán','Tổng Tiền (VND)','VAT','VAT Amount (VND)','Số Tiền Được KM (VND)','Số Tiền Sau KM (VND)','Trạng thái thanh toán','Sub Type','SapDocument','Kỳ cước','VG - VF','Ngày hóa đơn','Ngày phát hành'] },
+  { key:'DaoTao', sheetName:'Tải File', label:'Import Đội/Tổ (Đào tạo)', sub:'Danh sách đào tạo',
+    requiredHeaders:['STT','Miền','Depot','Đội xe','Mã NV','Họ tên','Chức danh','QLTT','GĐ Depot','Chủ đề đào tạo','Cơ sở đề xuất','Ngày đào tạo','Thời gian','Ghi chú'] },
 ];
 const SAP_DEPOT = { '1100':'HCM03','1101':'HCM02','1160':'HCM06','1175':'HCM07','BTA':'HCM01','CTP':'HCM02','GRP':'HCM03','Q12':'HCM06','Q07':'HCM07','1102':'BDU','1103':'BAR','1104':'DON','1105':'TNI','1106':'TGI','2008':'LAN','2009':'CTH','3001':'PQU','BIP':'BIP','BTR':'BTR','TVH':'TVH' };
 const DEPOT_NAMES = { HCM01:'Depot Bình Tân', HCM02:'Depot Central Park', HCM03:'Depot Homyland', HCM06:'Depot Q12', HCM07:'Depot Q7' };
@@ -1235,7 +1455,7 @@ async function loadType(key){
   }catch(e){ return { rows: [], log: { count:'Data Emty', time:null, file:'' } }; }
 }
 
-function readFileAsRows(file){
+function readFileAsRows(file, onProgress){
   const isCsv = /\.csv$/i.test(file.name);
   // CSV: đọc theo luồng (streaming) bằng PapaParse — không cần cấp phát 1 khối bộ nhớ lớn cho cả file,
   // nên nhẹ hơn nhiều so với .xlsx khi file lớn (nhiều tuần/tháng dữ liệu).
@@ -1253,19 +1473,302 @@ function readFileAsRows(file){
       });
     });
   }
+  // File .xlsx lớn (>20MB): đi thẳng vào đường đọc streaming (không cần 1 khối buffer khổng lồ),
+  // chấp nhận chậm hơn nhưng không bị giới hạn dung lượng như cách đọc thường (SheetJS + FileReader).
+  const isXlsxLike = /\.(xlsx|xls)$/i.test(file.name);
+  if(isXlsxLike && file.size > 20*1024*1024 && window.fflate){
+    return readXlsxStreaming(file, onProgress).catch(err=>{
+      // Nếu đọc streaming lỗi vì lý do khác (không phải hết bộ nhớ) — vẫn thử lại cách đọc thường 1 lần
+      return readFileAsRowsNormal(file);
+    });
+  }
+  return readFileAsRowsNormal(file).catch(err=>{
+    if(isXlsxLike && isOutOfMemoryError(err) && window.fflate){
+      // Cách đọc thường hết bộ nhớ — tự động chuyển sang đọc streaming, chậm hơn nhưng không cần buffer lớn
+      return readXlsxStreaming(file, onProgress);
+    }
+    throw err;
+  });
+}
+function readFileAsRowsNormal(file){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onload = (e)=>{
       try{
         const data = new Uint8Array(e.target.result);
         const wb = XLSX.read(data, { type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false });
-        resolve(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval:'', raw:false }));
+        resolve(pickBestSheetRows(wb));
       }catch(err){ reject(err); }
     };
     reader.onerror = ()=> reject(new Error('Trình duyệt không đọc được file (file lỗi hoặc không đủ quyền truy cập).'));
     try{
       reader.readAsArrayBuffer(file);
     }catch(err){ reject(err); }
+  });
+}
+/* ---- Tự động dò dòng tiêu đề (header) trong mỗi sheet ----
+   Nhiều file export (báo cáo V-Green, danh sách đào tạo…) có 1-2 dòng tiêu đề lớn/ghi chú
+   phía trên dòng chứa tên cột thật sự, nên KHÔNG thể luôn giả định dòng 1 là header.
+   Cách làm: đọc sheet dạng mảng thô (header:1), quét tối đa 20 dòng đầu, chọn dòng có
+   nhiều ô chữ (không phải số/rỗng) nhất làm dòng tiêu đề — đó thường chính là dòng header.
+   Tên cột cũng được .trim() để tránh lệch do khoảng trắng thừa trong file gốc (vd "Ngày đào tạo "). */
+function findHeaderRowIndex(aoa, maxScan){
+  maxScan = Math.min(aoa.length, maxScan || 20);
+  let bestIdx = 0, bestScore = -1;
+  for(let i=0;i<maxScan;i++){
+    const row = aoa[i] || [];
+    let score = 0;
+    row.forEach(c=>{
+      const s = String(c==null?'':c).trim();
+      if(!s) return;
+      // Ô header thường là chữ (không phải số thuần, không phải ngày dạng số serial)
+      if(isNaN(Number(s.replace(',','.')))) score++;
+      else score += 0.15; // vẫn cộng điểm nhẹ để không loại các cột toàn số như "STT"
+    });
+    if(score > bestScore){ bestScore = score; bestIdx = i; }
+  }
+  return bestIdx;
+}
+function aoaToObjects(aoa, headerIdx){
+  const headerRow = (aoa[headerIdx]||[]).map(h=>String(h==null?'':h).trim());
+  const rowsOut = [];
+  for(let i=headerIdx+1;i<aoa.length;i++){
+    const r = aoa[i];
+    if(!r) continue;
+    let allEmpty = true;
+    const obj = {};
+    for(let c=0;c<headerRow.length;c++){
+      const key = headerRow[c];
+      if(!key) continue;
+      const val = (r[c]!==undefined && r[c]!==null) ? r[c] : '';
+      if(String(val).trim() !== '') allEmpty = false;
+      obj[key] = val;
+    }
+    if(!allEmpty) rowsOut.push(obj);
+  }
+  return rowsOut;
+}
+function sheetToRowsAuto(ws){
+  if(!ws) return [];
+  const aoa = XLSX.utils.sheet_to_json(ws, { header:1, defval:'', raw:false });
+  if(!aoa.length) return [];
+  const headerIdx = findHeaderRowIndex(aoa, 20);
+  return aoaToObjects(aoa, headerIdx);
+}
+// Không giả định luôn là sheet đầu tiên — nhiều file export có sheet bìa/ghi chú trước sheet dữ liệu thật.
+// Ưu tiên các tên sheet phổ biến, nếu không có thì chọn sheet nào có nhiều dòng dữ liệu nhất.
+// Với mỗi sheet, dòng tiêu đề cũng được tự động dò (xem sheetToRowsAuto) thay vì luôn lấy dòng 1.
+function pickBestSheetRows(wb){
+  const preferred = ['Result','Sheet1','Data','Order','Tải File'];
+  for(const name of preferred){
+    if(wb.SheetNames.includes(name)){
+      const rows = sheetToRowsAuto(wb.Sheets[name]);
+      if(rows.length) return rows;
+    }
+  }
+  let best = [];
+  for(const name of wb.SheetNames){
+    const rows = sheetToRowsAuto(wb.Sheets[name]);
+    if(rows.length > best.length) best = rows;
+  }
+  return best;
+}
+
+/* ---- Đọc .xlsx theo luồng thật sự (không cần 1 buffer lớn cho cả file) ----
+   Dùng fflate để giải nén ZIP theo từng mẩu nhỏ ngay khi dữ liệu tới (không đợi tải hết file),
+   và parse XML của sheet theo từng dòng <row> ngay khi đủ dữ liệu, giải phóng phần đã xử lý.
+   Xử lý được cả 2 kiểu ô: chuỗi ghi trực tiếp (inlineStr) và chuỗi dùng chung (sharedStrings.xml),
+   dù 2 phần này xuất hiện trước/sau nhau trong file (dùng placeholder rồi thay thế ở bước cuối).
+   Cũng tự động dò dòng tiêu đề trong vài chục dòng đầu (giống sheetToRowsAuto ở trên) thay vì
+   luôn coi dòng đầu tiên là header — tránh lỗi khi file có dòng tiêu đề lớn/ghi chú phía trên. */
+function xlsxColToIdx(col){
+  let idx = 0;
+  for(let i=0;i<col.length;i++){ idx = idx*26 + (col.charCodeAt(i) - 64); }
+  return idx - 1;
+}
+function xmlUnescape(s){
+  if(s==null) return '';
+  return s.replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&apos;/g,"'").replace(/&amp;/g,'&');
+}
+function headerRowScore(arr){
+  let score = 0;
+  arr.forEach(c=>{
+    const s = String(c==null?'':c).trim();
+    if(!s) return;
+    if(isNaN(Number(s.replace(',','.')))) score++;
+    else score += 0.15;
+  });
+  return score;
+}
+function readXlsxStreaming(file, onProgress){
+  return new Promise((resolve, reject)=>{
+    if(!window.fflate){ reject(new Error('Thiếu thư viện đọc file streaming (fflate).')); return; }
+    const SI_PREFIX = '\u0001SI\u0001';
+    const HEADER_SCAN_LIMIT = 20;
+    let sharedStrings = null;
+    let sharedStringsChunks = [];
+    let sheetBuf = '';
+    let header = null;         // mảng tên cột (đã .trim()) — chỉ được gán SAU khi dò xong dòng header
+    let rows = [];             // KẾT QUẢ CUỐI — chỉ 1 cấu trúc dữ liệu duy nhất, không nhân đôi bộ nhớ
+    let pendingSiRows = null;  // chỉ giữ THAM CHIẾU tới các dòng có ô cần tra sharedStrings (không copy dữ liệu)
+    let rowsSeen = 0;
+    let sheetDone=false, sharedStringsDone=false, sheetFound=false, sharedStringsFound=false, settled=false;
+
+    // Bộ đệm các dòng thô đầu tiên (tối đa HEADER_SCAN_LIMIT dòng) để dò header trước khi biết chắc header là dòng nào
+    let rawBuffer = []; // { arr, hasSi }
+    let headerIdx = null;
+
+    const rowRe = /<row[^>]*>([\s\S]*?)<\/row>/g;
+    const cellRe = /<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>(?:<is>([\s\S]*?)<\/is>|<v>([\s\S]*?)<\/v>)?<\/c>)/g;
+    const isTextRe = /<t[^>]*>([\s\S]*?)<\/t>/g;
+
+    function parseRowXml(rowXml){
+      const cells = {};
+      let maxcol = -1;
+      let hasSi = false;
+      cellRe.lastIndex = 0;
+      let m;
+      while((m = cellRe.exec(rowXml))){
+        const idx = xlsxColToIdx(m[1]);
+        if(idx > maxcol) maxcol = idx;
+        const attrs = m[2] || '';
+        const tMatch = attrs.match(/\bt="([a-zA-Z]+)"/);
+        const type = tMatch ? tMatch[1] : null;
+        let val = '';
+        if(m[3] !== undefined){
+          let txt = ''; let tm; isTextRe.lastIndex = 0;
+          while((tm = isTextRe.exec(m[3]))){ txt += tm[1]; }
+          val = xmlUnescape(txt);
+        } else if(m[4] !== undefined){
+          if(type === 's'){ val = SI_PREFIX + m[4].trim(); hasSi = true; }
+          else { val = xmlUnescape(m[4]); }
+        }
+        cells[idx] = val;
+      }
+      const arr = [];
+      for(let i=0;i<=maxcol;i++) arr.push(cells[i] !== undefined ? cells[i] : '');
+      return { arr, hasSi };
+    }
+
+    function emitDataRow(arr, hasSi){
+      const obj = {};
+      for(let i=0;i<header.length;i++){ obj[header[i]] = arr[i] !== undefined ? arr[i] : ''; }
+      rows.push(obj);
+      if(hasSi){
+        if(!pendingSiRows) pendingSiRows = [];
+        pendingSiRows.push(obj);
+      }
+    }
+
+    function decideHeaderAndFlush(){
+      // Chọn dòng có điểm (số ô chữ không rỗng) cao nhất trong bộ đệm làm header
+      let bestIdx = 0, bestScore = -1;
+      rawBuffer.forEach((row, i)=>{
+        const score = headerRowScore(row.arr);
+        if(score > bestScore){ bestScore = score; bestIdx = i; }
+      });
+      headerIdx = bestIdx;
+      header = rawBuffer[headerIdx].arr.map(h=>String(h==null?'':h).trim());
+      for(let i=headerIdx+1;i<rawBuffer.length;i++){
+        emitDataRow(rawBuffer[i].arr, rawBuffer[i].hasSi);
+      }
+      rawBuffer = [];
+    }
+
+    function processSheetChunk(text){
+      sheetBuf += text;
+      rowRe.lastIndex = 0;
+      let lastIndex = 0, m;
+      while((m = rowRe.exec(sheetBuf))){
+        const { arr, hasSi } = parseRowXml(m[1]);
+        lastIndex = rowRe.lastIndex;
+        rowsSeen++;
+        if(header === null){
+          rawBuffer.push({ arr, hasSi });
+          if(rawBuffer.length >= HEADER_SCAN_LIMIT){ decideHeaderAndFlush(); }
+        } else {
+          emitDataRow(arr, hasSi);
+        }
+        if(onProgress && (rowsSeen % 5000 === 0)) onProgress(rowsSeen);
+      }
+      if(lastIndex > 0) sheetBuf = sheetBuf.slice(lastIndex);
+    }
+
+    function finalize(){
+      if(settled) return;
+      if(!sheetDone || !sharedStringsDone) return;
+      settled = true;
+      try{
+        // File nhỏ hơn HEADER_SCAN_LIMIT dòng: dòng header vẫn còn nằm trong bộ đệm chưa được xử lý
+        if(header === null && rawBuffer.length){ decideHeaderAndFlush(); }
+        // Chỉ cần sửa TRỰC TIẾP các object đã có sẵn trong `rows` — không tạo mảng kết quả mới
+        if(pendingSiRows && pendingSiRows.length){
+          for(const obj of pendingSiRows){
+            for(const key in obj){
+              const v = obj[key];
+              if(typeof v === 'string' && v.indexOf(SI_PREFIX) === 0){
+                const si = parseInt(v.slice(SI_PREFIX.length), 10);
+                obj[key] = (sharedStrings && sharedStrings[si] !== undefined) ? sharedStrings[si] : '';
+              }
+            }
+          }
+        }
+        pendingSiRows = null;
+        resolve(rows);
+      }catch(err){ reject(err); }
+    }
+
+    const unzipper = new fflate.Unzip();
+    unzipper.register(fflate.UnzipInflate);
+    const decoder = new TextDecoder('utf-8');
+
+    unzipper.onfile = (f)=>{
+      if(!sharedStringsFound && f.name === 'xl/sharedStrings.xml'){
+        sharedStringsFound = true;
+        f.ondata = (err, chunk, final)=>{
+          if(err){ reject(err); return; }
+          sharedStringsChunks.push(decoder.decode(chunk, {stream: !final}));
+          if(final){
+            const text = sharedStringsChunks.join('');
+            sharedStringsChunks = null;
+            const siList = text.match(/<si[ >][\s\S]*?<\/si>/g) || [];
+            sharedStrings = siList.map(si=>{
+              let txt = ''; let tm; isTextRe.lastIndex = 0;
+              while((tm = isTextRe.exec(si))){ txt += tm[1]; }
+              return xmlUnescape(txt);
+            });
+            sharedStringsDone = true;
+            finalize();
+          }
+        };
+        f.start();
+      } else if(!sheetFound && /^xl\/worksheets\/sheet\d*\.xml$/i.test(f.name)){
+        sheetFound = true;
+        f.ondata = (err, chunk, final)=>{
+          if(err){ reject(err); return; }
+          processSheetChunk(decoder.decode(chunk, {stream: !final}));
+          if(final){ sheetDone = true; finalize(); }
+        };
+        f.start();
+      }
+    };
+
+    if(!file.stream){ reject(new Error('Trình duyệt không hỗ trợ đọc file theo luồng (file.stream).')); return; }
+    const streamReader = file.stream().getReader();
+    function pump(){
+      streamReader.read().then(({done, value})=>{
+        if(done){
+          unzipper.push(new Uint8Array(0), true);
+          // Nếu file không có sharedStrings.xml (nhiều file chỉ dùng inlineStr) thì coi như đã xong luôn
+          if(!sharedStringsFound){ sharedStringsDone = true; finalize(); }
+          if(!sheetFound){ sheetDone = true; finalize(); }
+          return;
+        }
+        try{ unzipper.push(value, false); }catch(err){ reject(err); return; }
+        pump();
+      }).catch(reject);
+    }
+    pump();
   });
 }
 function isOutOfMemoryError(err){
@@ -1285,24 +1788,39 @@ function startImport(key){ pendingImportKey = key; document.getElementById('file
 
 async function doImport(key, file){
   const cfg = IMPORT_TYPES.find(t=>t.key===key);
-  const bigFileWarning = file.size > 15*1024*1024 ? ' — file lớn, có thể mất 30-90 giây, đừng tắt trang…' : '';
+  const bigFileWarning = file.size > 15*1024*1024 ? ' — file lớn, sẽ đọc theo luồng nên có thể mất vài phút, cứ để yên đừng tắt trang…' : '';
   setStatus(`Đang đọc file "${file.name}" (${(file.size/1024/1024).toFixed(1)}MB)${bigFileWarning}`);
   await new Promise(r=>setTimeout(r,20));
   let json;
-  try{ json = await readFileAsRows(file); } catch(err){
+  try{
+    json = await readFileAsRows(file, (n)=>{ setStatus(`Đang đọc file "${file.name}" theo luồng — đã xử lý ~${n.toLocaleString('vi-VN')} dòng…`); });
+  } catch(err){
     if(isOutOfMemoryError(err)){
       const isXlsx = !/\.csv$/i.test(file.name);
-      const suggestCsv = isXlsx ? ' Cách nhanh nhất: mở file này bằng Excel/Google Sheets rồi "Lưu dưới dạng" .csv, sau đó import lại file .csv (đọc nhẹ hơn .xlsx rất nhiều vì được đọc theo luồng).' : '';
-      setStatus(`File quá lớn (${(file.size/1024/1024).toFixed(1)}MB), trình duyệt không đủ bộ nhớ để đọc.${suggestCsv} Ngoài ra có thể: chia nhỏ file theo từng tuần thay vì cả tháng, dùng Chrome trên máy tính và đóng bớt các tab/ứng dụng khác, hoặc khởi động lại trình duyệt để giải phóng bộ nhớ rồi thử lại.`, true);
+      const suggestCsv = isXlsx ? ' Cách nhanh nhất: mở file này bằng Excel/Google Sheets rồi "Lưu dưới dạng" .csv, sau đó import lại file .csv.' : '';
+      setStatus(`File quá lớn (${(file.size/1024/1024).toFixed(1)}MB), trình duyệt không đủ bộ nhớ để đọc — kể cả với cách đọc theo luồng.${suggestCsv} Ngoài ra có thể: dùng Chrome trên máy tính và đóng bớt các tab/ứng dụng khác, hoặc khởi động lại trình duyệt để giải phóng bộ nhớ rồi thử lại.`, true);
     } else {
       setStatus(`Lỗi đọc file: ${err.message || err}`, true);
     }
     return;
   }
-  if(!json.length){ setStatus('File không có dữ liệu.', true); return; }
+  if(!json.length){ setStatus('Không tìm thấy dòng dữ liệu nào trong file (đã kiểm tra tất cả các sheet, tự động dò dòng tiêu đề). Kiểm tra lại: file có đúng định dạng bảng không, có bị để trống/ẩn sheet dữ liệu không.', true); return; }
   const fileHeaders = Object.keys(json[0]);
   const missing = cfg.requiredHeaders.filter(h => !fileHeaders.includes(h));
   if(missing.length){ setStatus(`Không tìm thấy các cột bắt buộc trong file: ${missing.join(', ')}`, true); return; }
+
+  // Cảnh báo sớm nếu file Order thiếu hẳn dữ liệu tiền (Total Fee Display trống) — tránh GMV tính ra âm mà không rõ vì sao
+  if(key === 'Order'){
+    const completedRows = json.filter(r => String(r['Status']||'').trim().toUpperCase() === 'COMPLETED');
+    if(completedRows.length){
+      const blankFee = completedRows.filter(r => String(r['Total Fee Display']||'').trim() === '').length;
+      const blankRatio = blankFee / completedRows.length;
+      if(blankRatio > 0.5){
+        const proceed = confirm(`Cảnh báo: ${blankFee.toLocaleString('vi-VN')}/${completedRows.length.toLocaleString('vi-VN')} đơn COMPLETED trong file này KHÔNG có giá trị "Total Fee Display" (bỏ trống). Nếu import, GMV tính ra sẽ sai (có thể ra số âm do vẫn trừ phí bảo hiểm). Rất có thể file xuất từ hệ thống nguồn bị thiếu cột tiền — nên kiểm tra lại report gốc trước khi import.\n\nVẫn muốn import file này?`);
+        if(!proceed){ setStatus('Đã huỷ import — file thiếu dữ liệu Total Fee Display cho phần lớn đơn COMPLETED.', true); return; }
+      }
+    }
+  }
 
   // Lấy index dedup (chỉ các chuỗi khoá, nhẹ hơn nhiều so với nạp toàn bộ dữ liệu lịch sử)
   let dedupR = await storageGet('dedupkeys:'+key);
@@ -1448,6 +1966,23 @@ async function renderReport(){
 function fmtVND(n){ return Math.round(n).toLocaleString('vi-VN')+' đ'; }
 function fmtTy(n){ return (n/1e9).toLocaleString('vi-VN',{minimumFractionDigits:2,maximumFractionDigits:2})+' tỷ'; }
 function drawCharts(depotList, totalBD){
+  if(typeof Chart === 'undefined'){
+    console.warn('Chart.js chưa tải được (có thể mạng chặn CDN) — bỏ qua vẽ biểu đồ, các bảng số liệu vẫn hiển thị bình thường.');
+    const dc = document.getElementById('depotChart'), sc = document.getElementById('serviceChart');
+    [dc, sc].forEach(cv=>{
+      if(!cv) return;
+      const box = cv.closest('.chart-box');
+      if(box && !box.querySelector('.chart-fallback-note')){
+        const note = document.createElement('div');
+        note.className = 'chart-fallback-note hint';
+        note.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 20px;';
+        note.textContent = 'Không tải được thư viện vẽ biểu đồ (mạng có thể đang chặn CDN) — số liệu chi tiết vẫn xem được ở bảng bên dưới.';
+        box.style.position = 'relative';
+        box.appendChild(note);
+      }
+    });
+    return;
+  }
   Chart.defaults.font.family = "'IBM Plex Mono', monospace";
   Chart.defaults.color = '#7c8b8a';
   if(depotChartInst) depotChartInst.destroy();
@@ -2030,7 +2565,7 @@ function handleMinioFile(kind, file){
   reader.onload = async ev=>{
     const data = new Uint8Array(ev.target.result);
     const wb = XLSX.read(data, {type:'array', dense:false, cellNF:false, cellHTML:false, cellStyles:false});
-    const fullRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], {defval:''});
+    const fullRows = sheetToRowsAuto(wb.Sheets[wb.SheetNames[0]]);
     const keepCols = MINIO_KEEP_COLS[kind];
     const rows = fullRows.map(r=>{ const o={}; keepCols.forEach(h=>o[h]=r[h]); return o; });
     minioFiles[kind] = rows;
@@ -2303,7 +2838,418 @@ async function exportMinio(){
   downloadBlob(buf, `bao_cao_miniogreen_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
-/* ===================== INIT ===================== */
+/* =========================================================================
+   MODULE 6: HEATMAP D/S & ĐIỀU XE (lưu bằng IndexedDB — bảng Demand/Supply theo khu vực,
+   tích chọn để ghim khu vực lên đầu, và mô phỏng điều xe giữa 2 khu vực)
+========================================================================= */
+let heatmapRows = [];
+let heatmapHistory = [];
+let heatmapLoaded = false;
+
+const HEATMAP_SEED = [
+  { district:'Thành phố Dĩ An', demand:151, supply:154 },
+  { district:'Thành phố Thủ Dầu Một', demand:119, supply:196 },
+  { district:'Thành phố Thuận An', demand:112, supply:192 },
+  { district:'Huyện Bắc Tân Uyên', demand:66, supply:77 },
+  { district:'Thị xã Bến Cát', demand:64, supply:144 },
+  { district:'Huyện Bàu Bàng', demand:30, supply:57 },
+  { district:'Huyện Phú Giáo', demand:7, supply:14 },
+  { district:'Huyện Dầu Tiếng', demand:5, supply:29 },
+  { district:'Thành phố Tân Uyên', demand:3, supply:30 },
+];
+
+function hmGenId(){ return 'hm'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+
+async function loadHeatmapData(){
+  try{
+    const rowsR = await storageGet('heatmap:rows');
+    if(rowsR && rowsR.value){
+      heatmapRows = JSON.parse(rowsR.value);
+    } else {
+      heatmapRows = HEATMAP_SEED.map(r=>({ id: hmGenId(), district: r.district, demand: r.demand, supply: r.supply, checked:false }));
+      await storageSet('heatmap:rows', JSON.stringify(heatmapRows));
+    }
+    const histR = await storageGet('heatmap:history');
+    heatmapHistory = (histR && histR.value) ? JSON.parse(histR.value) : [];
+  }catch(e){
+    heatmapRows = HEATMAP_SEED.map(r=>({ id: hmGenId(), district: r.district, demand: r.demand, supply: r.supply, checked:false }));
+    heatmapHistory = [];
+  }
+  heatmapLoaded = true;
+}
+async function saveHeatmapRows(){ try{ await storageSet('heatmap:rows', JSON.stringify(heatmapRows)); }catch(e){} }
+async function saveHeatmapHistory(){ try{ await storageSet('heatmap:history', JSON.stringify(heatmapHistory)); }catch(e){} }
+
+async function initHeatmapView(){
+  if(!heatmapLoaded) await loadHeatmapData();
+  renderHeatmap();
+  renderHeatmapHistory();
+}
+
+function addHeatmapRow(){
+  heatmapRows.push({ id: hmGenId(), district: '', demand: 0, supply: 0, checked:false });
+  saveHeatmapRows();
+  renderHeatmap();
+  const inputs = document.querySelectorAll('.hm-district-input');
+  if(inputs.length) inputs[inputs.length-1].focus();
+}
+function deleteHeatmapRow(id){
+  heatmapRows = heatmapRows.filter(r=>r.id!==id);
+  saveHeatmapRows();
+  renderHeatmap();
+}
+function toggleHeatmapPin(id){
+  const r = heatmapRows.find(r=>r.id===id);
+  if(r) r.checked = !r.checked;
+  saveHeatmapRows();
+  renderHeatmap();
+}
+function updateHeatmapField(id, field, value){
+  const r = heatmapRows.find(r=>r.id===id);
+  if(!r) return;
+  if(field==='district'){ r.district = value; }
+  else { r[field] = Math.max(0, Math.round(parseFloat(value)||0)); }
+  saveHeatmapRows();
+  renderHeatmap();
+}
+
+function heatmapPriority(demand, supply){
+  // Ưu tiên dựa trên tỉ lệ Supply/Demand: càng thiếu xe so với nhu cầu thì càng ưu tiên cao
+  if(demand <= 0) return { label:'Ổn định', cls:'hm-prio-low' };
+  const ratio = supply / demand;
+  if(ratio < 1) return { label:'Ưu tiên cao', cls:'hm-prio-high' };
+  if(ratio < 1.3) return { label:'Ưu tiên trung bình', cls:'hm-prio-med' };
+  return { label:'Ổn định', cls:'hm-prio-low' };
+}
+function renderHeatmap(){
+  const hideNumbers = document.getElementById('hm-hide-numbers').checked;
+  // Ghim (tích chọn) lên đầu bảng — trong nhóm ghim và nhóm còn lại đều giữ thứ tự đã nhập
+  const pinned = heatmapRows.filter(r=>r.checked);
+  const rest = heatmapRows.filter(r=>!r.checked);
+  const ordered = pinned.concat(rest);
+
+  const maxDemand = Math.max(1, ...heatmapRows.map(r=>r.demand||0));
+  const maxSupply = Math.max(1, ...heatmapRows.map(r=>r.supply||0));
+
+  const tbody = document.getElementById('hm-tbody');
+  tbody.innerHTML = '';
+  ordered.forEach(r=>{
+    const demand = r.demand||0, supply = r.supply||0;
+    const gap = supply - demand;
+    const demandPct = Math.min(100, (demand/maxDemand)*100);
+    const supplyPct = Math.min(100, (supply/maxSupply)*100);
+    const prio = heatmapPriority(demand, supply);
+    const tr = document.createElement('tr');
+    if(r.checked) tr.classList.add('hm-pinned');
+    const demandCell = hideNumbers
+      ? `<span class="hm-val hm-masked">•••</span>`
+      : `<input type="number" class="hm-val" value="${demand}" min="0" data-id="${r.id}" data-field="demand">`;
+    const supplyCell = hideNumbers
+      ? `<span class="hm-val hm-masked">•••</span>`
+      : `<input type="number" class="hm-val" value="${supply}" min="0" data-id="${r.id}" data-field="supply">`;
+    const gapCell = hideNumbers
+      ? `<span class="hm-masked">•••</span>`
+      : `${gap>=0?'+':''}${gap.toLocaleString('vi-VN')}`;
+    tr.innerHTML = `
+      <td><div style="display:inline-flex;align-items:center;gap:6px;max-width:100%;"><input class="hm-district-input" type="text" value="${esc(r.district)}" placeholder="Tên khu vực…" data-id="${r.id}" data-field="district" title="${esc(r.district)}" style="flex:0 0 auto;width:230px;"><span class="badge ${prio.cls}" style="flex:0 0 auto;white-space:nowrap;">● ${prio.label}</span></div></td>
+      <td class="num hm-cell"><div class="hm-bar" style="width:${demandPct}%"></div>${demandCell}</td>
+      <td class="num hm-cell"><div class="hm-bar hm-bar-supply" style="width:${supplyPct}%"></div>${supplyCell}</td>
+      <td class="num mono ${gap<0?'hm-gap-neg':'hm-gap-pos'}">${gapCell}</td>
+      <td style="text-align:center"><input type="checkbox" ${r.checked?'checked':''} data-id="${r.id}" onchange="toggleHeatmapPin('${r.id}')" title="Ghim khu vực này lên đầu bảng"></td>
+      <td class="hm-del" onclick="deleteHeatmapRow('${r.id}')" title="Xoá khu vực">×</td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('input[data-field]').forEach(inp=>{
+    inp.addEventListener('change', e=>{ updateHeatmapField(e.target.dataset.id, e.target.dataset.field, e.target.value); });
+  });
+
+  const totalDemand = heatmapRows.reduce((s,r)=>s+(r.demand||0),0);
+  const totalSupply = heatmapRows.reduce((s,r)=>s+(r.supply||0),0);
+  const totalGap = totalSupply - totalDemand;
+  document.getElementById('hm-total-demand').textContent = hideNumbers ? '•••' : totalDemand.toLocaleString('vi-VN');
+  document.getElementById('hm-total-supply').textContent = hideNumbers ? '•••' : totalSupply.toLocaleString('vi-VN');
+  document.getElementById('hm-total-gap').textContent = hideNumbers ? '•••' : (totalGap>=0?'+':'')+totalGap.toLocaleString('vi-VN');
+  document.getElementById('hm-foot-demand').textContent = hideNumbers ? '•••' : totalDemand.toLocaleString('vi-VN');
+  document.getElementById('hm-foot-supply').textContent = hideNumbers ? '•••' : totalSupply.toLocaleString('vi-VN');
+  const footGap = document.getElementById('hm-foot-gap');
+  footGap.textContent = hideNumbers ? '•••' : (totalGap>=0?'+':'')+totalGap.toLocaleString('vi-VN');
+  footGap.className = 'num ' + (totalGap<0?'hm-gap-neg':'hm-gap-pos');
+
+  populateHeatmapDispatchSelects();
+  document.getElementById('hm-foot').textContent = `${heatmapRows.length.toLocaleString('vi-VN')} khu vực · ${pinned.length} khu đang được ghim · dữ liệu lưu trên máy này (IndexedDB), không đồng bộ giữa các thiết bị.`;
+}
+
+async function resetHeatmapData(){
+  const ok = confirm('Làm mới toàn bộ dữ liệu Heatmap D/S?\n\nSẽ đưa Demand & Supply của tất cả khu vực về 0, bỏ ghim, và xoá lịch sử điều xe (giữ nguyên danh sách tên khu vực để nhập số liệu mới). Không hoàn tác được.');
+  if(!ok) return;
+  heatmapRows.forEach(r=>{ r.demand = 0; r.supply = 0; r.checked = false; });
+  heatmapHistory = [];
+  await saveHeatmapRows();
+  await saveHeatmapHistory();
+  renderHeatmap();
+  renderHeatmapHistory();
+}
+
+function populateHeatmapDispatchSelects(){
+  const fromSel = document.getElementById('hm-from');
+  const toSel = document.getElementById('hm-to');
+  const prevFrom = fromSel.value, prevTo = toSel.value;
+  const opts = heatmapRows.filter(r=>r.district.trim()!=='').map(r=>`<option value="${r.id}">${esc(r.district)} (Supply: ${r.supply||0})</option>`).join('');
+  fromSel.innerHTML = opts; toSel.innerHTML = opts;
+  if(heatmapRows.some(r=>r.id===prevFrom)) fromSel.value = prevFrom;
+  if(heatmapRows.some(r=>r.id===prevTo)) toSel.value = prevTo;
+}
+
+async function dispatchHeatmapVehicles(){
+  const fromId = document.getElementById('hm-from').value;
+  const toId = document.getElementById('hm-to').value;
+  const qty = Math.round(parseFloat(document.getElementById('hm-qty').value) || 0);
+  const hint = document.getElementById('hm-dispatch-hint');
+  if(!fromId || !toId){ hint.textContent = 'Cần chọn đủ khu đi và khu đến (thêm khu vực có tên trước).'; hint.className='hint'; return; }
+  if(fromId === toId){ hint.textContent = 'Khu đi và khu đến phải khác nhau.'; hint.className='hint'; return; }
+  if(qty <= 0){ hint.textContent = 'Số lượng xe điều phải lớn hơn 0.'; hint.className='hint'; return; }
+  const fromRow = heatmapRows.find(r=>r.id===fromId);
+  const toRow = heatmapRows.find(r=>r.id===toId);
+  if(!fromRow || !toRow) return;
+
+  const actualQty = Math.min(qty, fromRow.supply||0);
+  fromRow.supply = Math.max(0, (fromRow.supply||0) - actualQty);
+  toRow.supply = (toRow.supply||0) + actualQty;
+
+  heatmapHistory.unshift({ time: new Date().toISOString(), from: fromRow.district, to: toRow.district, qty: actualQty });
+  if(heatmapHistory.length > 200) heatmapHistory = heatmapHistory.slice(0,200);
+
+  await saveHeatmapRows();
+  await saveHeatmapHistory();
+  renderHeatmap();
+  renderHeatmapHistory();
+
+  if(actualQty < qty){
+    hint.textContent = `Khu "${fromRow.district}" chỉ còn ${actualQty} xe để điều đi (đã điều hết Supply hiện có), không đủ ${qty} xe yêu cầu.`;
+    hint.className = 'hint';
+  } else {
+    hint.textContent = `Đã điều ${actualQty.toLocaleString('vi-VN')} xe từ "${fromRow.district}" sang "${toRow.district}" — heatmap đã cập nhật.`;
+    hint.className = 'hint';
+  }
+}
+
+function renderHeatmapHistory(){
+  const tbody = document.getElementById('hm-history-tbody');
+  const empty = document.getElementById('hm-history-empty');
+  tbody.innerHTML = '';
+  if(!heatmapHistory.length){ empty.classList.remove('hidden'); return; }
+  empty.classList.add('hidden');
+  heatmapHistory.forEach(h=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="time-cell">${new Date(h.time).toLocaleString('vi-VN')}</td><td>${esc(h.from)}</td><td>${esc(h.to)}</td><td class="num mono">${h.qty.toLocaleString('vi-VN')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================================================================
+   MODULE 7: SẠC XE (đối chiếu Vin xe với Số khung) & ĐỘI/TỔ (đối chiếu Mã NV đào tạo)
+========================================================================= */
+let sacXeRowsGlobal = [], sacXeVehicleGlobal = [];
+let doiToRowsGlobal = [];
+
+function normVin(v){ return String(v||'').trim().toUpperCase().replace(/\s+/g,''); }
+function parseMoneyVN(v){
+  if(v===undefined||v===null||v==='') return 0;
+  const n = parseFloat(String(v).replace(/[.,](?=\d{3}(\D|$))/g,'').replace(/,/g,'.'));
+  return isNaN(n) ? (parseFloat(v)||0) : n;
+}
+
+async function processSacXe(){
+  const { rows: xeRows } = await loadType('Xe');
+  const { rows: sacRows } = await loadType('SacXe');
+  if(!xeRows.length || !sacRows.length){
+    document.getElementById('sac-hint').textContent = 'thiếu dữ liệu — cần import đủ file Xe và Sạc xe ở mục Báo cáo GMV';
+    return;
+  }
+  document.getElementById('sac-hint').textContent = 'đang xử lý…';
+  await new Promise(r=>setTimeout(r,10));
+
+  const vinToXe = new Map();
+  xeRows.forEach(r=>{ const vin = normVin(r['Số khung']); if(vin) vinToXe.set(vin, r); });
+
+  sacXeRowsGlobal = [];
+  let unmatched = 0;
+  sacRows.forEach(r=>{
+    const vin = normVin(r['Vin xe']);
+    const xe = vinToXe.get(vin);
+    if(!xe){ unmatched++; return; }
+    sacXeRowsGlobal.push({
+      soKhung: xe['Số khung'], bienSo: xe['Biển số'], doi: xe['Đội'], to: xe['Tổ'], depot: xe['Depot'],
+      tram: pick2(r,['Tên trạm']), batDau: pick2(r,['Thời gian bắt đầu sạc']), ketThuc: pick2(r,['Thời gian kết thúc sạc']),
+      kwh: parseMoneyVN(r['Số KW sạc']), tien: parseMoneyVN(r['Số Tiền Sau KM (VND)']),
+      trangThai: pick2(r,['Trạng thái thanh toán'])
+    });
+  });
+
+  // Tổng hợp theo xe
+  const byVehicle = new Map();
+  sacXeRowsGlobal.forEach(r=>{
+    const key = r.soKhung;
+    if(!byVehicle.has(key)) byVehicle.set(key, { bienSo:r.bienSo, doi:r.doi, to:r.to, sessions:0, kwh:0, tien:0 });
+    const v = byVehicle.get(key);
+    v.sessions++; v.kwh += r.kwh; v.tien += r.tien;
+  });
+  sacXeVehicleGlobal = [...byVehicle.values()].sort((a,b)=> b.tien - a.tien);
+
+  const totalKwh = sacXeRowsGlobal.reduce((s,r)=>s+r.kwh,0);
+  const totalTien = sacXeRowsGlobal.reduce((s,r)=>s+r.tien,0);
+  document.getElementById('sac-sessions').textContent = sacXeRowsGlobal.length.toLocaleString('vi-VN');
+  document.getElementById('sac-kwh').textContent = totalKwh.toLocaleString('vi-VN',{maximumFractionDigits:1});
+  document.getElementById('sac-tien').textContent = Math.round(totalTien).toLocaleString('vi-VN');
+  document.getElementById('sac-unmatched-note').textContent = `${sacXeRowsGlobal.length.toLocaleString('vi-VN')} phiên sạc khớp được VIN thuộc xe đội mình · ${unmatched.toLocaleString('vi-VN')} phiên sạc không khớp (VIN không có trong file Xe — thuộc đội/khách hàng khác) bị loại khỏi kết quả.`;
+  document.getElementById('sac-results').style.display = 'block';
+  document.getElementById('sac-empty').style.display = 'none';
+  document.getElementById('btn-export-sac').disabled = sacXeRowsGlobal.length===0;
+  document.getElementById('sac-hint').textContent = 'sẵn sàng — xử lý lúc ' + new Date().toLocaleString('vi-VN');
+  document.getElementById('sacxe-foot').textContent = `${sacRows.length.toLocaleString('vi-VN')} dòng Sạc xe · ${xeRows.length.toLocaleString('vi-VN')} xe đã đối chiếu.`;
+
+  renderSacXeTable();
+  renderSacXeVehicleTable();
+}
+
+function renderSacXeTable(){
+  const q = document.getElementById('sac-search').value.trim().toLowerCase();
+  const tbody = document.getElementById('sac-tbody');
+  tbody.innerHTML = '';
+  const visible = sacXeRowsGlobal.filter(r=>{
+    if(!q) return true;
+    return [r.soKhung,r.bienSo,r.doi,r.to,r.depot,r.tram].join(' ').toLowerCase().includes(q);
+  });
+  visible.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="mono">${esc(r.soKhung)}</td><td class="mono">${esc(r.bienSo)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td><td>${esc(r.depot)}</td>
+      <td>${esc(r.tram)}</td><td class="time-cell">${esc(r.batDau)}</td><td class="time-cell">${esc(r.ketThuc)}</td>
+      <td class="num mono">${r.kwh.toLocaleString('vi-VN',{maximumFractionDigits:2})}</td>
+      <td class="num mono">${Math.round(r.tien).toLocaleString('vi-VN')}</td><td>${esc(r.trangThai)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function renderSacXeVehicleTable(){
+  const tbody = document.getElementById('sac-vehicle-tbody');
+  tbody.innerHTML = '';
+  sacXeVehicleGlobal.forEach(v=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td class="mono">${esc(v.bienSo)}</td><td>${esc(v.doi)}</td><td>${esc(v.to)}</td>
+      <td class="num mono">${v.sessions.toLocaleString('vi-VN')}</td>
+      <td class="num mono">${v.kwh.toLocaleString('vi-VN',{maximumFractionDigits:1})}</td>
+      <td class="num mono">${Math.round(v.tien).toLocaleString('vi-VN')}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+async function exportSacXe(){
+  if(!sacXeRowsGlobal.length) return;
+  const wb = new ExcelJS.Workbook();
+  const ws1 = wb.addWorksheet('Sạc xe theo VIN');
+  ws1.addRow(['Số khung','Biển số','Đội','Tổ','Depot','Tên trạm','Bắt đầu sạc','Kết thúc sạc','Số KW','Tổng tiền sau KM','Trạng thái TT']);
+  ws1.getRow(1).font = {bold:true};
+  ws1.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E9B0'}});
+  sacXeRowsGlobal.forEach(r=> ws1.addRow([r.soKhung,r.bienSo,r.doi,r.to,r.depot,r.tram,r.batDau,r.ketThuc,r.kwh,Math.round(r.tien),r.trangThai]));
+  ws1.columns.forEach(c=> c.width = 16);
+  ws1.autoFilter = {from:{row:1,column:1}, to:{row:1,column:11}};
+
+  const ws2 = wb.addWorksheet('Tổng hợp theo xe');
+  ws2.addRow(['Biển số','Đội','Tổ','Số phiên sạc','Tổng KW','Tổng tiền sau KM']);
+  ws2.getRow(1).font = {bold:true};
+  ws2.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E9B0'}});
+  sacXeVehicleGlobal.forEach(v=> ws2.addRow([v.bienSo,v.doi,v.to,v.sessions,v.kwh,Math.round(v.tien)]));
+  ws2.columns.forEach(c=> c.width = 16);
+
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf, `sac_xe_theo_vin_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+async function processDoiToDaoTao(){
+  const { rows: xeRows } = await loadType('Xe');
+  const { rows: daoTaoRows } = await loadType('DaoTao');
+  if(!xeRows.length || !daoTaoRows.length){
+    document.getElementById('doito-hint').textContent = 'thiếu dữ liệu — cần import đủ file Xe và Đội/Tổ (Đào tạo) ở mục Báo cáo GMV';
+    return;
+  }
+  document.getElementById('doito-hint').textContent = 'đang xử lý…';
+  await new Promise(r=>setTimeout(r,10));
+
+  // Mã NV -> Đội xe theo file đào tạo (nếu 1 mã NV xuất hiện nhiều dòng, lấy dòng đầu tiên gặp)
+  const nvToDoi = new Map();
+  daoTaoRows.forEach(r=>{
+    const nv = String(pick2(r,['Mã NV'])).trim();
+    if(!nv || nvToDoi.has(nv)) return;
+    nvToDoi.set(nv, { doiXe: pick2(r,['Đội xe']), depot: pick2(r,['Depot']), mien: pick2(r,['Miền']), hoTen: pick2(r,['Họ tên']) });
+  });
+
+  doiToRowsGlobal = [];
+  let matched = 0, skipped = 0;
+  xeRows.forEach(r=>{
+    const taiXe = pick2(r,['Tài xế']);
+    if(!String(taiXe).trim()){ skipped++; return; }
+    const maNV = extractMaNV(taiXe);
+    const info = maNV ? nvToDoi.get(maNV) : null;
+    doiToRowsGlobal.push({
+      soKhung: r['Số khung'], bienSo: r['Biển số'], dongXe: r['Dòng xe'], depot: r['Depot'],
+      doiXe: r['Đội'], toXe: r['Tổ'], taiXe, maNV,
+      doiXeDaoTao: info ? info.doiXe : '', matched: !!info
+    });
+    if(info) matched++;
+  });
+
+  document.getElementById('doito-total').textContent = doiToRowsGlobal.length.toLocaleString('vi-VN');
+  document.getElementById('doito-matched').textContent = matched.toLocaleString('vi-VN');
+  document.getElementById('doito-unmatched').textContent = (doiToRowsGlobal.length-matched).toLocaleString('vi-VN');
+  document.getElementById('doito-results').style.display = 'block';
+  document.getElementById('doito-empty').style.display = 'none';
+  document.getElementById('btn-export-doito').disabled = doiToRowsGlobal.length===0;
+  document.getElementById('doito-hint').textContent = 'sẵn sàng — xử lý lúc ' + new Date().toLocaleString('vi-VN');
+  document.getElementById('sacxe-foot').textContent = `${doiToRowsGlobal.length.toLocaleString('vi-VN')} xe có tài xế · ${daoTaoRows.length.toLocaleString('vi-VN')} dòng đào tạo đã đối chiếu · ${skipped.toLocaleString('vi-VN')} xe không có tài xế được bỏ qua.`;
+
+  renderDoiToTable();
+}
+
+function renderDoiToTable(){
+  const q = document.getElementById('doito-search').value.trim().toLowerCase();
+  const onlyMismatch = document.getElementById('doito-only-mismatch').checked;
+  const tbody = document.getElementById('doito-tbody');
+  tbody.innerHTML = '';
+  const visible = doiToRowsGlobal.filter(r=>{
+    if(onlyMismatch && r.matched && String(r.doiXeDaoTao).trim()===String(r.doiXe).trim()) return false;
+    if(!q) return true;
+    return [r.soKhung,r.bienSo,r.taiXe,r.maNV,r.doiXe,r.toXe,r.doiXeDaoTao].join(' ').toLowerCase().includes(q);
+  });
+  visible.forEach(r=>{
+    const tr = document.createElement('tr');
+    const isMismatch = r.matched && String(r.doiXeDaoTao).trim()!==String(r.doiXe).trim();
+    if(!r.matched || isMismatch) tr.classList.add('row-warn');
+    const badge = !r.matched
+      ? `<span class="badge warn">● Không khớp</span>`
+      : (isMismatch ? `<span class="badge warn">● Lệch Đội</span>` : `<span class="badge ok">● Khớp</span>`);
+    tr.innerHTML = `<td class="mono">${esc(r.soKhung)}</td><td class="mono">${esc(r.bienSo)}</td><td>${esc(r.dongXe)}</td><td>${esc(r.depot)}</td>
+      <td>${esc(r.doiXe)}</td><td>${esc(r.toXe)}</td><td>${esc(r.taiXe)}</td><td class="mono">${esc(r.maNV)}</td>
+      <td>${esc(r.doiXeDaoTao)}</td><td>${badge}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+async function exportDoiToDaoTao(){
+  if(!doiToRowsGlobal.length) return;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Xe theo Đội-Tổ (Đào tạo)');
+  ws.addRow(['Số khung','Biển số','Dòng xe','Depot','Đội (file Xe)','Tổ (file Xe)','Tài xế','Mã NV','Đội xe (Đào tạo)','Khớp?']);
+  ws.getRow(1).font = {bold:true};
+  ws.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}});
+  doiToRowsGlobal.forEach(r=>{
+    const isMismatch = r.matched && String(r.doiXeDaoTao).trim()!==String(r.doiXe).trim();
+    const trangThai = !r.matched ? 'Không khớp' : (isMismatch ? 'Lệch Đội' : 'Khớp');
+    ws.addRow([r.soKhung,r.bienSo,r.dongXe,r.depot,r.doiXe,r.toXe,r.taiXe,r.maNV,r.doiXeDaoTao,trangThai]);
+  });
+  ws.columns.forEach(c=> c.width = 18);
+  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:10}};
+  const buf = await wb.xlsx.writeBuffer();
+  downloadBlob(buf, `xe_theo_doi_to_daotao_${new Date().toISOString().slice(0,10)}.xlsx`);
+}
+
+
 (async function init(){
   document.getElementById('footerNote').textContent = 'Đổi máy hoặc trình duyệt khác, hoặc xoá dữ liệu duyệt web, sẽ phải import lại. File Order lớn (~60MB) có thể mất 30-90 giây để đọc và lưu, vui lòng chờ và đừng đóng tab.';
   await renderStartTable();
