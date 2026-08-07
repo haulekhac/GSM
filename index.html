@@ -349,7 +349,7 @@
           <div class="field"><label>Quy tắc đối soát</label><div class="fake-select disabled">≥2 lần = Đã giao ca <span class="caret">▾</span></div></div>
         </div>
         <div class="action-row">
-          <button class="btn btn-primary" id="btn-process" disabled onclick="processFiles()">Đối soát ngay</button>
+          <button class="btn btn-primary" id="btn-process" disabled onclick="processFiles().catch(err=>console.error(err))">Đối soát ngay</button>
           <button class="btn btn-ghost" onclick="exportExcel()" id="btn-export" disabled>⬇ Tải file kết quả (.xlsx)</button>
           <span class="hint" id="go-hint">tải cả 2 file để bắt đầu</span>
         </div>
@@ -375,6 +375,7 @@
                 <th>STT</th><th>Số khung</th><th>Dòng xe</th><th>Biển số</th><th>Đội</th><th>Tổ</th>
                 <th>Trạng thái cấp 3</th><th>Trạng thái cấp 4</th><th>Trạng thái xe</th><th>Tài xế</th>
                 <th class="derived">Mô hình vận doanh</th><th class="derived">Mã nhân viên</th>
+                <th class="derived">Đội (Đào tạo)</th>
                 <th class="derived">Chụp ảnh giao ca online</th><th class="derived">Check hệ thống chụp ảnh giao ca online</th>
                 <th class="derived">GSVH giải trình</th><th class="derived">Hình thức xử lý</th>
               </tr>
@@ -482,6 +483,10 @@
         <!-- --- SUB: START --- -->
         <div class="subpanel active" id="sub-start">
           <div class="notice gold" id="statusNote">Đang tải dữ liệu đã lưu…</div>
+          <div class="action-row" style="margin-top:0;margin-bottom:14px;">
+            <button class="btn btn-outline-warn" onclick="resetAllImportedData()">Xoá tất cả dữ liệu &amp; làm mới</button>
+            <span class="hint">Xoá toàn bộ dữ liệu đã import (tất cả các loại bên dưới) chỉ trong 1 lần bấm, để import lại từ đầu.</span>
+          </div>
           <div class="table-card" style="margin-bottom:14px;">
             <div class="table-scroll" style="max-height:none;">
               <table>
@@ -494,7 +499,7 @@
           </div>
           <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none">
           <div class="notice">Yêu cầu upload các File theo đúng các cột, để tránh bị lỗi nhé!!!</div>
-          <div class="notice gold">File Order rất lớn (nhiều tuần/tháng, &gt;40-50MB)? Nên xuất/lưu dưới dạng <b>.csv</b> thay vì .xlsx trước khi import — file .csv được đọc theo luồng nên nhẹ bộ nhớ hơn nhiều, tránh lỗi "Array buffer allocation failed" khi trình duyệt hết bộ nhớ.</div>
+          <div class="notice gold">GSM Lưu ý: Order lớn → xuất .csv</div>
         </div>
 
         <!-- --- SUB: REPORT --- -->
@@ -565,9 +570,7 @@
         </div>
       </div>
 
-      <div class="notice gold">
-        GMV = Total Fee Display − 2.000đ (nếu không có bảo hiểm), chỉ tính đơn COMPLETED. "Nằm XDV" và "Xe chờ tài" là ước lượng từ Trạng thái xe.
-      </div>
+      <div class="notice gold">GSM Lưu ý: GMV trừ 2.000đ bảo hiểm</div>
 
       <div class="stats stats-3" id="xe0-stats" style="display:none">
         <div class="stat"><div class="lbl">Tổng tài xế Active + đã gán xe</div><div class="num" id="x0-total">0</div></div>
@@ -900,6 +903,11 @@
           <div class="stat warn"><div class="num" id="sac-tien">0</div><div class="lbl">Tổng tiền sau KM (VND)</div></div>
         </div>
         <div class="notice" id="sac-unmatched-note"></div>
+
+        <div class="card-head"><h2>Tổng hợp theo Loại — Đội/Tổ</h2></div>
+        <div class="hint" style="margin-bottom:10px;">Cộng dồn "Số Tiền Sau KM (VND)" theo Đội &gt; Tổ, tách theo cột "Loại" trong file Sạc xe (Qr Code, AutoChanger…).</div>
+        <div id="sac-loai-container"></div>
+
         <div class="toolbar2">
           <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="sac-search" placeholder="Tìm theo biển số, số khung, đội, tổ, trạm sạc…" oninput="renderSacXeTable()"></div></div>
         </div>
@@ -936,20 +944,19 @@
       <div id="doito-results" style="display:none">
         <div class="stats stats-3">
           <div class="stat"><div class="num" id="doito-total">0</div><div class="lbl">Xe có tài xế</div></div>
-          <div class="stat ok"><div class="num" id="doito-matched">0</div><div class="lbl">Khớp được Đội xe (đào tạo)</div></div>
-          <div class="stat warn"><div class="num" id="doito-unmatched">0</div><div class="lbl">Không khớp (Mã NV lạ)</div></div>
+          <div class="stat ok"><div class="num" id="doito-matched">0</div><div class="lbl">Tra được Đội (đào tạo)</div></div>
+          <div class="stat warn"><div class="num" id="doito-unmatched">0</div><div class="lbl">Không tra được (Mã NV lạ)</div></div>
         </div>
         <div class="toolbar2">
           <div class="search-box"><div class="fake-select"><span class="ic"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span><input type="search" id="doito-search" placeholder="Tìm theo biển số, số khung, tài xế, mã NV, đội, tổ…" oninput="renderDoiToTable()"></div></div>
-          <label class="toggle"><input type="checkbox" id="doito-only-mismatch" onchange="renderDoiToTable()"> Chỉ hiện lệch Đội/Tổ hoặc không khớp</label>
         </div>
         <div class="table-card" style="margin-bottom:20px;">
           <div class="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>Số khung</th><th>Biển số</th><th>Dòng xe</th><th>Depot</th><th>Đội (file Xe)</th><th>Tổ (file Xe)</th>
-                  <th>Tài xế</th><th>Mã NV</th><th class="derived">Đội xe (Đào tạo)</th><th class="derived">Khớp?</th>
+                  <th>Số khung</th><th>Biển số</th><th>Dòng xe</th><th>Depot</th><th>Đội</th><th>Tổ</th>
+                  <th>Tài xế</th><th>Mã NV</th><th class="derived">Đội (Đào tạo)</th>
                 </tr>
               </thead>
               <tbody id="doito-tbody"></tbody>
@@ -1080,9 +1087,21 @@ function extractMaNV(taiXeStr){
   const m = String(taiXeStr).match(/\(([^()]+)\)\s*$/);
   return m ? m[1].trim() : '';
 }
-function processFiles(){
+async function buildNvToDoiMap(){
+  // Tra Đội (theo file Đào tạo đã import ở mục "Báo cáo GMV") theo Mã NV — dùng chung cho các bảng khác.
+  const { rows: daoTaoRows } = await loadType('DaoTao');
+  const map = new Map();
+  daoTaoRows.forEach(r=>{
+    const nv = String(pick2(r,['Mã NV'])).trim();
+    if(!nv || map.has(nv)) return;
+    map.set(nv, pick2(r,['Đội xe']));
+  });
+  return map;
+}
+async function processFiles(){
   const vRows = sheetToRows(vehicleWB, ['Result','Sheet1']);
   const sRows = sheetToRows(shiftWB, ['Result','Sheet1']);
+  const nvToDoi = await buildNvToDoiMap();
   const countMap = new Map();
   sRows.forEach(r=>{
     const sap = String(pick(r, ['Mã SAP','Ma SAP','MaSAP','Mã nhân viên'])).trim();
@@ -1100,7 +1119,8 @@ function processFiles(){
       soKhung: pick(r,['Số khung','So khung']), dongXe: pick(r,['Dòng xe','Dong xe']),
       bienSo: pick(r,['Biển số','Bien so']), doi: pick(r,['Đội','Doi']), to: pick(r,['Tổ','To']),
       capBa: pick(r,['Trạng thái cấp 3']), capBon: pick(r,['Trạng thái cấp 4']), trangThaiXe: pick(r,['Trạng thái xe']),
-      taiXe, moHinh: pick(r,['Mô hình vận doanh']), maNV, count, status, gsvh:'', xuLy:''
+      taiXe, moHinh: pick(r,['Mô hình vận doanh']), maNV, doiDaoTao: (maNV && nvToDoi.get(maNV)) || '',
+      count, status, gsvh:'', xuLy:''
     });
   });
   document.getElementById('s-total').textContent = rows.length;
@@ -1123,7 +1143,7 @@ function renderTable(){
   let visible = rows.filter(r=>{
     if(onlyWarn && r.status!=='Giao ca thiếu') return false;
     if(!q) return true;
-    return [r.soKhung,r.dongXe,r.bienSo,r.doi,r.to,r.taiXe,r.maNV].join(' ').toLowerCase().includes(q);
+    return [r.soKhung,r.dongXe,r.bienSo,r.doi,r.to,r.taiXe,r.maNV,r.doiDaoTao].join(' ').toLowerCase().includes(q);
   });
   visible.forEach((r, idx)=>{
     const tr = document.createElement('tr');
@@ -1134,6 +1154,7 @@ function renderTable(){
       <td class="mono">${esc(r.bienSo)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td>
       <td>${esc(r.capBa)}</td><td>${esc(r.capBon)}</td><td>${esc(r.trangThaiXe)}</td><td>${esc(r.taiXe)}</td>
       <td>${esc(r.moHinh)}</td><td class="mono">${esc(r.maNV)}</td>
+      <td>${esc(r.doiDaoTao)}</td>
       <td style="text-align:center"><span class="cnt">${r.count}</span></td>
       <td><span class="badge ${badgeCls}">● ${r.status}</span></td>
       <td class="editable"><input type="text" placeholder="—" data-field="gsvh" value="${esc(r.gsvh)}"></td>
@@ -1151,7 +1172,7 @@ async function exportExcel(){
   if(!rows.length) return;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Đối soát giao ca');
-  const headers = ['STT','Số khung','Dòng xe','Biển số','Đội','Tổ','Trạng thái cấp 3','Trạng thái cấp 4','Trạng thái xe','Tài xế','Mô hình vận doanh','Mã nhân viên','Chụp ảnh giao ca online','Check hệ thống chụp ảnh giao ca online','GSVH giải trình','Hình thức xử lý'];
+  const headers = ['STT','Số khung','Dòng xe','Biển số','Đội','Tổ','Trạng thái cấp 3','Trạng thái cấp 4','Trạng thái xe','Tài xế','Mô hình vận doanh','Mã nhân viên','Đội (Đào tạo)','Chụp ảnh giao ca online','Check hệ thống chụp ảnh giao ca online','GSVH giải trình','Hình thức xử lý'];
   ws.addRow(headers);
   const headerRow = ws.getRow(1);
   headerRow.eachCell((cell, colNumber)=>{
@@ -1160,11 +1181,11 @@ async function exportExcel(){
   });
   headerRow.height = 28;
   rows.forEach((r, i)=>{
-    const row = ws.addRow([i+1, r.soKhung, r.dongXe, r.bienSo, r.doi, r.to, r.capBa, r.capBon, r.trangThaiXe, r.taiXe, r.moHinh, r.maNV, r.count, r.status, r.gsvh, r.xuLy]);
-    const statusCell = row.getCell(14);
+    const row = ws.addRow([i+1, r.soKhung, r.dongXe, r.bienSo, r.doi, r.to, r.capBa, r.capBon, r.trangThaiXe, r.taiXe, r.moHinh, r.maNV, r.doiDaoTao, r.count, r.status, r.gsvh, r.xuLy]);
+    const statusCell = row.getCell(15);
     statusCell.font = r.status==='Giao ca thiếu' ? {color:{argb:'FFE0553C'}, bold:true} : {color:{argb:'FF0F9D78'}, bold:true};
   });
-  [6,20,14,12,14,16,20,18,16,26,15,13,14,16,26,20].forEach((w,i)=> ws.getColumn(i+1).width = w);
+  [6,20,14,12,14,16,20,18,16,26,15,13,14,14,16,26,20].forEach((w,i)=> ws.getColumn(i+1).width = w);
   ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:headers.length}};
   ws.views = [{state:'frozen', ySplit:1}];
   const buf = await wb.xlsx.writeBuffer();
@@ -1390,9 +1411,9 @@ const IMPORT_TYPES = [
     requiredHeaders:['Mã tài xế','Tên tài xế','Biển kiểm soát','Model','Dòng xe','Ngày phân công','Tổng thời gian online','Doanh số','Tổng giá trị cuốc xe','Thời gian vận doanh','Tỷ lệ nhận chuyến','Tỷ lệ hoàn thành','Số cuốc xe hoàn thành'] },
   { key:'Order', sheetName:'Tải File', label:'Import Order', sub:'',
     requiredHeaders:['Status','Service Name','Distance','Total Fee Display','Total Pay Display','Sap Profile Id','Driver Vehicle Plate','Completed Time','Order ID','Order Time','Insurance Provider Code'] },
-  { key:'SacXe', sheetName:'Tải File', label:'Import Dữ liệu Sạc xe', sub:'Chức năng này đang phát triển...',
+  { key:'SacXe', sheetName:'Tải File', label:'Import Dữ liệu Sạc xe', sub:'Giao dịch sạc V-Green (đối chiếu theo Vin xe)',
     requiredHeaders:['Mã','Ngày tạo','Thanh toán trước ngày','Mã giao dịch sạc','Mã trạm','Tên trạm','Thời gian bắt đầu sạc','Thời gian kết thúc sạc','Profit Center','Vendor Code','Khách Hàng','Email','Số Điện Thoại','Địa Chỉ','Loại','Vin xe','VF Account','Mã KH SAP','Mã KH B2B','Mã KH SAP B2B','Số hóa đơn','Số KW sạc','Idle Time','Mã SR thanh toán','Tên SR thanh toán','Phương thức thanh toán','Mã thanh toán','Thời gian thanh toán','Tổng Tiền (VND)','VAT','VAT Amount (VND)','Số Tiền Được KM (VND)','Số Tiền Sau KM (VND)','Trạng thái thanh toán','Sub Type','SapDocument','Kỳ cước','VG - VF','Ngày hóa đơn','Ngày phát hành'] },
-  { key:'DaoTao', sheetName:'Tải File', label:'Import Đội/Tổ (Đào tạo)', sub:'Danh sách đào tạo',
+  { key:'DaoTao', sheetName:'Tải File', label:'Import Đội/Tổ (Đào tạo)', sub:'Danh sách đào tạo — dùng để suy ra Đội/Tổ của từng xe qua tài xế',
     requiredHeaders:['STT','Miền','Depot','Đội xe','Mã NV','Họ tên','Chức danh','QLTT','GĐ Depot','Chủ đề đào tạo','Cơ sở đề xuất','Ngày đào tạo','Thời gian','Ghi chú'] },
 ];
 const SAP_DEPOT = { '1100':'HCM03','1101':'HCM02','1160':'HCM06','1175':'HCM07','BTA':'HCM01','CTP':'HCM02','GRP':'HCM03','Q12':'HCM06','Q07':'HCM07','1102':'BDU','1103':'BAR','1104':'DON','1105':'TNI','1106':'TGI','2008':'LAN','2009':'CTH','3001':'PQU','BIP':'BIP','BTR':'BTR','TVH':'TVH' };
@@ -1529,8 +1550,16 @@ function findHeaderRowIndex(aoa, maxScan){
   }
   return bestIdx;
 }
+function normText(s){
+  // Một số file Excel (đặc biệt export từ macOS) lưu dấu tiếng Việt ở dạng Unicode tổ hợp (NFD:
+  // chữ cái + dấu là 2 ký tự riêng) thay vì dạng dựng sẵn (NFC: 1 ký tự) — nhìn giống hệt nhau
+  // trên màn hình nhưng so sánh chuỗi (===, includes...) sẽ SAI vì khác nhau ở mức byte.
+  // Chuẩn hoá về NFC ngay khi đọc để tên cột & dữ liệu luôn khớp với các chuỗi hằng trong code.
+  if(typeof s !== 'string') return s;
+  return (s.normalize ? s.normalize('NFC') : s);
+}
 function aoaToObjects(aoa, headerIdx){
-  const headerRow = (aoa[headerIdx]||[]).map(h=>String(h==null?'':h).trim());
+  const headerRow = (aoa[headerIdx]||[]).map(h=>normText(String(h==null?'':h).trim()));
   const rowsOut = [];
   for(let i=headerIdx+1;i<aoa.length;i++){
     const r = aoa[i];
@@ -1540,7 +1569,7 @@ function aoaToObjects(aoa, headerIdx){
     for(let c=0;c<headerRow.length;c++){
       const key = headerRow[c];
       if(!key) continue;
-      const val = (r[c]!==undefined && r[c]!==null) ? r[c] : '';
+      const val = (r[c]!==undefined && r[c]!==null) ? normText(r[c]) : '';
       if(String(val).trim() !== '') allEmpty = false;
       obj[key] = val;
     }
@@ -1652,7 +1681,7 @@ function readXlsxStreaming(file, onProgress){
 
     function emitDataRow(arr, hasSi){
       const obj = {};
-      for(let i=0;i<header.length;i++){ obj[header[i]] = arr[i] !== undefined ? arr[i] : ''; }
+      for(let i=0;i<header.length;i++){ obj[header[i]] = arr[i] !== undefined ? normText(arr[i]) : ''; }
       rows.push(obj);
       if(hasSi){
         if(!pendingSiRows) pendingSiRows = [];
@@ -1668,7 +1697,7 @@ function readXlsxStreaming(file, onProgress){
         if(score > bestScore){ bestScore = score; bestIdx = i; }
       });
       headerIdx = bestIdx;
-      header = rawBuffer[headerIdx].arr.map(h=>String(h==null?'':h).trim());
+      header = rawBuffer[headerIdx].arr.map(h=>normText(String(h==null?'':h).trim()));
       for(let i=headerIdx+1;i<rawBuffer.length;i++){
         emitDataRow(rawBuffer[i].arr, rawBuffer[i].hasSi);
       }
@@ -1708,7 +1737,7 @@ function readXlsxStreaming(file, onProgress){
               const v = obj[key];
               if(typeof v === 'string' && v.indexOf(SI_PREFIX) === 0){
                 const si = parseInt(v.slice(SI_PREFIX.length), 10);
-                obj[key] = (sharedStrings && sharedStrings[si] !== undefined) ? sharedStrings[si] : '';
+                obj[key] = normText((sharedStrings && sharedStrings[si] !== undefined) ? sharedStrings[si] : '');
               }
             }
           }
@@ -1861,9 +1890,7 @@ async function doImport(key, file){
   await renderStartTable();
   if(document.getElementById('sub-report').classList.contains('active')) await renderReport();
 }
-async function doDelete(key){
-  const cfg = IMPORT_TYPES.find(t=>t.key===key);
-  if(!confirm(`Xoá toàn bộ dữ liệu đã import cho "${cfg.label}"? Hành động này không hoàn tác được.`)) return;
+async function deleteImportType(key){
   const batchesR = await storageGet('batches:'+key);
   const batchIds = batchesR ? JSON.parse(batchesR.value) : [];
   for(const bid of batchIds){ await storageDelete('batch:'+key+':'+bid); }
@@ -1871,7 +1898,47 @@ async function doDelete(key){
   await storageDelete('dedupkeys:'+key);
   await storageDelete('rows:'+key); // dọn khối dữ liệu cũ (nếu còn) từ trước khi có cấu trúc batch
   await storageSet('log:'+key, JSON.stringify({ count:'Data Emty', time:new Date().toISOString(), file:'' }));
+}
+async function doDelete(key){
+  const cfg = IMPORT_TYPES.find(t=>t.key===key);
+  if(!confirm(`Xoá toàn bộ dữ liệu đã import cho "${cfg.label}"? Hành động này không hoàn tác được.`)) return;
+  await deleteImportType(key);
   setStatus(`Đã xoá dữ liệu "${cfg.label}".`);
+  await renderStartTable();
+  if(document.getElementById('sub-report').classList.contains('active')) await renderReport();
+}
+async function resetAllImportedData(){
+  const ok = confirm('Xoá TOÀN BỘ dữ liệu đã import (Tài xế, Xe, Phiếu công, Order, Sạc xe, Đội/Tổ Đào tạo)?\n\nHành động này không hoàn tác được — bạn sẽ phải import lại từ đầu.');
+  if(!ok) return;
+  setStatus('Đang xoá toàn bộ dữ liệu…');
+  for(const cfg of IMPORT_TYPES){ await deleteImportType(cfg.key); }
+
+  // Xoá luôn các kết quả đã tính trong phiên làm việc hiện tại (Xe 0 đồng, Sạc xe, Đội/Tổ đào tạo…)
+  xe0Cache = { xeRows:null, txRows:null, orderRowsCompleted:null };
+  teamRowsGlobal = []; zeroListGlobal = []; driverIncomeGlobal = [];
+  dailyPivotCache = { dates: [], rows: [] };
+  sacXeRowsGlobal = []; sacXeVehicleGlobal = [];
+  doiToRowsGlobal = [];
+
+  document.getElementById('xe0-stats').style.display = 'none';
+  document.getElementById('xe0-results').style.display = 'none';
+  document.getElementById('xe0-empty').style.display = 'block';
+  document.getElementById('btn-export-zero').disabled = true;
+  document.getElementById('btn-export-team').disabled = true;
+
+  document.getElementById('sac-results').style.display = 'none';
+  document.getElementById('sac-empty').style.display = 'block';
+  document.getElementById('btn-export-sac').disabled = true;
+  document.getElementById('sac-hint').textContent = 'chưa xử lý';
+  const sacLoaiEl = document.getElementById('sac-loai-container');
+  if(sacLoaiEl) sacLoaiEl.innerHTML = '';
+
+  document.getElementById('doito-results').style.display = 'none';
+  document.getElementById('doito-empty').style.display = 'block';
+  document.getElementById('btn-export-doito').disabled = true;
+  document.getElementById('doito-hint').textContent = 'chưa xử lý';
+
+  setStatus('Đã xoá toàn bộ dữ liệu — sẵn sàng import lại từ đầu.');
   await renderStartTable();
   if(document.getElementById('sub-report').classList.contains('active')) await renderReport();
 }
@@ -3082,7 +3149,7 @@ async function processSacXe(){
       soKhung: xe['Số khung'], bienSo: xe['Biển số'], doi: xe['Đội'], to: xe['Tổ'], depot: xe['Depot'],
       tram: pick2(r,['Tên trạm']), batDau: pick2(r,['Thời gian bắt đầu sạc']), ketThuc: pick2(r,['Thời gian kết thúc sạc']),
       kwh: parseMoneyVN(r['Số KW sạc']), tien: parseMoneyVN(r['Số Tiền Sau KM (VND)']),
-      trangThai: pick2(r,['Trạng thái thanh toán'])
+      trangThai: pick2(r,['Trạng thái thanh toán']), loai: pick2(r,['Loại']) || '(Không xác định)'
     });
   });
 
@@ -3110,6 +3177,69 @@ async function processSacXe(){
 
   renderSacXeTable();
   renderSacXeVehicleTable();
+  renderSacXeLoaiPivot();
+}
+
+function buildSacXeLoaiPivot(){
+  const loaiSet = new Set();
+  sacXeRowsGlobal.forEach(r=> loaiSet.add(r.loai || '(Không xác định)'));
+  const loaiList = [...loaiSet].sort((a,b)=>a.localeCompare(b,'vi'));
+
+  function toKey(doi,to){ return String(doi||'—')+'\u0001'+String(to||'—'); }
+  const toMap = new Map();
+  sacXeRowsGlobal.forEach(r=>{
+    const loai = r.loai || '(Không xác định)';
+    const key = toKey(r.doi, r.to);
+    if(!toMap.has(key)) toMap.set(key, { doi:r.doi, to:r.to, byLoai:{} });
+    const t = toMap.get(key);
+    t.byLoai[loai] = (t.byLoai[loai]||0) + r.tien;
+  });
+  const toRows = [...toMap.values()].sort((a,b)=> (String(a.doi)+String(a.to)).localeCompare(String(b.doi)+String(b.to),'vi'));
+
+  const doiMap = new Map();
+  toRows.forEach(r=>{
+    if(!doiMap.has(r.doi)) doiMap.set(r.doi, { doi:r.doi, byLoai:{} });
+    const d = doiMap.get(r.doi);
+    loaiList.forEach(l=>{ d.byLoai[l] = (d.byLoai[l]||0) + (r.byLoai[l]||0); });
+  });
+  const doiOrder = [...doiMap.keys()].sort((a,b)=> String(a).localeCompare(String(b),'vi'));
+
+  const grand = { byLoai:{} };
+  doiMap.forEach(d=> loaiList.forEach(l=> grand.byLoai[l] = (grand.byLoai[l]||0) + (d.byLoai[l]||0)));
+
+  return { loaiList, toRows, doiMap, doiOrder, grand };
+}
+
+function renderSacXeLoaiPivot(){
+  const container = document.getElementById('sac-loai-container');
+  if(!container) return;
+  if(!sacXeRowsGlobal.length){ container.innerHTML = ''; return; }
+  const { loaiList, toRows, doiMap, doiOrder, grand } = buildSacXeLoaiPivot();
+  const rowSum = obj => loaiList.reduce((s,l)=> s+(obj.byLoai[l]||0), 0);
+  const money = n => Math.round(n).toLocaleString('vi-VN');
+
+  let html = '<div class="table-card" style="margin-bottom:20px;"><div class="table-scroll">'
+    + '<table><thead><tr><th>Đội / Tổ</th>'
+    + loaiList.map(l=>`<th class="num">${esc(l)}</th>`).join('')
+    + '<th class="num">Tổng cộng</th></tr></thead><tbody>';
+
+  doiOrder.forEach(doi=>{
+    const d = doiMap.get(doi);
+    html += `<tr class="team-doi"><td>${esc(doi)}</td>`
+      + loaiList.map(l=>`<td class="num mono">${money(d.byLoai[l]||0)}</td>`).join('')
+      + `<td class="num mono">${money(rowSum(d))}</td></tr>`;
+    toRows.filter(r=>r.doi===doi).forEach(r=>{
+      html += `<tr class="team-tổ"><td style="padding-left:26px;">${esc(r.to)}</td>`
+        + loaiList.map(l=>`<td class="num mono">${money(r.byLoai[l]||0)}</td>`).join('')
+        + `<td class="num mono">${money(rowSum(r))}</td></tr>`;
+    });
+  });
+
+  html += `<tr class="team-depot"><td>Grand Total</td>`
+    + loaiList.map(l=>`<td class="num mono">${money(grand.byLoai[l]||0)}</td>`).join('')
+    + `<td class="num mono">${money(rowSum(grand))}</td></tr>`;
+  html += '</tbody></table></div></div>';
+  container.innerHTML = html;
 }
 
 function renderSacXeTable(){
@@ -3158,6 +3288,24 @@ async function exportSacXe(){
   ws2.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E9B0'}});
   sacXeVehicleGlobal.forEach(v=> ws2.addRow([v.bienSo,v.doi,v.to,v.sessions,v.kwh,Math.round(v.tien)]));
   ws2.columns.forEach(c=> c.width = 16);
+
+  const { loaiList, toRows, doiMap, doiOrder, grand } = buildSacXeLoaiPivot();
+  const rowSum = obj => loaiList.reduce((s,l)=> s+(obj.byLoai[l]||0), 0);
+  const ws3 = wb.addWorksheet('Loại - Đội - Tổ');
+  ws3.addRow(['Đội / Tổ', ...loaiList, 'Tổng cộng']);
+  ws3.getRow(1).font = {bold:true};
+  ws3.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFC6E9B0'}});
+  doiOrder.forEach(doi=>{
+    const d = doiMap.get(doi);
+    const doiRow = ws3.addRow([doi, ...loaiList.map(l=>Math.round(d.byLoai[l]||0)), Math.round(rowSum(d))]);
+    doiRow.eachCell(c=>{ c.font={bold:true}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F7F0'}}; });
+    toRows.filter(r=>r.doi===doi).forEach(r=>{
+      ws3.addRow([r.to, ...loaiList.map(l=>Math.round(r.byLoai[l]||0)), Math.round(rowSum(r))]);
+    });
+  });
+  const grandRow = ws3.addRow(['Grand Total', ...loaiList.map(l=>Math.round(grand.byLoai[l]||0)), Math.round(rowSum(grand))]);
+  grandRow.eachCell(c=>{ c.font={bold:true,color:{argb:'FFFFFFFF'}}; c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0A2F2C'}}; });
+  ws3.columns.forEach(c=> c.width = 18);
 
   const buf = await wb.xlsx.writeBuffer();
   downloadBlob(buf, `sac_xe_theo_vin_${new Date().toISOString().slice(0,10)}.xlsx`);
@@ -3210,24 +3358,17 @@ async function processDoiToDaoTao(){
 
 function renderDoiToTable(){
   const q = document.getElementById('doito-search').value.trim().toLowerCase();
-  const onlyMismatch = document.getElementById('doito-only-mismatch').checked;
   const tbody = document.getElementById('doito-tbody');
   tbody.innerHTML = '';
   const visible = doiToRowsGlobal.filter(r=>{
-    if(onlyMismatch && r.matched && String(r.doiXeDaoTao).trim()===String(r.doiXe).trim()) return false;
     if(!q) return true;
     return [r.soKhung,r.bienSo,r.taiXe,r.maNV,r.doiXe,r.toXe,r.doiXeDaoTao].join(' ').toLowerCase().includes(q);
   });
   visible.forEach(r=>{
     const tr = document.createElement('tr');
-    const isMismatch = r.matched && String(r.doiXeDaoTao).trim()!==String(r.doiXe).trim();
-    if(!r.matched || isMismatch) tr.classList.add('row-warn');
-    const badge = !r.matched
-      ? `<span class="badge warn">● Không khớp</span>`
-      : (isMismatch ? `<span class="badge warn">● Lệch Đội</span>` : `<span class="badge ok">● Khớp</span>`);
     tr.innerHTML = `<td class="mono">${esc(r.soKhung)}</td><td class="mono">${esc(r.bienSo)}</td><td>${esc(r.dongXe)}</td><td>${esc(r.depot)}</td>
       <td>${esc(r.doiXe)}</td><td>${esc(r.toXe)}</td><td>${esc(r.taiXe)}</td><td class="mono">${esc(r.maNV)}</td>
-      <td>${esc(r.doiXeDaoTao)}</td><td>${badge}</td>`;
+      <td>${esc(r.doiXeDaoTao)}</td>`;
     tbody.appendChild(tr);
   });
 }
@@ -3235,23 +3376,21 @@ async function exportDoiToDaoTao(){
   if(!doiToRowsGlobal.length) return;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('Xe theo Đội-Tổ (Đào tạo)');
-  ws.addRow(['Số khung','Biển số','Dòng xe','Depot','Đội (file Xe)','Tổ (file Xe)','Tài xế','Mã NV','Đội xe (Đào tạo)','Khớp?']);
+  ws.addRow(['Số khung','Biển số','Dòng xe','Depot','Đội','Tổ','Tài xế','Mã NV','Đội (Đào tạo)']);
   ws.getRow(1).font = {bold:true};
   ws.getRow(1).eachCell(c=> c.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFF00'}});
   doiToRowsGlobal.forEach(r=>{
-    const isMismatch = r.matched && String(r.doiXeDaoTao).trim()!==String(r.doiXe).trim();
-    const trangThai = !r.matched ? 'Không khớp' : (isMismatch ? 'Lệch Đội' : 'Khớp');
-    ws.addRow([r.soKhung,r.bienSo,r.dongXe,r.depot,r.doiXe,r.toXe,r.taiXe,r.maNV,r.doiXeDaoTao,trangThai]);
+    ws.addRow([r.soKhung,r.bienSo,r.dongXe,r.depot,r.doiXe,r.toXe,r.taiXe,r.maNV,r.doiXeDaoTao]);
   });
   ws.columns.forEach(c=> c.width = 18);
-  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:10}};
+  ws.autoFilter = {from:{row:1,column:1}, to:{row:1,column:9}};
   const buf = await wb.xlsx.writeBuffer();
   downloadBlob(buf, `xe_theo_doi_to_daotao_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 
 (async function init(){
-  document.getElementById('footerNote').textContent = 'Đổi máy hoặc trình duyệt khác, hoặc xoá dữ liệu duyệt web, sẽ phải import lại. File Order lớn (~60MB) có thể mất 30-90 giây để đọc và lưu, vui lòng chờ và đừng đóng tab.';
+  document.getElementById('footerNote').textContent = 'GSM Lưu ý: đổi máy phải import lại';
   await renderStartTable();
   await restoreMinioFromStorage();
   setStatus('Sẵn sàng.');
