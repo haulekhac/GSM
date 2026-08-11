@@ -147,7 +147,7 @@
 
 <div class="topbar">
   <div class="brand">
-    <div class="logo">GC</div>
+    <div class="logo">GP</div>
     <div class="title">ĐỔ BÁO CÁO ĐỘI 6<small>ĐỘI 6 ĐỈNH QUÁ, KHÔNG NGẠI DRAMA</small></div>
   </div>
   <div class="today" id="topToday">—</div>
@@ -236,11 +236,14 @@
   <!-- ============ 5. BÁO CÁO ============ -->
   <div class="card-head" style="margin-top:6px;">
     <div><h2 style="font-size:15px;">5 · Báo cáo theo Tổ — hôm nay</h2></div>
-    <div style="display:flex;gap:10px;">
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
       <button class="btn btn-ghost btn-sm" onclick="exportReport(todayStr())">⬇ Lưu / Tải báo cáo hôm nay (.xlsx)</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fileImport').click()" title="Dùng khi lỡ mất dữ liệu trên máy, hoặc đồng đội gửi file báo cáo họ đã tải — nạp lại đúng file .xlsx đã xuất từ công cụ này vào báo cáo hôm nay.">⬆ Nạp lại file đã tải</button>
+      <input type="file" id="fileImport" accept=".xlsx,.xls" style="display:none">
       <button class="btn btn-outline-warn btn-sm" onclick="clearTodayData()">⟳ Xoá dữ liệu hôm nay</button>
     </div>
   </div>
+  <div class="hint" id="importHint" style="margin-bottom:10px;"></div>
   <div id="reportContainer"></div>
   <div class="empty-state" id="reportEmpty">
     <div class="glyph">＋</div>
@@ -302,7 +305,7 @@ function askTeamPassword(doi, requiredDoi){
     const okBtn = document.getElementById('teamPassOk');
     const cancelBtn = document.getElementById('teamPassCancel');
     document.getElementById('teamPassMsg').textContent = (requiredDoi!==null && requiredDoi!==undefined)
-      ? `Đây là File Đội ${requiredDoi} không được phép dùng ở đây. Nhập mật khẩu để thêm Đội ${doi} (Liên hệ Admin).`
+      ? `Chỉ Đội ${requiredDoi} được phép dùng ở đây. Nhập mật khẩu để thêm Đội ${doi} (liên hệ Hậu Lê Khắc để lấy mật khẩu).`
       : `Số Đội ${doi} khác với Đội đang dùng trên máy này. Nhập mật khẩu để tiếp tục (liên hệ Hậu Lê Khắc để lấy mật khẩu).`;
     err.style.display = 'none';
     input.value = '';
@@ -406,11 +409,12 @@ function fmtVNThousand(n){
 }
 function emptyTeamData(){ return { ghiChu:'', slots:{} }; }
 function emptySlotData(){ return { doanhSo:null, txOffline:null, txLenCa:null, txOff:null, offline0d:null, ds300k:null, viPham:null, chuaBaoDuong:null, viThap:null }; }
-function ensureTeamSlot(teamId, slot){
-  if(!todayData[teamId]) todayData[teamId] = emptyTeamData();
-  if(!todayData[teamId].slots[slot]) todayData[teamId].slots[slot] = emptySlotData();
-  return todayData[teamId].slots[slot];
+function ensureTeamSlotIn(dataObj, teamId, slot){
+  if(!dataObj[teamId]) dataObj[teamId] = emptyTeamData();
+  if(!dataObj[teamId].slots[slot]) dataObj[teamId].slots[slot] = emptySlotData();
+  return dataObj[teamId].slots[slot];
 }
+function ensureTeamSlot(teamId, slot){ return ensureTeamSlotIn(todayData, teamId, slot); }
 
 /* =========================================================================
    KHỞI TẠO / RESET THEO NGÀY
@@ -600,6 +604,132 @@ async function applyWorkspaceToSlot(){
 }
 
 /* =========================================================================
+   NẠP LẠI FILE BÁO CÁO ĐÃ TẢI (.xlsx) — để tiếp tục chỉnh khi lỡ mất dữ liệu,
+   hoặc đồng đội gửi file báo cáo họ đã tải để nạp chung vào 1 máy.
+   Chỉ đọc đúng định dạng do công cụ này xuất ra (mục 5 / mục 6).
+   Báo cáo chỉ áp dụng cho HÔM NAY nên chọn file xong là nạp thẳng vào hôm nay, không cần chọn ngày.
+========================================================================= */
+const TEAM_HEADER_RE = /^\s*Đội\s*(\d+)\s*Tổ\s*(\d+)\s*$/i;
+
+function parseImportNumber(v){
+  if(v===null||v===undefined||v==='') return null;
+  if(typeof v==='number') return isNaN(v)?null:v;
+  let s = String(v).trim();
+  if(s==='') return null;
+  // File do công cụ này xuất dùng dấu chấm làm ngăn cách hàng nghìn (vd 2.184.400) — bỏ dấu chấm rồi đọc số
+  s = s.replace(/\./g,'').replace(/,/g,'.');
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function parseExportedReport(aoa){
+  const blocks = [];
+  let i = 0;
+  while(i < aoa.length){
+    const row = aoa[i] || [];
+    const first = String(row[0]||'').trim();
+    const m = first.match(TEAM_HEADER_RE);
+    if(m){
+      const doi = parseInt(m[1],10), to = parseInt(m[2],10);
+      const lastCell = String(row[row.length-1]||'').trim().toLowerCase();
+      const hasNoteCol = lastCell === 'ghi chú';
+      const slotNames = (hasNoteCol ? row.slice(1, row.length-1) : row.slice(1))
+        .map(x=>String(x||'').trim()).filter(Boolean);
+      const block = { doi, to, slotNames, values:{}, ghiChu:'' };
+      i++;
+      while(i < aoa.length){
+        const r = aoa[i] || [];
+        const label = String(r[0]||'').trim();
+        if(!label){ i++; break; } // dòng trống -> hết block của Tổ này
+        if(TEAM_HEADER_RE.test(label)) break; // gặp Tổ tiếp theo
+        const rd = ROW_DEFS.find(x=> normLabel(x.label) === normLabel(label));
+        if(rd){
+          const vals = {};
+          slotNames.forEach((s, idx)=>{ vals[s] = parseImportNumber(r[1+idx]); });
+          block.values[rd.key] = vals;
+          if(rd.key==='doanhSo' && hasNoteCol){
+            const noteCell = r[1+slotNames.length];
+            if(noteCell) block.ghiChu = String(noteCell).trim();
+          }
+        }
+        i++;
+      }
+      blocks.push(block);
+    } else {
+      i++;
+    }
+  }
+  return blocks;
+}
+
+document.getElementById('fileImport').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  const hint = document.getElementById('importHint');
+  hint.textContent = 'Đang đọc file…';
+  reader.onload = async ev=>{
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheetName = wb.SheetNames[0];
+      const aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], {header:1, defval:''});
+      const blocks = parseExportedReport(aoa);
+      if(!blocks.length){
+        hint.textContent = 'Không nhận diện được dữ liệu trong file — kiểm tra lại đây có đúng là file báo cáo đã xuất từ công cụ này không.';
+      } else {
+        await applyImportReport(blocks);
+      }
+    }catch(err){
+      hint.textContent = 'Không đọc được file — kiểm tra lại định dạng .xlsx.';
+    }
+    e.target.value = ''; // cho phép chọn lại cùng 1 file lần sau nếu cần
+  };
+  reader.readAsArrayBuffer(file);
+});
+
+async function applyImportReport(blocks){
+  // Báo cáo chỉ áp dụng cho HÔM NAY — file nạp lại luôn được gộp vào dữ liệu hôm nay.
+  let addedTeams = 0, addedSlots = [], skippedTeams = [];
+  for(const b of blocks){
+    // Tôn trọng khoá Đội (ALLOWED_DOI) nếu file này đã bị khoá cho 1 Đội cố định
+    if(ALLOWED_DOI !== null && ALLOWED_DOI !== undefined && Number(ALLOWED_DOI) !== b.doi){
+      skippedTeams.push(`Đội ${b.doi} Tổ ${b.to}`);
+      continue;
+    }
+    let team = teams.find(t=> t.doi===b.doi && t.to===b.to);
+    if(!team){
+      const id = 't'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+      team = { id, doi:b.doi, to:b.to };
+      teams.push(team);
+      addedTeams++;
+    }
+    b.slotNames.forEach(s=>{ if(!slots.includes(s)){ slots.push(s); addedSlots.push(s); } });
+
+    if(!todayData[team.id]) todayData[team.id] = emptyTeamData();
+    if(b.ghiChu) todayData[team.id].ghiChu = b.ghiChu;
+    b.slotNames.forEach(s=>{
+      const cell = ensureTeamSlot(team.id, s);
+      ROW_DEFS.forEach(rd=>{
+        const v = b.values[rd.key] ? b.values[rd.key][s] : undefined;
+        if(v!==undefined && v!==null){ cell[rd.key] = v; } // chỉ ghi đè ô có số liệu trong file, giữ nguyên các ô khác
+      });
+    });
+  }
+
+  if(addedTeams){ await saveTeams(); }
+  if(addedSlots.length){ await saveSlots(); }
+  await saveTodayData();
+
+  const okCount = blocks.length - skippedTeams.length;
+  document.getElementById('importHint').textContent =
+    `Đã nạp lại ${okCount} Đội/Tổ vào báo cáo hôm nay`
+    + (addedTeams ? ` (tự thêm ${addedTeams} Đội/Tổ mới vào danh sách)` : '')
+    + (skippedTeams.length ? `. Bị chặn (khác Đội được phép ở đây): ${skippedTeams.join(', ')}` : '') + '.';
+
+  renderTeamChips(); renderSlotChips(); renderSelectors(); renderReport();
+}
+
+/* =========================================================================
    4. DÁN CHUỖI DỮ LIỆU THÔ
 ========================================================================= */
 function normLabel(s){
@@ -755,8 +885,9 @@ async function exportReport(dateStr){
         const v = cell ? cell[rd.key] : null;
         if(rd.key === 'doanhSo'){
           // Doanh số: xuất dạng chuỗi có dấu chấm phân cách hàng nghìn (vd 48.227.500)
-          // để hiển thị nhất quán trong Excel bất kể cài đặt vùng miền của máy mở file.
-          rowVals.push(v===null||v===undefined||v==='' ? '' : Math.round(v).toLocaleString('vi-VN'));
+          // dùng hàm tự viết (không phụ thuộc toLocaleString/ICU của trình duyệt) để luôn
+          // hiển thị nhất quán trong Excel bất kể máy/trình duyệt nào mở file.
+          rowVals.push(v===null||v===undefined||v==='' ? '' : fmtVNThousand(v));
         } else {
           rowVals.push(v===null||v===undefined ? '' : Math.round(v));
         }
@@ -797,7 +928,7 @@ async function exportReport(dateStr){
   renderSelectors();
   renderReport();
   await renderArchiveList();
-  document.getElementById('foot').textContent = 'File báo cáo được thiết kế bởi: Hậu Lê Khắc, Vui lòng không share link tránh lỗi nhóm 1 nha';
+  document.getElementById('foot').textContent = 'File báo cáo được thiết kế bởi: Hậu Lê Khắc, Vui lòng không share link tránh lỗi nhóm 1 nha.';
 })();
 </script>
 </body>
