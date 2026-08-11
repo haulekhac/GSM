@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GREEN PORTAL — Đổ báo cáo Đội (theo khung giờ)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';"></script>
+<style>
+  :root{
+    --teal-1:#0fb8ad; --teal-2:#0a9c92; --teal-dark:#0a2f2c;
+    --bg:#eef3f4; --panel:#ffffff; --line:#e3e8ea; --ink:#1c2b2a; --dim:#7c8b8a;
+    --ok:#0f9d78; --ok-bg:#e4f7f0; --warn:#e0553c; --warn-bg:#fdeae6; --gold:#c9860f; --gold-bg:#fdf3e0;
+    --radius:12px; --mono:'JetBrains Mono', monospace; --sans:'Plus Jakarta Sans', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+
+  .hidden{display:none !important;}
+
+  #loginGate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,var(--teal-1),var(--teal-dark));padding:20px;}
+  #loginGate.hidden{display:none;}
+  .login-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);}
+  .login-logo{width:52px;height:52px;border-radius:12px;background:var(--teal-dark);color:#fff;font-family:var(--mono);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+  .login-card h1{font-size:17px;margin:0 0 4px;}
+  .login-card p{font-size:12.5px;color:var(--dim);margin:0 0 18px;}
+  .login-card input[type=password]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-bottom:12px;font-family:var(--sans);text-align:center;letter-spacing:2px;}
+  .login-card input[type=password]:focus{outline:none;border-color:var(--teal-2);}
+  #loginError{display:none;color:var(--warn);font-size:12px;margin-top:10px;}
+  #loginError.show{display:block;}
+  .login-remember{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--dim);margin-top:16px;cursor:pointer;user-select:none;}
+
+  /* Modal xác nhận mật khẩu khi thêm Đội khác trên cùng máy */
+  #teamPassGate{position:fixed;inset:0;z-index:998;display:none;align-items:center;justify-content:center;
+    background:rgba(10,47,44,.55);padding:20px;}
+  #teamPassGate .login-logo{background:var(--warn);}
+  #teamPassGate input[type=password]{margin-bottom:14px;}
+
+  .topbar{background:linear-gradient(90deg,var(--teal-1),var(--teal-2));color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:64px;position:sticky;top:0;z-index:20;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand .logo{width:34px;height:34px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--teal-2);font-weight:800;font-family:var(--mono);font-size:12px;}
+  .topbar .title{font-weight:800;font-size:15px;}
+  .topbar .title small{display:block;font-weight:500;font-size:11px;opacity:.85;letter-spacing:.03em;margin-top:1px;}
+  .topbar .today{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.18);padding:6px 12px;border-radius:20px;}
+
+  .main{max-width:1400px;margin:0 auto;padding:22px 22px 70px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
+  .card-head h2{font-size:14px;margin:0;font-weight:700;}
+  .card-head .sub{font-size:11.5px;color:var(--dim);margin-top:3px;}
+
+  .grid{display:grid;gap:14px;}
+  .grid-4{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .grid-3{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .grid-2{grid-template-columns:repeat(2,minmax(0,1fr));}
+  @media(max-width:900px){.grid-4,.grid-3{grid-template-columns:repeat(2,minmax(0,1fr));}}
+  @media(max-width:560px){.grid-4,.grid-3,.grid-2{grid-template-columns:minmax(0,1fr);}}
+
+  label.f{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;font-weight:600;}
+  input[type=text], input[type=number], select, textarea{
+    width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;
+    font-family:var(--sans);color:var(--ink);background:#fbfcfc;
+  }
+  input:focus, select:focus, textarea:focus{outline:none;border-color:var(--teal-2);background:#fff;}
+  textarea{font-family:var(--mono);font-size:12.5px;min-height:90px;resize:vertical;}
+
+  .btn{border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans);}
+  .btn-primary{background:linear-gradient(90deg,var(--teal-1),var(--teal-2));color:#fff;}
+  .btn-primary:disabled{background:#c9d3d2;cursor:not-allowed;}
+  .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
+  .btn-ghost:hover{background:#f4faf9;}
+  .btn-outline-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f6cec4;}
+  .btn-outline-warn:hover{background:var(--warn);color:#fff;}
+  .btn-sm{padding:7px 12px;font-size:12px;border-radius:6px;}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
+  .hint{font-size:11.5px;color:var(--dim);font-family:var(--mono);}
+  .notice{font-size:12.5px;padding:10px 14px;border-radius:8px;margin-bottom:14px;border:1px solid var(--line);color:var(--dim);}
+  .notice.warn{background:var(--warn-bg);border-color:#f6cec4;color:var(--warn);}
+  .notice.ok{background:var(--ok-bg);border-color:#bfe9d9;color:var(--ok);}
+  .notice.gold{background:var(--gold-bg);border-color:#f2ddad;color:var(--gold);}
+
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#f4faf9;border:1px solid var(--line);border-radius:20px;padding:6px 8px 6px 14px;font-size:12.5px;font-weight:600;margin:3px 6px 3px 0;}
+  .chip .x{cursor:pointer;color:var(--warn);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;}
+  .chip .x:hover{background:var(--warn-bg);}
+  .chip code{font-family:var(--mono);color:var(--teal-2);}
+
+  .upload-box{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;background:#fbfcfc;font-size:13px;color:var(--ink);
+    display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;min-height:41px;cursor:pointer;}
+  .upload-box.filled{border-style:solid;border-color:var(--teal-2);background:#f2fbf9;}
+  .upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+  .upload-box .fname{font-family:var(--mono);font-size:11.5px;color:var(--teal-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
+  .upload-box .placeholder{color:#a9b3b2;}
+
+  table{border-collapse:collapse;width:100%;font-size:13px;}
+  .team-block{margin-bottom:22px;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .team-block table thead th{background:#fff5f2;color:#c0392b;text-align:center;padding:9px 8px;font-weight:800;font-size:12.5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;}
+  .team-block table thead th:first-child{text-align:left;padding-left:14px;}
+  .team-block table tbody td{padding:8px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12.5px;}
+  .team-block table tbody td:first-child{text-align:left;font-family:var(--sans);font-weight:700;color:var(--ink);padding-left:14px;white-space:nowrap;}
+  .team-block table tbody tr:last-child td{border-bottom:none;}
+  .team-block table tbody td.empty{color:#c7cfce;}
+  .team-block table tbody td.note{text-align:left;font-family:var(--sans);color:var(--dim);}
+  .team-toolbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#fafcfc;border-bottom:1px solid var(--line);gap:10px;flex-wrap:wrap;}
+  .team-toolbar .code{font-family:var(--mono);font-size:11.5px;color:var(--teal-2);background:var(--ok-bg);padding:4px 10px;border-radius:20px;}
+
+  .empty-state{text-align:center;padding:50px 20px;color:var(--dim);background:#fff;border:1px dashed var(--line);border-radius:var(--radius);}
+  .empty-state .glyph{font-family:var(--mono);font-size:26px;color:#c9d3d2;margin-bottom:8px;}
+
+  footer.foot{margin-top:18px;font-size:11.5px;color:var(--dim);font-family:var(--mono);text-align:center;}
+
+  .archive-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:12.5px;}
+  .archive-item .d{font-family:var(--mono);font-weight:700;}
+</style>
+</head>
+<body>
+
+<div id="loginGate">
+  <form id="loginForm" class="login-card">
+    <div class="login-logo">GC</div>
+    <h1>Đổ báo cáo Đội</h1>
+    <p>Nhập mật khẩu để tiếp tục</p>
+    <input type="password" id="loginPass" placeholder="Mật khẩu" autofocus>
+    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Đăng nhập</button>
+    <div id="loginError">Sai mật khẩu, thử lại.</div>
+    <label class="login-remember"><input type="checkbox" id="loginRemember" checked> Ghi nhớ đăng nhập trên máy này</label>
+  </form>
+</div>
+
+<!-- Modal xác nhận khi thêm số Đội KHÁC với Đội đang dùng trên máy này -->
+<div id="teamPassGate">
+  <div class="login-card">
+    <div class="login-logo">!</div>
+    <h1>Xác nhận Đội khác</h1>
+    <p id="teamPassMsg">Số Đội này khác với Đội đang dùng trên máy này.</p>
+    <input type="password" id="teamPassInput" placeholder="Mật khẩu">
+    <div class="row" style="justify-content:center;margin-top:0;">
+      <button type="button" class="btn btn-primary btn-sm" id="teamPassOk">Xác nhận</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="teamPassCancel">Huỷ</button>
+    </div>
+    <div id="teamPassError" style="display:none;color:var(--warn);font-size:12px;margin-top:10px;">Sai mật khẩu — liên hệ Hậu Lê Khắc để lấy mật khẩu.</div>
+  </div>
+</div>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="logo">GC</div>
+    <div class="title">ĐỔ BÁO CÁO ĐỘI 6<small>ĐỘI 6 ĐỈNH QUÁ, KHÔNG NGẠI DRAMA</small></div>
+  </div>
+  <div class="today" id="topToday">—</div>
+</div>
+
+<div class="main">
+
+  <div class="notice gold">
+   Dữ liệu chỉ lưu dưới dạng local <b>ngày mới</b> sẽ tự reset và cập nhật theo số ngày<b>“Lưu / Tải báo cáo hôm nay”</b> trước khi hết ngày để có bản sao mang đi, hoặc mở lại ở mục "Lịch sử theo ngày" bên dưới bất cứ lúc nào.
+  </div>
+
+  <!-- ============ 1. CẤU HÌNH ĐỘI / TỔ ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div><h2>1 · Danh sách Đội / Tổ</h2><div class="sub">Nhập số Đội &amp; số Tổ — mã báo cáo sẽ tự sinh theo đúng định dạng file (vd Đội 6 Tổ 2 → BDU.DOIXE06.02).</div></div>
+    </div>
+    <div class="notice warn hidden" id="teamLockNotice"></div>
+    <div class="grid grid-4">
+      <div class="f"><label class="f">Mã Depot (tiền tố)</label><input type="text" id="cfgDepot" value="BDU" maxlength="6" style="text-transform:uppercase" oninput="this.value=this.value.toUpperCase()"></div>
+      <div class="f"><label class="f">Số Đội</label><input type="number" id="cfgDoi" min="1" placeholder="vd 6"></div>
+      <div class="f"><label class="f">Số Tổ</label><input type="number" id="cfgTo" min="1" placeholder="vd 2"></div>
+      <div class="f" style="display:flex;align-items:flex-end;"><button class="btn btn-primary" style="width:100%" onclick="addTeam()">＋ Thêm Đội/Tổ</button></div>
+    </div>
+    <div id="teamChips" style="margin-top:14px;"></div>
+    <div class="hint" id="teamHint" style="margin-top:6px;"></div>
+  </div>
+
+  <!-- ============ 2. CẤU HÌNH KHUNG GIỜ ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div><h2>2 · Khung giờ báo cáo</h2><div class="sub">Mặc định: 9H00, 11H00, 13H00, 15H00, 16H00, 17H00, 20H00, 21H00 — có thể thêm / xoá / đổi tên</div></div>
+    </div>
+    <div id="slotChips"></div>
+    <div class="row">
+      <input type="text" id="newSlotName" placeholder="Tên khung giờ mới, vd 19H00" style="max-width:220px;">
+      <button class="btn btn-ghost btn-sm" onclick="addSlot()">＋ Thêm khung giờ</button>
+      <button class="btn btn-ghost btn-sm" onclick="resetSlotsDefault()">↺ Khôi phục mặc định</button>
+    </div>
+  </div>
+
+  <!-- ============ 3. ĐỔ FILE WORKSPACE ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div><h2>3 · Đổ dữ liệu từ file Workspace</h2><div class="sub">File cần có các cột: Đội, Tổ, Tổng số tài xế, Tài xế vận doanh, Tổng tài xế offline, Tổng doanh thu</div></div>
+    </div>
+    <div class="grid grid-3">
+      <div class="f">
+        <label class="f">File Workspace (.xlsx)</label>
+        <div class="upload-box" id="dzWorkspace">
+          <span class="placeholder" id="phWorkspace">Chọn file .xlsx…</span>
+          <span class="fname" id="fnameWorkspace" style="display:none"></span>
+          <input type="file" id="fileWorkspace" accept=".xlsx,.xls">
+        </div>
+      </div>
+      <div class="f">
+        <label class="f">Khung giờ tương ứng</label>
+        <select id="wsSlot"></select>
+      </div>
+      <div class="f" style="display:flex;align-items:flex-end;">
+        <button class="btn btn-primary" id="btnApplyWorkspace" style="width:100%" disabled onclick="applyWorkspaceToSlot()">⬇ Đổ vào khung giờ đã chọn</button>
+      </div>
+    </div>
+    <div class="hint" id="wsHint" style="margin-top:10px;">chưa có file</div>
+  </div>
+
+  <!-- ============ 4. NHẬP CHUỖI DỮ LIỆU THÔ ============ -->
+  <div class="card">
+    <div class="card-head">
+      <div><h2>4 · Dán chuỗi dữ liệu thô (theo từng Tổ / khung giờ)</h2><div class="sub">Dán nguyên văn dòng lọc từ hệ thống, hệ thống sẽ tự tách 5 số liệu: TX Offline+0Đ, DS&lt;300K+Offline&gt;3h, Vi phạm giao thông, Chưa bảo dưỡng, Ví Thấp</div></div>
+    </div>
+    <div class="grid grid-3">
+      <div class="f"><label class="f">Tổ</label><select id="rawTeam"></select></div>
+      <div class="f"><label class="f">Khung giờ</label><select id="rawSlot"></select></div>
+      <div class="f"><label class="f">Ghi chú (tuỳ chọn, áp dụng cho cả Tổ)</label><input type="text" id="rawNote" placeholder="Ghi chú…"></div>
+    </div>
+    <div class="f" style="margin-top:12px;">
+      <label class="f">Dán chuỗi dữ liệu thô</label>
+      <textarea id="rawText" placeholder="Tất cả Tất cả 0đ + Offline (4) DS&lt;300k + Offline&gt;3h (28) Online&gt;90p + 0 cuốc (1) Vi phạm giao thông (0) Chưa Bảo dưỡng (11) Ví thấp (0)"></textarea>
+    </div>
+    <div class="row">
+      <button class="btn btn-primary" onclick="applyRawText()">✓ Áp dụng vào bảng</button>
+      <span class="hint" id="rawHint"></span>
+    </div>
+  </div>
+
+  <!-- ============ 5. BÁO CÁO ============ -->
+  <div class="card-head" style="margin-top:6px;">
+    <div><h2 style="font-size:15px;">5 · Báo cáo theo Tổ — hôm nay</h2></div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost btn-sm" onclick="exportReport(todayStr())">⬇ Lưu / Tải báo cáo hôm nay (.xlsx)</button>
+      <button class="btn btn-outline-warn btn-sm" onclick="clearTodayData()">⟳ Xoá dữ liệu hôm nay</button>
+    </div>
+  </div>
+  <div id="reportContainer"></div>
+  <div class="empty-state" id="reportEmpty">
+    <div class="glyph">＋</div>
+    Thêm Đội/Tổ ở mục 1, rồi đổ dữ liệu ở mục 3 hoặc 4 để xem báo cáo.
+  </div>
+
+  <!-- ============ 6. LỊCH SỬ THEO NGÀY ============ -->
+  <div class="card" style="margin-top:20px;">
+    <div class="card-head"><h2>6 · Lịch sử theo ngày</h2></div>
+    <div id="archiveList"></div>
+    <div class="hint" id="archiveEmpty">Chưa có dữ liệu của ngày trước.</div>
+  </div>
+
+  <footer class="foot" id="foot"></footer>
+</div>
+
+<script>
+/* =========================================================================
+   ĐĂNG NHẬP RIÊNG cho module này (tách biệt khỏi mật khẩu Green Portal chính)
+   Đổi mật khẩu tại TRP_PASSWORD bên dưới.
+========================================================================= */
+const TRP_PASSWORD = '246810';
+const TRP_AUTH_KEY = 'trp_authed';
+(function initLogin(){
+  const gate = document.getElementById('loginGate');
+  try{ if(localStorage.getItem(TRP_AUTH_KEY) === '1'){ gate.classList.add('hidden'); return; } }catch(e){}
+  document.getElementById('loginForm').addEventListener('submit', e=>{
+    e.preventDefault();
+    const val = document.getElementById('loginPass').value;
+    if(val === TRP_PASSWORD){
+      if(document.getElementById('loginRemember').checked){ try{ localStorage.setItem(TRP_AUTH_KEY,'1'); }catch(err){} }
+      gate.classList.add('hidden');
+    } else {
+      document.getElementById('loginError').classList.add('show');
+      document.getElementById('loginPass').value=''; document.getElementById('loginPass').focus();
+    }
+  });
+})();
+
+/* =========================================================================
+   MẬT KHẨU KHOÁ ĐỘI — mỗi máy chỉ gắn với 1 số Đội.
+   Nếu ai đó nhập số Đội khác với Đội đã dùng trên máy này, hệ thống sẽ
+   yêu cầu nhập mật khẩu (liên hệ Hậu Lê Khắc để lấy mật khẩu).
+   Đổi mật khẩu tại TEAM_LOCK_PASSWORD bên dưới.
+========================================================================= */
+const TEAM_LOCK_PASSWORD = '00000';
+
+// Số Đội DUY NHẤT được phép dùng trên FILE này (áp dụng cho MỌI thiết bị mở link/file này,
+// không phụ thuộc máy nào mở trước). Trước khi gửi link cho từng Đội, đổi số này thành số Đội
+// của Đội đó rồi lưu/gửi 1 bản riêng cho mỗi Đội (vd Đội 6 -> ALLOWED_DOI = 6).
+// Để null nếu muốn quay lại kiểu khoá theo máy (Đội đầu tiên nhập trên máy nào sẽ khoá máy đó).
+const ALLOWED_DOI = 6;
+
+function askTeamPassword(doi, requiredDoi){
+  return new Promise(resolve=>{
+    const gate = document.getElementById('teamPassGate');
+    const input = document.getElementById('teamPassInput');
+    const err = document.getElementById('teamPassError');
+    const okBtn = document.getElementById('teamPassOk');
+    const cancelBtn = document.getElementById('teamPassCancel');
+    document.getElementById('teamPassMsg').textContent = (requiredDoi!==null && requiredDoi!==undefined)
+      ? `Đây là File Đội ${requiredDoi} không được phép dùng ở đây. Nhập mật khẩu để thêm Đội ${doi} (Liên hệ Admin).`
+      : `Số Đội ${doi} khác với Đội đang dùng trên máy này. Nhập mật khẩu để tiếp tục (liên hệ Hậu Lê Khắc để lấy mật khẩu).`;
+    err.style.display = 'none';
+    input.value = '';
+    gate.style.display = 'flex';
+    setTimeout(()=>input.focus(), 50);
+
+    function cleanup(){
+      gate.style.display = 'none';
+      okBtn.removeEventListener('click', onOk);
+      cancelBtn.removeEventListener('click', onCancel);
+      input.removeEventListener('keydown', onKey);
+    }
+    function onOk(){
+      if(input.value === TEAM_LOCK_PASSWORD){ cleanup(); resolve(true); }
+      else { err.style.display = 'block'; input.value=''; input.focus(); }
+    }
+    function onCancel(){ cleanup(); resolve(false); }
+    function onKey(e){ if(e.key==='Enter'){ onOk(); } else if(e.key==='Escape'){ onCancel(); } }
+
+    okBtn.addEventListener('click', onOk);
+    cancelBtn.addEventListener('click', onCancel);
+    input.addEventListener('keydown', onKey);
+  });
+}
+
+/* =========================================================================
+   LƯU TRỮ — IndexedDB (miễn phí, chạy hoàn toàn phía trình duyệt)
+========================================================================= */
+const LS_PREFIX = 'trp::';
+let _dbPromise=null;
+function getDB(){
+  if(_dbPromise) return _dbPromise;
+  _dbPromise = new Promise((resolve,reject)=>{
+    if(!window.indexedDB){ reject(new Error('IndexedDB không khả dụng')); return; }
+    const req = indexedDB.open('trp_db', 1);
+    req.onupgradeneeded = ()=>{ if(!req.result.objectStoreNames.contains('kv')) req.result.createObjectStore('kv'); };
+    req.onsuccess = ()=> resolve(req.result);
+    req.onerror = ()=> reject(req.error);
+  });
+  return _dbPromise;
+}
+async function kvGet(key){
+  try{
+    const db = await getDB();
+    return await new Promise(resolve=>{
+      const tx = db.transaction('kv','readonly');
+      const r = tx.objectStore('kv').get(LS_PREFIX+key);
+      r.onsuccess = ()=> resolve(r.result===undefined ? null : r.result);
+      r.onerror = ()=> resolve(null);
+    });
+  }catch(e){ return null; }
+}
+async function kvSet(key,value){
+  try{
+    const db = await getDB();
+    return await new Promise(resolve=>{
+      const tx = db.transaction('kv','readwrite');
+      tx.objectStore('kv').put(value, LS_PREFIX+key);
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> resolve(false);
+    });
+  }catch(e){ return false; }
+}
+async function kvGetJSON(key, fallback){ const v = await kvGet(key); if(v===null||v===undefined) return fallback; try{ return JSON.parse(v); }catch(e){ return fallback; } }
+async function kvSetJSON(key, obj){ return kvSet(key, JSON.stringify(obj)); }
+
+/* =========================================================================
+   STATE
+========================================================================= */
+const DEFAULT_SLOTS = ['9H00','11H00','13H00','15H00','16H00','17H00','20H00','21H00'];
+let teams = [];        // [{id, doi, to}]
+let slots = [];        // ['9H00', ...]
+let depotPrefix = 'BDU';
+let todayData = {};    // { [teamId]: { ghiChu:'', slots:{ [slot]: {doanhSo,txOffline,txLenCa,txOff,offline0d,ds300k,viPham,chuaBaoDuong,viThap} } } }
+let wsParsedMap = null; // parsed workspace rows keyed by team code
+
+function pad2(n){ n = parseInt(n,10)||0; return n<10 ? '0'+n : ''+n; }
+function teamCode(t){ return `${depotPrefix}.DOIXE${pad2(t.doi)}.${pad2(t.to)}`; }
+function teamLabel(t){ return `Đội ${t.doi} Tổ ${t.to}`; }
+function todayStr(){
+  const d = new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function esc(v){ return String(v==null?'':v).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+// Tự chèn dấu chấm ngăn cách hàng nghìn theo kiểu VN — KHÔNG phụ thuộc vào toLocaleString/ICU
+// của trình duyệt (một số trình duyệt/thiết bị thiếu dữ liệu ngôn ngữ nên toLocaleString('vi-VN')
+// im lặng trả về số không có dấu chấm). Dùng hàm này để luôn ra kết quả giống nhau mọi nơi.
+function fmtVNThousand(n){
+  if(n===null||n===undefined||n==='') return '';
+  const num = Math.round(Number(n));
+  if(isNaN(num)) return '';
+  const neg = num < 0;
+  const digits = String(Math.abs(num));
+  let out = '';
+  for(let i=0;i<digits.length;i++){
+    const posFromEnd = digits.length - i;
+    out += digits[i];
+    if(posFromEnd>1 && posFromEnd%3===1) out += '.';
+  }
+  return (neg?'-':'') + out;
+}
+function emptyTeamData(){ return { ghiChu:'', slots:{} }; }
+function emptySlotData(){ return { doanhSo:null, txOffline:null, txLenCa:null, txOff:null, offline0d:null, ds300k:null, viPham:null, chuaBaoDuong:null, viThap:null }; }
+function ensureTeamSlot(teamId, slot){
+  if(!todayData[teamId]) todayData[teamId] = emptyTeamData();
+  if(!todayData[teamId].slots[slot]) todayData[teamId].slots[slot] = emptySlotData();
+  return todayData[teamId].slots[slot];
+}
+
+/* =========================================================================
+   KHỞI TẠO / RESET THEO NGÀY
+========================================================================= */
+async function loadConfig(){
+  teams = await kvGetJSON('teams', []);
+  slots = await kvGetJSON('slots', DEFAULT_SLOTS.slice());
+  depotPrefix = (await kvGet('depotPrefix')) || 'BDU';
+  document.getElementById('cfgDepot').value = depotPrefix;
+}
+async function saveTeams(){ await kvSetJSON('teams', teams); }
+async function saveSlots(){ await kvSetJSON('slots', slots); }
+
+async function loadTodayData(){
+  const lastDate = await kvGet('lastDate');
+  const today = todayStr();
+  if(lastDate !== today){
+    // Sang ngày mới: dữ liệu hiển thị sẽ trống, nhưng KHÔNG xoá dữ liệu ngày cũ (vẫn nằm trong kho lưu trữ 'day:<ngày cũ>')
+    todayData = {};
+    await kvSetJSON('day:'+today, todayData);
+    await kvSet('lastDate', today);
+  } else {
+    todayData = await kvGetJSON('day:'+today, {});
+  }
+}
+async function saveTodayData(){ await kvSetJSON('day:'+todayStr(), todayData); }
+
+/* =========================================================================
+   1. QUẢN LÝ ĐỘI / TỔ
+========================================================================= */
+document.getElementById('cfgDepot').addEventListener('change', async e=>{
+  depotPrefix = (e.target.value||'BDU').trim().toUpperCase() || 'BDU';
+  e.target.value = depotPrefix;
+  await kvSet('depotPrefix', depotPrefix);
+  renderTeamChips(); renderSelectors(); renderReport();
+});
+async function addTeam(){
+  const doi = document.getElementById('cfgDoi').value;
+  const to = document.getElementById('cfgTo').value;
+  const hint = document.getElementById('teamHint');
+  if(!doi || !to){ hint.textContent = 'Nhập đủ số Đội và số Tổ.'; return; }
+  const exists = teams.find(t=> String(t.doi)===String(doi) && String(t.to)===String(to));
+  if(exists){ hint.textContent = 'Đội/Tổ này đã có trong danh sách.'; return; }
+
+  // Khoá Đội: nếu file này đã gán cố định ALLOWED_DOI, áp dụng cho MỌI thiết bị mở link này.
+  // Nếu ALLOWED_DOI để trống (null), quay lại kiểu cũ: khoá theo Đội đầu tiên nhập trên từng máy.
+  const authorizedDoi = await kvGet('authorizedDoi');
+  const requiredDoi = (ALLOWED_DOI !== null && ALLOWED_DOI !== undefined) ? ALLOWED_DOI : authorizedDoi;
+  if(requiredDoi !== null && requiredDoi !== undefined && String(requiredDoi) !== String(doi)){
+    hint.textContent = `Chỉ Đội ${requiredDoi} được phép dùng ở đây — cần mật khẩu...`;
+    const ok = await askTeamPassword(doi, requiredDoi);
+    if(!ok){
+      hint.textContent = `Không thể thêm Đội ${doi} (chỉ Đội ${requiredDoi} được phép dùng ở đây). Liên hệ Hậu Lê Khắc để lấy mật khẩu.`;
+      return;
+    }
+  }
+
+  const id = 't'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
+  teams.push({ id, doi: parseInt(doi,10), to: parseInt(to,10) });
+  await saveTeams();
+  if(ALLOWED_DOI === null || ALLOWED_DOI === undefined){
+    if(authorizedDoi === null){ await kvSet('authorizedDoi', String(doi)); }
+  }
+  document.getElementById('cfgDoi').value=''; document.getElementById('cfgTo').value='';
+  hint.textContent = '';
+  renderTeamChips(); renderSelectors(); renderReport();
+}
+async function removeTeam(id){
+  teams = teams.filter(t=>t.id!==id);
+  await saveTeams();
+  renderTeamChips(); renderSelectors(); renderReport();
+}
+function renderTeamChips(){
+  const el = document.getElementById('teamChips');
+  if(!teams.length){ el.innerHTML = '<span class="hint">Chưa có Đội/Tổ nào — thêm ở trên (vd đội 6, tổ 2, tổ 3, tổ 4…)</span>'; return; }
+  el.innerHTML = teams.map(t=> `<span class="chip">${esc(teamLabel(t))} · <code>${esc(teamCode(t))}</code><span class="x" onclick="removeTeam('${t.id}')">×</span></span>`).join('');
+}
+
+/* =========================================================================
+   2. QUẢN LÝ KHUNG GIỜ
+========================================================================= */
+async function addSlot(){
+  const el = document.getElementById('newSlotName');
+  const name = el.value.trim();
+  if(!name){ return; }
+  if(slots.includes(name)){ el.value=''; return; }
+  slots.push(name);
+  await saveSlots();
+  el.value = '';
+  renderSlotChips(); renderSelectors(); renderReport();
+}
+async function removeSlot(name){
+  slots = slots.filter(s=>s!==name);
+  await saveSlots();
+  renderSlotChips(); renderSelectors(); renderReport();
+}
+async function resetSlotsDefault(){
+  slots = DEFAULT_SLOTS.slice();
+  await saveSlots();
+  renderSlotChips(); renderSelectors(); renderReport();
+}
+function renderSlotChips(){
+  const el = document.getElementById('slotChips');
+  el.innerHTML = slots.map(s=> `<span class="chip">${esc(s)}<span class="x" onclick="removeSlot('${esc(s)}')">×</span></span>`).join('');
+}
+
+function renderSelectors(){
+  const wsSlot = document.getElementById('wsSlot');
+  const rawSlot = document.getElementById('rawSlot');
+  const rawTeam = document.getElementById('rawTeam');
+  const slotOpts = slots.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  wsSlot.innerHTML = slotOpts; rawSlot.innerHTML = slotOpts;
+  rawTeam.innerHTML = teams.map(t=>`<option value="${t.id}">${esc(teamLabel(t))} (${esc(teamCode(t))})</option>`).join('');
+}
+
+/* =========================================================================
+   3. ĐỔ FILE WORKSPACE
+========================================================================= */
+let workspaceWB = null;
+document.getElementById('fileWorkspace').addEventListener('change', e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev=>{
+    const data = new Uint8Array(ev.target.result);
+    workspaceWB = XLSX.read(data, {type:'array'});
+    document.getElementById('phWorkspace').style.display='none';
+    document.getElementById('fnameWorkspace').style.display='inline';
+    document.getElementById('fnameWorkspace').textContent = file.name;
+    document.getElementById('dzWorkspace').classList.add('filled');
+    parseWorkspace();
+  };
+  reader.readAsArrayBuffer(file);
+});
+function pickWs(obj, keys){ for(const k of keys){ if(obj[k]!==undefined && obj[k]!==null && String(obj[k]).trim()!=='') return obj[k]; } return ''; }
+function parseVNNum(v){
+  if(v===undefined||v===null) return 0;
+  if(typeof v==='number') return isNaN(v)?0:v;
+  let s = String(v).trim().replace(/[^\d.,-]/g,'');
+  if(s==='') return 0;
+  const lastComma=s.lastIndexOf(','), lastDot=s.lastIndexOf('.');
+  if(lastComma!==-1 && lastDot!==-1){ if(lastComma>lastDot){ s=s.replace(/\./g,'').replace(',','.'); } else { s=s.replace(/,/g,''); } }
+  else if(lastComma!==-1){ const dec=s.length-lastComma-1; s = dec===3 ? s.replace(/,/g,'') : s.replace(',','.'); }
+  else if(lastDot!==-1){ const dec=s.length-lastDot-1; if(dec===3 && (s.match(/\./g)||[]).length===1) s=s.replace(/\./g,''); }
+  const n=parseFloat(s); return isNaN(n)?0:n;
+}
+function parseWorkspace(){
+  if(!workspaceWB){ return; }
+  const sheetName = workspaceWB.SheetNames[0];
+  const rows = XLSX.utils.sheet_to_json(workspaceWB.Sheets[sheetName], {defval:''});
+  wsParsedMap = new Map();
+  let count = 0;
+  rows.forEach(r=>{
+    const to = String(pickWs(r, ['Tổ'])).trim();
+    if(!to) return; // dòng tổng của Đội (Tổ trống) — bỏ qua
+    const tongSo = parseVNNum(pickWs(r, ['Tổng số tài xế']));
+    const vanDoanh = parseVNNum(pickWs(r, ['Tài xế vận doanh']));
+    const offline = parseVNNum(pickWs(r, ['Tổng tài xế offline']));
+    const doanhThu = parseVNNum(pickWs(r, ['Tổng doanh thu']));
+    wsParsedMap.set(to, { tongSo, vanDoanh, offline, doanhThu });
+    count++;
+  });
+  document.getElementById('btnApplyWorkspace').disabled = count===0;
+  document.getElementById('wsHint').textContent = count
+    ? `Đọc được ${count} dòng Tổ từ file. Chọn khung giờ rồi bấm "Đổ vào khung giờ đã chọn".`
+    : 'Không đọc được dòng Tổ nào — kiểm tra lại file có đúng cột "Đội","Tổ","Tổng số tài xế","Tài xế vận doanh","Tổng tài xế offline","Tổng doanh thu" không.';
+}
+async function applyWorkspaceToSlot(){
+  if(!wsParsedMap || !wsParsedMap.size){ return; }
+  const slot = document.getElementById('wsSlot').value;
+  if(!slot){ document.getElementById('wsHint').textContent = 'Chưa có khung giờ nào — thêm ở mục 2.'; return; }
+  let matched = 0, unmatched = [];
+  teams.forEach(t=>{
+    const code = teamCode(t);
+    const rec = wsParsedMap.get(code);
+    if(!rec){ unmatched.push(code); return; }
+    const cell = ensureTeamSlot(t.id, slot);
+    cell.doanhSo = rec.doanhThu;
+    cell.txLenCa = rec.vanDoanh;
+    cell.txOffline = rec.offline;
+    cell.txOff = Math.max(0, rec.tongSo - rec.vanDoanh);
+    matched++;
+  });
+  await saveTodayData();
+  document.getElementById('wsHint').textContent = `Đã đổ dữ liệu khung giờ "${slot}" cho ${matched}/${teams.length} Tổ.`
+    + (unmatched.length ? ` Không khớp mã: ${unmatched.join(', ')} (kiểm tra lại số Đội/Tổ hoặc mã Depot).` : '');
+  renderReport();
+}
+
+/* =========================================================================
+   4. DÁN CHUỖI DỮ LIỆU THÔ
+========================================================================= */
+function normLabel(s){
+  return String(s||'').toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/đ/g,'d').replace(/Đ/g,'d')
+    .replace(/[^a-z0-9]/g,'');
+}
+function parseRawString(text){
+  const out = { offline0d:null, ds300k:null, viPham:null, chuaBaoDuong:null, viThap:null };
+  const re = /([^()]+)\(([\-\d.,]+)\)/g;
+  let m; const found = [];
+  while((m = re.exec(text))){
+    const label = normLabel(m[1]);
+    const num = parseVNNum(m[2]);
+    found.push({label, num, raw:m[1].trim()});
+    if(label.includes('0d') && label.includes('offline')) out.offline0d = num;
+    else if(label.includes('300k')) out.ds300k = num;
+    else if(label.includes('vipham')) out.viPham = num;
+    else if(label.includes('baoduong')) out.chuaBaoDuong = num;
+    else if(label.includes('vithap')) out.viThap = num;
+  }
+  return { out, found };
+}
+async function applyRawText(){
+  const teamId = document.getElementById('rawTeam').value;
+  const slot = document.getElementById('rawSlot').value;
+  const note = document.getElementById('rawNote').value.trim();
+  const text = document.getElementById('rawText').value.trim();
+  const hint = document.getElementById('rawHint');
+  if(!teamId || !slot){ hint.textContent = 'Cần có ít nhất 1 Tổ và 1 khung giờ (mục 1 &amp; 2).'; return; }
+  if(!text){ hint.textContent = 'Chưa dán chuỗi dữ liệu.'; return; }
+  const { out, found } = parseRawString(text);
+  const cell = ensureTeamSlot(teamId, slot);
+  cell.offline0d = out.offline0d;
+  cell.ds300k = out.ds300k;
+  cell.viPham = out.viPham;
+  cell.chuaBaoDuong = out.chuaBaoDuong;
+  cell.viThap = out.viThap;
+  if(note){ if(!todayData[teamId]) todayData[teamId] = emptyTeamData(); todayData[teamId].ghiChu = note; }
+  await saveTodayData();
+  const t = teams.find(x=>x.id===teamId);
+  const missing = [];
+  if(out.offline0d===null) missing.push('TX Offline+0Đ'); if(out.ds300k===null) missing.push('DS<300K+Offline>3h');
+  if(out.viPham===null) missing.push('Vi phạm giao thông'); if(out.chuaBaoDuong===null) missing.push('Chưa bảo dưỡng'); if(out.viThap===null) missing.push('Ví Thấp');
+  hint.textContent = `Đã áp dụng cho ${t?teamLabel(t):''} — khung giờ ${slot} (nhận diện được ${found.length} mục trong chuỗi).`
+    + (missing.length ? ` Chưa tìm thấy: ${missing.join(', ')}.` : '');
+  document.getElementById('rawText').value='';
+  renderReport();
+}
+
+/* =========================================================================
+   5. BÁO CÁO
+========================================================================= */
+const ROW_DEFS = [
+  { key:'doanhSo', label:'Doanh số', fmt:'money' },
+  { key:'txOffline', label:'Số lượng TX Offline', fmt:'int' },
+  { key:'offline0d', label:'Số lượng TX Offline + 0Đ', fmt:'int' },
+  { key:'ds300k', label:'DS <300K + Offline > 3h', fmt:'int' },
+  { key:'viPham', label:'Vi phạm giao thông', fmt:'int' },
+  { key:'chuaBaoDuong', label:'Chưa bảo dưỡng', fmt:'int' },
+  { key:'viThap', label:'Ví Thấp', fmt:'int' },
+  { key:'txLenCa', label:'Tổng TX lên ca', fmt:'int' },
+  { key:'txOff', label:'Tổng TX OFF', fmt:'int' },
+];
+function fmtCell(v, fmt){
+  if(v===null || v===undefined || v==='') return '';
+  return fmtVNThousand(v);
+}
+function renderReport(){
+  const container = document.getElementById('reportContainer');
+  const emptyEl = document.getElementById('reportEmpty');
+  if(!teams.length){ container.innerHTML=''; emptyEl.style.display='block'; return; }
+  emptyEl.style.display='none';
+  let html = '';
+  teams.forEach(t=>{
+    const data = todayData[t.id] || emptyTeamData();
+    html += `<div class="team-block">
+      <div class="team-toolbar"><b>${esc(teamLabel(t))}</b><span class="code">${esc(teamCode(t))}</span>
+        <span class="hint" style="margin-left:auto;">${data.ghiChu? 'Ghi chú: '+esc(data.ghiChu) : ''}</span></div>
+      <table><thead><tr><th></th>${slots.map(s=>`<th>${esc(s)}</th>`).join('')}<th>Ghi chú</th></tr></thead><tbody>`;
+    ROW_DEFS.forEach(rd=>{
+      html += `<tr><td>${esc(rd.label)}</td>`;
+      slots.forEach(s=>{
+        const cell = (data.slots && data.slots[s]) || null;
+        const v = cell ? cell[rd.key] : null;
+        const txt = fmtCell(v, rd.fmt);
+        html += `<td class="${txt===''?'empty':''}">${txt===''?'—':txt}</td>`;
+      });
+      html += `<td class="note">${slots.indexOf(rd.key)>=0?'':''}</td>`;
+      html += `</tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  container.innerHTML = html;
+}
+
+async function clearTodayData(){
+  if(!confirm('Xoá toàn bộ dữ liệu báo cáo của HÔM NAY (tất cả các Tổ, tất cả khung giờ)? Không hoàn tác được.')) return;
+  todayData = {};
+  await saveTodayData();
+  renderReport();
+}
+
+/* =========================================================================
+   6. LỊCH SỬ THEO NGÀY + XUẤT EXCEL
+========================================================================= */
+async function listArchivedDates(){
+  // Không có API "list keys" chuẩn trên IndexedDB cursor đơn giản ở đây, nên ta duy trì 1 index riêng.
+  return await kvGetJSON('dayIndex', []);
+}
+async function touchDayIndex(dateStr){
+  const idx = await kvGetJSON('dayIndex', []);
+  if(!idx.includes(dateStr)){ idx.push(dateStr); idx.sort(); await kvSetJSON('dayIndex', idx); }
+}
+async function renderArchiveList(){
+  const idx = (await listArchivedDates()).filter(d=> d !== todayStr());
+  const el = document.getElementById('archiveList');
+  const emptyEl = document.getElementById('archiveEmpty');
+  if(!idx.length){ el.innerHTML=''; emptyEl.style.display='block'; return; }
+  emptyEl.style.display='none';
+  el.innerHTML = idx.slice().reverse().map(d=>`
+    <div class="archive-item">
+      <span class="d">${esc(d)}</span>
+      <button class="btn btn-ghost btn-sm" onclick="exportReport('${d}')">⬇ Tải báo cáo ngày này (.xlsx)</button>
+    </div>`).join('');
+}
+
+// Viền đầy đủ (4 cạnh), màu ĐEN, cho toàn bộ ô trong bảng xuất Excel — giúp nhìn rõ, đọc nhanh
+const XLSX_BORDER_LINE = { style:'thin', color:{ argb:'FF000000' } };
+const XLSX_BORDER_FULL = { top:XLSX_BORDER_LINE, left:XLSX_BORDER_LINE, bottom:XLSX_BORDER_LINE, right:XLSX_BORDER_LINE };
+
+async function exportReport(dateStr){
+  const data = (dateStr === todayStr()) ? todayData : await kvGetJSON('day:'+dateStr, {});
+  if(!teams.length){ alert('Chưa có Đội/Tổ nào để xuất báo cáo.'); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('Báo cáo Đội - '+dateStr);
+  let r = 1;
+  teams.forEach(t=>{
+    const teamData = data[t.id] || emptyTeamData();
+    // header row: tên đội đỏ + các khung giờ + Ghi chú
+    const headerVals = [teamLabel(t), ...slots, 'Ghi chú'];
+    const headerRow = ws.getRow(r); headerRow.values = headerVals;
+    headerRow.eachCell({ includeEmpty:true }, c=>{
+      c.font = {bold:true, color:{argb:'FFC0392B'}};
+      c.border = XLSX_BORDER_FULL;
+    });
+    r++;
+    ROW_DEFS.forEach(rd=>{
+      const rowVals = [rd.label];
+      slots.forEach(s=>{
+        const cell = (teamData.slots && teamData.slots[s]) || null;
+        const v = cell ? cell[rd.key] : null;
+        if(rd.key === 'doanhSo'){
+          // Doanh số: xuất dạng chuỗi có dấu chấm phân cách hàng nghìn (vd 48.227.500)
+          // để hiển thị nhất quán trong Excel bất kể cài đặt vùng miền của máy mở file.
+          rowVals.push(v===null||v===undefined||v==='' ? '' : Math.round(v).toLocaleString('vi-VN'));
+        } else {
+          rowVals.push(v===null||v===undefined ? '' : Math.round(v));
+        }
+      });
+      rowVals.push(rd.key==='doanhSo' ? (teamData.ghiChu||'') : '');
+      const row = ws.addRow(rowVals);
+      row.getCell(1).font = {bold:true};
+      row.eachCell({ includeEmpty:true }, c=>{ c.border = XLSX_BORDER_FULL; });
+      r++;
+    });
+    r++; ws.addRow([]); // dòng trống ngăn cách giữa các Tổ (không có viền)
+  });
+  ws.columns.forEach((c,i)=>{ c.width = i===0 ? 26 : 14; });
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:'application/octet-stream'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `bao_cao_doi_${depotPrefix}_${dateStr}.xlsx`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* =========================================================================
+   INIT
+========================================================================= */
+(async function init(){
+  document.getElementById('topToday').textContent = new Date().toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'2-digit', day:'2-digit'});
+  if(ALLOWED_DOI !== null && ALLOWED_DOI !== undefined){
+    const n = document.getElementById('teamLockNotice');
+    n.textContent = `File này chỉ dùng cho Đội ${ALLOWED_DOI} — nhập số Đội khác sẽ bị chặn.`;
+    n.classList.remove('hidden');
+  }
+  await loadConfig();
+  await loadTodayData();
+  await touchDayIndex(todayStr());
+  renderTeamChips();
+  renderSlotChips();
+  renderSelectors();
+  renderReport();
+  await renderArchiveList();
+  document.getElementById('foot').textContent = 'File báo cáo được thiết kế bởi: Hậu Lê Khắc, Vui lòng không share link tránh lỗi nhóm 1 nha';
+})();
+</script>
+</body>
+</html>

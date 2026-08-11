@@ -70,6 +70,8 @@
   .side-item.nav-item:hover{background:#f4faf9;}
   .side-item.active{background:var(--ok-bg);color:var(--teal-2);}
   .side-item.sub{padding-left:34px;font-weight:500;font-size:13px;cursor:default;}
+  .side-item.external-link{cursor:pointer;transition:background .12s;text-decoration:none;}
+  .side-item.external-link:hover{background:#f4faf9;}
   .side-divider{height:1px;background:var(--line);margin:12px 4px;}
   .side-note{padding:12px;font-size:11px;color:var(--dim);line-height:1.6;}
 
@@ -312,6 +314,10 @@
     <div class="side-item nav-item" data-view="drivers" data-label="Quản lý tài xế">
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span> Quản lý tài xế
     </div>
+
+    <a class="side-item external-link" href="bao_cao_doi_6.html" target="_blank" rel="noopener" title="Mở trang Đổ báo cáo Đội (file riêng)">
+      <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></span> Đổ báo cáo Đội
+    </a>
 
     <div class="side-divider"></div>
     <div class="side-note">Được xây dựng bởi: Hậu Lê Khắc IT, lấy trực tiếp logic của file Excel của GSM</div>
@@ -1488,6 +1494,10 @@ function readFileAsRows(file, onProgress){
         skipEmptyLines: true,
         worker: true,
         chunkSize: 1024*1024*2,
+        // Excel/Google Sheets khi "Save As CSV" hay chèn thêm dấu BOM (ký tự vô hình) vào ĐẦU cột đầu
+        // tiên, và đôi khi tên cột dính khoảng trắng thừa — nếu không xử lý, cột đầu tiên (vd "Status")
+        // sẽ không khớp với danh sách cột bắt buộc, khiến app coi như file thiếu cột dù thực ra không thiếu.
+        transformHeader: (h)=> String(h||'').replace(/^\uFEFF/, '').trim(),
         step: (result)=>{ if(result.data) rows.push(result.data); },
         complete: ()=> resolve(rows),
         error: (err)=> reject(err instanceof Error ? err : new Error(String(err)))
@@ -1609,7 +1619,9 @@ function pickBestSheetRows(wb){
    Xử lý được cả 2 kiểu ô: chuỗi ghi trực tiếp (inlineStr) và chuỗi dùng chung (sharedStrings.xml),
    dù 2 phần này xuất hiện trước/sau nhau trong file (dùng placeholder rồi thay thế ở bước cuối).
    Cũng tự động dò dòng tiêu đề trong vài chục dòng đầu (giống sheetToRowsAuto ở trên) thay vì
-   luôn coi dòng đầu tiên là header — tránh lỗi khi file có dòng tiêu đề lớn/ghi chú phía trên. */
+   luôn coi dòng đầu tiên là header — tránh lỗi khi file có dòng tiêu đề lớn/ghi chú phía trên.
+   Tách <row>...</row> bằng indexOf thay vì regex trên buffer khổng lồ: nhanh hơn nhiều và không
+   có rủi ro hiệu năng khi file .xlsx xuất ra dạng 1 dòng XML liên tục (không xuống dòng) rất lớn. */
 function xlsxColToIdx(col){
   let idx = 0;
   for(let i=0;i<col.length;i++){ idx = idx*26 + (col.charCodeAt(i) - 64); }
@@ -1634,6 +1646,7 @@ function readXlsxStreaming(file, onProgress){
     if(!window.fflate){ reject(new Error('Thiếu thư viện đọc file streaming (fflate).')); return; }
     const SI_PREFIX = '\u0001SI\u0001';
     const HEADER_SCAN_LIMIT = 20;
+    const MAX_BUF_WITHOUT_ROW = 30*1024*1024; // an toàn: 30MB liên tục không tìm được 1 <row> trọn vẹn -> báo lỗi rõ ràng
     let sharedStrings = null;
     let sharedStringsChunks = [];
     let sheetBuf = '';
@@ -1647,7 +1660,6 @@ function readXlsxStreaming(file, onProgress){
     let rawBuffer = []; // { arr, hasSi }
     let headerIdx = null;
 
-    const rowRe = /<row[^>]*>([\s\S]*?)<\/row>/g;
     const cellRe = /<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>(?:<is>([\s\S]*?)<\/is>|<v>([\s\S]*?)<\/v>)?<\/c>)/g;
     const isTextRe = /<t[^>]*>([\s\S]*?)<\/t>/g;
 
@@ -1704,23 +1716,46 @@ function readXlsxStreaming(file, onProgress){
       rawBuffer = [];
     }
 
+    // ---- Quét <row>...</row> bằng indexOf thay vì regex trên buffer khổng lồ ----
+    // An toàn hơn nhiều với file .xlsx xuất ra dạng 1 dòng liên tục (không xuống dòng) và rất lớn:
+    // không có rủi ro regex "quét lùi" (backtracking) tốn CPU trên chuỗi hàng trăm MB, và xử lý
+    // đúng cả trường hợp 1 chunk mạng đến giữa chừng 1 thẻ <row> (chờ chunk kế tiếp).
     function processSheetChunk(text){
       sheetBuf += text;
-      rowRe.lastIndex = 0;
-      let lastIndex = 0, m;
-      while((m = rowRe.exec(sheetBuf))){
-        const { arr, hasSi } = parseRowXml(m[1]);
-        lastIndex = rowRe.lastIndex;
+      let searchFrom = 0;
+      while(true){
+        const startTag = sheetBuf.indexOf('<row', searchFrom);
+        if(startTag === -1){
+          searchFrom = Math.max(searchFrom, sheetBuf.length - 100);
+          break;
+        }
+        const openEnd = sheetBuf.indexOf('>', startTag);
+        if(openEnd === -1) break; // thẻ mở <row ...> chưa đọc hết, chờ dữ liệu tiếp theo
+        const closeTag = sheetBuf.indexOf('</row>', openEnd);
+        if(closeTag === -1) break; // nội dung <row> chưa đọc hết, chờ dữ liệu tiếp theo
+
+        const rowInner = sheetBuf.slice(openEnd+1, closeTag);
+        let parsed;
+        try{
+          parsed = parseRowXml(rowInner);
+        }catch(err){
+          reject(new Error('Lỗi phân tích 1 dòng trong file .xlsx (dòng thứ ' + (rowsSeen+1) + '): ' + (err.message||err)));
+          return;
+        }
         rowsSeen++;
         if(header === null){
-          rawBuffer.push({ arr, hasSi });
+          rawBuffer.push(parsed);
           if(rawBuffer.length >= HEADER_SCAN_LIMIT){ decideHeaderAndFlush(); }
         } else {
-          emitDataRow(arr, hasSi);
+          emitDataRow(parsed.arr, parsed.hasSi);
         }
         if(onProgress && (rowsSeen % 5000 === 0)) onProgress(rowsSeen);
+        searchFrom = closeTag + 6; // độ dài '</row>'
       }
-      if(lastIndex > 0) sheetBuf = sheetBuf.slice(lastIndex);
+      if(searchFrom > 0) sheetBuf = sheetBuf.slice(searchFrom);
+      if(sheetBuf.length > MAX_BUF_WITHOUT_ROW){
+        reject(new Error('Đã đọc quá ' + Math.round(MAX_BUF_WITHOUT_ROW/1024/1024) + 'MB liên tục mà không tìm thấy 1 thẻ <row> trọn vẹn nào — có thể sheet trong file dùng cấu trúc khác thường (không phải lỗi bộ nhớ). Vui lòng kiểm tra lại file gốc.'));
+      }
     }
 
     function finalize(){
@@ -1775,7 +1810,9 @@ function readXlsxStreaming(file, onProgress){
         sheetFound = true;
         f.ondata = (err, chunk, final)=>{
           if(err){ reject(err); return; }
-          processSheetChunk(decoder.decode(chunk, {stream: !final}));
+          try{
+            processSheetChunk(decoder.decode(chunk, {stream: !final}));
+          }catch(err2){ reject(err2); return; }
           if(final){ sheetDone = true; finalize(); }
         };
         f.start();
@@ -1970,6 +2007,41 @@ async function renderStartTable(){
   }
 }
 function normPlate(p){ return String(p||'').toUpperCase().replace(/[-.\s]/g,''); }
+
+/* ---- Đọc số tiền/số lượng từ dữ liệu Order — chịu được nhiều kiểu định dạng khác nhau ----
+   Đây chính là nguyên nhân phổ biến nhất khiến "chuyển qua CSV thì mất doanh thu": khi mở file .xlsx
+   gốc bằng Excel/Google Sheets rồi "Lưu dưới dạng" .csv trên máy đang để định dạng vùng miền Việt Nam,
+   các cột số (vd "Total Fee Display") có thể bị ghi lại thành dạng "15.000" hoặc "15.000,00" (dấu chấm
+   phân cách hàng nghìn, dấu phẩy là thập phân) thay vì "15000" thuần. parseFloat() thông thường đọc
+   "15.000,00" ra thành 15 (chỉ lấy tới trước dấu phẩy) — khiến GMV tính ra gần như bằng 0.
+   Hàm này tự nhận diện: có cả dấu . và , thì dấu đứng SAU là dấu thập phân; chỉ có 1 loại dấu thì dựa
+   vào số chữ số phía sau để đoán là phân cách nghìn hay thập phân. */
+function parseVNNumber(v){
+  if(v===undefined||v===null) return 0;
+  if(typeof v === 'number') return isNaN(v) ? 0 : v;
+  let s = String(v).trim();
+  if(s==='') return 0;
+  const neg = /^-/.test(s) || /^\(.*\)$/.test(s);
+  s = s.replace(/[^\d.,]/g,'');
+  if(s==='') return 0;
+  const lastComma = s.lastIndexOf(',');
+  const lastDot = s.lastIndexOf('.');
+  if(lastComma !== -1 && lastDot !== -1){
+    if(lastComma > lastDot){ s = s.replace(/\./g,'').replace(',', '.'); }
+    else { s = s.replace(/,/g,''); }
+  } else if(lastComma !== -1){
+    const decimals = s.length - lastComma - 1;
+    if(decimals === 3){ s = s.replace(/,/g,''); } // "15,000" -> phân cách nghìn
+    else { s = s.replace(',', '.'); } // "15,5" -> số thập phân
+  } else if(lastDot !== -1){
+    const decimals = s.length - lastDot - 1;
+    if(decimals === 3 && (s.match(/\./g)||[]).length === 1){ s = s.replace(/\./g,''); } // "15.000" -> phân cách nghìn (VND không có số lẻ)
+    // decimals khác 3 (vd "15.5", "15.50") thì giữ nguyên dấu chấm làm số thập phân
+  }
+  const n = parseFloat(s);
+  if(isNaN(n)) return 0;
+  return neg ? -Math.abs(n) : n;
+}
 async function computeLiveGMV(){
   const { rows: xeRows } = await loadType('Xe');
   const { rows: orderRows } = await loadType('Order');
@@ -1978,7 +2050,7 @@ async function computeLiveGMV(){
   xeRows.forEach(r => { const plate = normPlate(r['Biển số']); if(plate) plateToDepotCode.set(plate, String(r['Depot']||'').trim()); });
   const byDepot = {}; let unmatched = 0, total = 0;
   orderRows.forEach(r => {
-    const fee = parseFloat(r['Total Fee Display']) || 0;
+    const fee = parseVNNumber(r['Total Fee Display']);
     const insurance = String(r['Insurance Provider Code']||'').trim();
     const gmv = fee - (insurance === '' ? 2000 : 0);
     const plate = normPlate(r['Driver Vehicle Plate']);
@@ -2191,7 +2263,7 @@ function recomputeXe0(periodFilter){
   function toKey(doi, to){ return (doi||'—') + '\u0001' + (to||'—'); }
 
   orderRows.forEach(r=>{
-    const fee = parseFloat(r['Total Fee Display']) || 0;
+    const fee = parseVNNumber(r['Total Fee Display']);
     const insurance = String(r['Insurance Provider Code']||'').trim();
     const gmv = fee - (insurance === '' ? 2000 : 0);
     const sap = String(r['Sap Profile Id']||'').trim();
@@ -2348,7 +2420,7 @@ function buildDailyPivot(orderRows, txRows){
   orderRows.forEach(r=>{
     const d = orderDateStr(r); if(!d) return;
     datesSet.add(d);
-    const fee = parseFloat(r['Total Fee Display']) || 0;
+    const fee = parseVNNumber(r['Total Fee Display']);
     const insurance = String(r['Insurance Provider Code']||'').trim();
     const gmv = fee - (insurance === '' ? 2000 : 0);
     const sap = String(r['Sap Profile Id']||'').trim();
@@ -2721,7 +2793,7 @@ function processMinio(){
       const status = String(o['Status']||'').trim().toUpperCase();
       if(status === 'COMPLETED'){
         I++;
-        L += parseFloat(o['Total Fee Display'])||0;
+        L += parseVNNumber(o['Total Fee Display']);
       } else if(status === 'CANCELLED'){
         const by = String(o['Cancel By']||'').trim().toUpperCase();
         if(by==='CUSTOMER') M++; else if(by==='DRIVER') N++; else if(by==='PARTNER') O++;
