@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GREEN PORTAL — Đổ báo cáo Đội (theo khung giờ)</title>
+<title>GREEN REPORT — Đổ báo cáo Đội (theo khung giờ)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" onerror="this.onerror=null;this.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';"></script>
@@ -22,17 +22,43 @@
   .hidden{display:none !important;}
 
   #loginGate{position:fixed;inset:0;z-index:999;display:flex;align-items:center;justify-content:center;
-    background:linear-gradient(135deg,var(--teal-1),var(--teal-dark));padding:20px;}
+    background:#f4f8f8;padding:24px;}
   #loginGate.hidden{display:none;}
-  .login-card{background:#fff;border-radius:16px;padding:36px 32px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25);}
-  .login-logo{width:52px;height:52px;border-radius:12px;background:var(--teal-dark);color:#fff;font-family:var(--mono);font-weight:800;font-size:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
-  .login-card h1{font-size:17px;margin:0 0 4px;}
-  .login-card p{font-size:12.5px;color:var(--dim);margin:0 0 18px;}
-  .login-card input[type=password]{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:8px;font-size:14px;margin-bottom:12px;font-family:var(--sans);text-align:center;letter-spacing:2px;}
-  .login-card input[type=password]:focus{outline:none;border-color:var(--teal-2);}
-  #loginError{display:none;color:var(--warn);font-size:12px;margin-top:10px;}
+
+  .login-split{display:flex;width:100%;max-width:1180px;height:min(720px,92vh);border-radius:22px;overflow:hidden;box-shadow:0 30px 70px rgba(10,47,44,.18);background:#fff;}
+  .login-hero{flex:1.15;position:relative;background:linear-gradient(180deg,#bfeef0 0%,#eaf9ee 55%,#d7f3df 100%);display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
+  .login-hero svg{width:100%;height:100%;display:block;}
+  @media(max-width:860px){ .login-hero{display:none;} .login-split{max-width:440px;height:auto;} }
+
+  .login-panel{flex:1;display:flex;align-items:center;justify-content:center;padding:44px 40px;}
+  .login-card{width:100%;max-width:340px;text-align:center;}
+  .login-brand-row{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:26px;}
+  .login-logo{width:46px;height:46px;border-radius:12px;background:linear-gradient(135deg,var(--teal-1),var(--teal-2));color:#fff;font-family:var(--mono);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .login-brand-text{text-align:left;}
+  .login-brand-text .b1{font-weight:800;font-size:14px;letter-spacing:.03em;color:var(--teal-dark);}
+  .login-brand-text .b2{font-weight:600;font-size:10.5px;letter-spacing:.06em;color:var(--gold);text-transform:uppercase;}
+  .login-card h1{font-size:19px;margin:0 0 6px;font-weight:800;color:var(--ink);}
+  .login-card p{font-size:12.5px;color:var(--dim);margin:0 0 24px;}
+  .login-field{text-align:left;margin-bottom:16px;}
+  .login-field label{display:block;font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+  .pass-wrap{position:relative;}
+  .login-card input[type=password], .login-card input[type=text].pw-visible{
+    width:100%;padding:12px 42px 12px 14px;border:1px solid var(--line);border-radius:9px;font-size:14px;
+    font-family:var(--sans);color:var(--ink);background:#fbfcfc;transition:border-color .15s ease,background .15s ease;
+  }
+  .login-card input[type=password]:focus, .login-card input[type=text].pw-visible:focus{outline:none;border-color:var(--teal-2);background:#fff;}
+  .eye-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:30px;height:30px;border:none;background:none;color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;border-radius:6px;}
+  .eye-btn:hover{background:#f0f5f5;color:var(--ink);}
+  .eye-btn svg{width:18px;height:18px;}
+  .login-submit{width:100%;justify-content:center;background:linear-gradient(90deg,var(--gold),#e0a83a);color:#fff;padding:12px 18px;font-size:14px;border-radius:9px;}
+  .login-submit:hover:not(:disabled){box-shadow:0 6px 18px rgba(201,134,15,.35);}
+  .login-submit:disabled{background:#d7dcdb;cursor:not-allowed;box-shadow:none;}
+  #loginError{display:none;color:var(--warn);font-size:12px;margin-top:12px;text-align:left;font-weight:600;}
   #loginError.show{display:block;}
-  .login-remember{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--dim);margin-top:16px;cursor:pointer;user-select:none;}
+  #loginLocked{display:none;text-align:left;font-size:12.5px;color:var(--warn);background:var(--warn-bg);border:1px solid #f6cec4;border-radius:9px;padding:14px 16px;margin-top:6px;line-height:1.6;}
+  #loginLocked.show{display:block;}
+  #loginLocked b{display:block;margin-bottom:2px;font-size:13px;}
+  .login-remember{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim);margin-top:18px;cursor:pointer;user-select:none;text-align:left;}
 
   /* Modal xác nhận mật khẩu khi thêm Đội khác trên cùng máy */
   #teamPassGate{position:fixed;inset:0;z-index:998;display:none;align-items:center;justify-content:center;
@@ -40,18 +66,26 @@
   #teamPassGate .login-logo{background:var(--warn);}
   #teamPassGate input[type=password]{margin-bottom:14px;}
 
-  .topbar{background:linear-gradient(90deg,var(--teal-1),var(--teal-2));color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:64px;position:sticky;top:0;z-index:20;}
+  .topbar{background:linear-gradient(90deg,var(--teal-1),var(--teal-2));color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:64px;position:sticky;top:0;z-index:20;box-shadow:0 2px 14px rgba(10,47,44,.18);}
   .brand{display:flex;align-items:center;gap:12px;}
   .brand .logo{width:34px;height:34px;border-radius:8px;background:#fff;display:flex;align-items:center;justify-content:center;color:var(--teal-2);font-weight:800;font-family:var(--mono);font-size:12px;}
   .topbar .title{font-weight:800;font-size:15px;}
   .topbar .title small{display:block;font-weight:500;font-size:11px;opacity:.85;letter-spacing:.03em;margin-top:1px;}
+  .topbar-right{display:flex;align-items:center;gap:10px;}
   .topbar .today{font-family:var(--mono);font-size:12px;background:rgba(255,255,255,.18);padding:6px 12px;border-radius:20px;}
+  .btn-home{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.16);color:#fff;text-decoration:none;font-size:12.5px;font-weight:700;padding:8px 14px;border-radius:20px;border:1px solid rgba(255,255,255,.3);transition:background .15s ease,transform .15s ease;}
+  .btn-home:hover{background:rgba(255,255,255,.3);transform:translateY(-1px);}
+  .btn-home svg{width:14px;height:14px;}
+  .btn-exit{display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);color:#fff;cursor:pointer;transition:background .15s ease,transform .15s ease;}
+  .btn-exit:hover{background:rgba(224,85,60,.85);border-color:rgba(224,85,60,.9);transform:translateY(-1px);}
+  .btn-exit svg{width:15px;height:15px;}
 
-  .main{max-width:1400px;margin:0 auto;padding:22px 22px 70px;}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;margin-bottom:18px;}
-  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;flex-wrap:wrap;}
-  .card-head h2{font-size:14px;margin:0;font-weight:700;}
-  .card-head .sub{font-size:11.5px;color:var(--dim);margin-top:3px;}
+  .main{max-width:1400px;margin:0 auto;padding:26px 22px 80px;}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px;box-shadow:0 1px 3px rgba(10,47,44,.04);transition:box-shadow .15s ease;}
+  .card:hover{box-shadow:0 4px 16px rgba(10,47,44,.06);}
+  .card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap;}
+  .card-head h2{font-size:14px;margin:0;font-weight:700;letter-spacing:.01em;}
+  .card-head .sub{font-size:11.5px;color:var(--dim);margin-top:4px;line-height:1.5;}
 
   .grid{display:grid;gap:14px;}
   .grid-4{grid-template-columns:repeat(4,minmax(0,1fr));}
@@ -63,44 +97,51 @@
   label.f{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;font-weight:600;}
   input[type=text], input[type=number], select, textarea{
     width:100%;border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-size:13px;
-    font-family:var(--sans);color:var(--ink);background:#fbfcfc;
+    font-family:var(--sans);color:var(--ink);background:#fbfcfc;transition:border-color .15s ease,background .15s ease;
   }
   input:focus, select:focus, textarea:focus{outline:none;border-color:var(--teal-2);background:#fff;}
   textarea{font-family:var(--mono);font-size:12.5px;min-height:90px;resize:vertical;}
 
-  .btn{border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans);}
+  .btn{border:none;border-radius:8px;padding:10px 18px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--sans);transition:transform .12s ease,box-shadow .12s ease,background .15s ease;}
+  .btn:active{transform:translateY(1px);}
   .btn-primary{background:linear-gradient(90deg,var(--teal-1),var(--teal-2));color:#fff;}
+  .btn-primary:hover:not(:disabled){box-shadow:0 4px 14px rgba(15,184,173,.35);}
   .btn-primary:disabled{background:#c9d3d2;cursor:not-allowed;}
   .btn-ghost{background:#fff;border:1px solid var(--line);color:var(--ink);}
-  .btn-ghost:hover{background:#f4faf9;}
+  .btn-ghost:hover{background:#f4faf9;border-color:var(--teal-2);}
   .btn-outline-warn{background:var(--warn-bg);color:var(--warn);border:1px solid #f6cec4;}
   .btn-outline-warn:hover{background:var(--warn);color:#fff;}
+  .btn-outline-danger{background:#fdeae6;color:#b3271a;border:1px solid #f0b3a6;}
+  .btn-outline-danger:hover{background:#b3271a;color:#fff;}
   .btn-sm{padding:7px 12px;font-size:12px;border-radius:6px;}
   .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;}
   .hint{font-size:11.5px;color:var(--dim);font-family:var(--mono);}
-  .notice{font-size:12.5px;padding:10px 14px;border-radius:8px;margin-bottom:14px;border:1px solid var(--line);color:var(--dim);}
+  .notice{font-size:12.5px;padding:11px 15px;border-radius:8px;margin-bottom:16px;border:1px solid var(--line);color:var(--dim);line-height:1.5;}
   .notice.warn{background:var(--warn-bg);border-color:#f6cec4;color:var(--warn);}
   .notice.ok{background:var(--ok-bg);border-color:#bfe9d9;color:var(--ok);}
   .notice.gold{background:var(--gold-bg);border-color:#f2ddad;color:var(--gold);}
 
-  .chip{display:inline-flex;align-items:center;gap:8px;background:#f4faf9;border:1px solid var(--line);border-radius:20px;padding:6px 8px 6px 14px;font-size:12.5px;font-weight:600;margin:3px 6px 3px 0;}
-  .chip .x{cursor:pointer;color:var(--warn);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;}
+  .chip{display:inline-flex;align-items:center;gap:8px;background:#f4faf9;border:1px solid var(--line);border-radius:20px;padding:6px 8px 6px 14px;font-size:12.5px;font-weight:600;margin:3px 6px 3px 0;transition:border-color .15s ease;}
+  .chip:hover{border-color:var(--teal-2);}
+  .chip .x{cursor:pointer;color:var(--warn);width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#fff;transition:background .15s ease;}
   .chip .x:hover{background:var(--warn-bg);}
   .chip code{font-family:var(--mono);color:var(--teal-2);}
 
   .upload-box{border:1px dashed var(--line);border-radius:8px;padding:10px 12px;background:#fbfcfc;font-size:13px;color:var(--ink);
-    display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;min-height:41px;cursor:pointer;}
+    display:flex;align-items:center;justify-content:space-between;gap:8px;position:relative;min-height:41px;cursor:pointer;transition:border-color .15s ease,background .15s ease;}
+  .upload-box:hover{border-color:var(--teal-2);}
   .upload-box.filled{border-style:solid;border-color:var(--teal-2);background:#f2fbf9;}
   .upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
   .upload-box .fname{font-family:var(--mono);font-size:11.5px;color:var(--teal-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;}
   .upload-box .placeholder{color:#a9b3b2;}
 
   table{border-collapse:collapse;width:100%;font-size:13px;}
-  .team-block{margin-bottom:22px;border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .team-block{margin-bottom:22px;border:1px solid var(--line);border-radius:10px;overflow:hidden;box-shadow:0 1px 2px rgba(10,47,44,.03);}
   .team-block table thead th{background:#fff5f2;color:#c0392b;text-align:center;padding:9px 8px;font-weight:800;font-size:12.5px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap;}
   .team-block table thead th:first-child{text-align:left;padding-left:14px;}
   .team-block table tbody td{padding:8px 8px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:right;font-family:var(--mono);font-size:12.5px;}
   .team-block table tbody td:first-child{text-align:left;font-family:var(--sans);font-weight:700;color:var(--ink);padding-left:14px;white-space:nowrap;}
+  .team-block table tbody tr:hover td{background:#fafcfc;}
   .team-block table tbody tr:last-child td{border-bottom:none;}
   .team-block table tbody td.empty{color:#c7cfce;}
   .team-block table tbody td.note{text-align:left;font-family:var(--sans);color:var(--dim);}
@@ -110,24 +151,99 @@
   .empty-state{text-align:center;padding:50px 20px;color:var(--dim);background:#fff;border:1px dashed var(--line);border-radius:var(--radius);}
   .empty-state .glyph{font-family:var(--mono);font-size:26px;color:#c9d3d2;margin-bottom:8px;}
 
-  footer.foot{margin-top:18px;font-size:11.5px;color:var(--dim);font-family:var(--mono);text-align:center;}
+  footer.foot{margin-top:22px;font-size:11.5px;color:var(--dim);font-family:var(--mono);text-align:center;}
 
-  .archive-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:12.5px;}
+  .archive-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:8px;font-size:12.5px;transition:border-color .15s ease;}
+  .archive-item:hover{border-color:var(--teal-2);}
   .archive-item .d{font-family:var(--mono);font-weight:700;}
+
+  /* Toast thông báo */
+  #toastHost{position:fixed;bottom:22px;right:22px;z-index:1200;display:flex;flex-direction:column;gap:10px;}
+  .toast{background:var(--teal-dark);color:#fff;padding:13px 18px;border-radius:10px;font-size:13px;font-weight:600;box-shadow:0 10px 30px rgba(0,0,0,.25);opacity:0;transform:translateY(10px);animation:toastIn .25s ease forwards, toastOut .25s ease forwards 3.2s;max-width:320px;}
+  @keyframes toastIn{to{opacity:1;transform:translateY(0);}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(-6px);}}
 </style>
 </head>
 <body>
 
 <div id="loginGate">
-  <form id="loginForm" class="login-card">
-    <div class="login-logo">GC</div>
-    <h1>Đổ báo cáo Đội</h1>
-    <p>Nhập mật khẩu để tiếp tục</p>
-    <input type="password" id="loginPass" placeholder="Mật khẩu" autofocus>
-    <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">Đăng nhập</button>
-    <div id="loginError">Sai mật khẩu, thử lại.</div>
-    <label class="login-remember"><input type="checkbox" id="loginRemember" checked> Ghi nhớ đăng nhập trên máy này</label>
-  </form>
+  <div class="login-split">
+    <div class="login-hero">
+      <svg viewBox="0 0 700 900" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#a9ecec"/>
+            <stop offset="100%" stop-color="#e9fbef"/>
+          </linearGradient>
+          <linearGradient id="hillGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#6fd08a"/>
+            <stop offset="100%" stop-color="#4bb96f"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="700" height="900" fill="url(#skyGrad)"/>
+        <circle cx="560" cy="140" r="60" fill="#ffffff" opacity=".55"/>
+        <ellipse cx="150" cy="170" rx="70" ry="26" fill="#ffffff" opacity=".7"/>
+        <ellipse cx="230" cy="185" rx="50" ry="20" fill="#ffffff" opacity=".7"/>
+        <!-- skyline -->
+        <g opacity=".9">
+          <rect x="80" y="430" width="46" height="230" fill="#0a5c56"/>
+          <rect x="140" y="380" width="38" height="280" fill="#0a2f2c"/>
+          <rect x="192" y="450" width="50" height="210" fill="#0a5c56"/>
+          <rect x="470" y="410" width="40" height="250" fill="#0a5c56"/>
+          <rect x="520" y="330" width="26" height="330" fill="#0a2f2c"/>
+          <rect x="560" y="460" width="46" height="200" fill="#0a5c56"/>
+          <polygon points="533,330 546,330 546,300 539,270 533,300" fill="#0a2f2c"/>
+        </g>
+        <!-- hills -->
+        <path d="M0,620 C120,560 220,600 350,610 C480,620 580,570 700,600 L700,900 L0,900 Z" fill="url(#hillGrad)"/>
+        <path d="M0,700 C150,650 300,680 420,660 C540,640 620,680 700,660 L700,900 L0,900 Z" fill="#3fa864"/>
+        <!-- trees -->
+        <g fill="#2f8f52">
+          <circle cx="90" cy="690" r="30"/><rect x="86" y="712" width="8" height="26" fill="#5b3a22"/>
+          <circle cx="600" cy="700" r="26"/><rect x="596" y="720" width="7" height="24" fill="#5b3a22"/>
+          <circle cx="650" cy="740" r="20"/><rect x="647" y="756" width="6" height="20" fill="#5b3a22"/>
+        </g>
+        <!-- road -->
+        <path d="M120,900 C220,760 300,780 350,740 C400,700 480,730 560,650" stroke="#e7ece9" stroke-width="46" fill="none" stroke-linecap="round"/>
+        <path d="M120,900 C220,760 300,780 350,740 C400,700 480,730 560,650" stroke="#f6f8f6" stroke-width="4" stroke-dasharray="18 16" fill="none" stroke-linecap="round"/>
+        <!-- car -->
+        <g transform="translate(190,700)">
+          <ellipse cx="120" cy="150" rx="150" ry="16" fill="#0a2f2c" opacity=".18"/>
+          <path d="M10,120 C10,90 40,80 70,78 L100,45 C110,32 130,24 155,24 L220,24 C245,24 262,34 272,50 L290,80 C320,84 345,96 350,120 C352,132 345,140 332,140 L28,140 C15,140 8,132 10,120 Z" fill="#0fb8ad"/>
+          <path d="M112,46 L145,46 L150,80 L96,80 Z" fill="#bff2ef" opacity=".85"/>
+          <path d="M158,46 L215,46 C232,46 244,54 252,68 L262,80 L152,80 Z" fill="#bff2ef" opacity=".85"/>
+          <circle cx="90" cy="145" r="30" fill="#132321"/><circle cx="90" cy="145" r="13" fill="#d8dedd"/>
+          <circle cx="270" cy="145" r="30" fill="#132321"/><circle cx="270" cy="145" r="13" fill="#d8dedd"/>
+          <rect x="20" y="118" width="46" height="14" rx="3" fill="#f4c542"/>
+          <circle cx="332" cy="96" r="5" fill="#fff8dc"/>
+          <path d="M60,80 C90,74 250,74 285,84" stroke="#0a9c92" stroke-width="3" fill="none" opacity=".6"/>
+        </g>
+      </svg>
+    </div>
+    <div class="login-panel">
+      <form id="loginForm" class="login-card">
+        <div class="login-brand-row">
+          <div class="login-logo">GP</div>
+          <div class="login-brand-text"><div class="b1">GREEN REPORT</div><div class="b2">Đổ báo cáo Đội 6</div></div>
+        </div>
+        <h1>Chào mừng trở lại</h1>
+        <p>Nhập mật khẩu để tiếp tục sử dụng công cụ</p>
+        <div class="login-field">
+          <label for="loginPass">Mật khẩu</label>
+          <div class="pass-wrap">
+            <input type="password" id="loginPass" placeholder="Nhập mật khẩu" autofocus>
+            <button type="button" class="eye-btn" id="toggleEyeBtn" title="Hiện/Ẩn mật khẩu">
+              <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+        </div>
+        <button type="submit" class="btn login-submit" id="loginSubmitBtn">Đăng nhập</button>
+        <div id="loginError"></div>
+        <div id="loginLocked"><b>🔒 Tài khoản tạm khoá</b><span id="loginLockedText"></span></div>
+        <label class="login-remember"><input type="checkbox" id="loginRemember" checked> Ghi nhớ đăng nhập trên máy này</label>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Modal xác nhận khi thêm số Đội KHÁC với Đội đang dùng trên máy này -->
@@ -145,24 +261,35 @@
   </div>
 </div>
 
+<div id="toastHost"></div>
+
 <div class="topbar">
   <div class="brand">
     <div class="logo">GP</div>
-    <div class="title">ĐỔ BÁO CÁO ĐỘI 6<small>ĐỘI 6 ĐỈNH QUÁ, KHÔNG NGẠI DRAMA</small></div>
+    <div class="title">ĐỔ BÁO CÁO ĐỘI 6<small>ĐỈNH QUÁ, KHÔNG NGẠI DRAMA</small></div>
   </div>
-  <div class="today" id="topToday">—</div>
+  <div class="topbar-right">
+    <a href="index.html" class="btn-home" title="Quay về trang chủ">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+      Trang chủ
+    </a>
+    <button type="button" class="btn-exit" id="btnExitTool" title="Thoát">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+    <div class="today" id="topToday">—</div>
+  </div>
 </div>
 
 <div class="main">
 
   <div class="notice gold">
-   Dữ liệu chỉ lưu dưới dạng local <b>ngày mới</b> sẽ tự reset và cập nhật theo số ngày<b>“Lưu / Tải báo cáo hôm nay”</b> trước khi hết ngày để có bản sao mang đi, hoặc mở lại ở mục "Lịch sử theo ngày" bên dưới bất cứ lúc nào.
+   Dữ liệu lưu local, ngày mới tự reset. Nhớ bấm <b>"Lưu / Tải báo cáo hôm nay"</b> trước khi hết ngày, hoặc xem lại ở mục "Lịch sử theo ngày" bên dưới.
   </div>
 
   <!-- ============ 1. CẤU HÌNH ĐỘI / TỔ ============ -->
   <div class="card">
     <div class="card-head">
-      <div><h2>1 · Danh sách Đội / Tổ</h2><div class="sub">Nhập số Đội &amp; số Tổ — mã báo cáo sẽ tự sinh theo đúng định dạng file (vd Đội 6 Tổ 2 → BDU.DOIXE06.02).</div></div>
+      <div><h2>1 · Danh sách Đội / Tổ</h2><div class="sub">Mã báo cáo tự sinh theo Đội &amp; Tổ (vd Đội 6 Tổ 2 → BDU.DOIXE06.02).</div></div>
     </div>
     <div class="notice warn hidden" id="teamLockNotice"></div>
     <div class="grid grid-4">
@@ -178,7 +305,7 @@
   <!-- ============ 2. CẤU HÌNH KHUNG GIỜ ============ -->
   <div class="card">
     <div class="card-head">
-      <div><h2>2 · Khung giờ báo cáo</h2><div class="sub">Mặc định: 9H00, 11H00, 13H00, 15H00, 16H00, 17H00, 20H00, 21H00 — có thể thêm / xoá / đổi tên</div></div>
+      <div><h2>2 · Khung giờ báo cáo</h2><div class="sub">Mặc định: 9H00 → 21H00 — thêm/xoá tuỳ ý, tự xếp đúng thứ tự theo giờ.</div></div>
     </div>
     <div id="slotChips"></div>
     <div class="row">
@@ -191,7 +318,7 @@
   <!-- ============ 3. ĐỔ FILE WORKSPACE ============ -->
   <div class="card">
     <div class="card-head">
-      <div><h2>3 · Đổ dữ liệu từ file Workspace</h2><div class="sub">File cần có các cột: Đội, Tổ, Tổng số tài xế, Tài xế vận doanh, Tổng tài xế offline, Tổng doanh thu</div></div>
+      <div><h2>3 · Đổ dữ liệu từ file Workspace</h2><div class="sub">File cần cột: Đội, Tổ, Tổng số tài xế, Tài xế vận doanh, Tổng tài xế offline, Tổng doanh thu.</div></div>
     </div>
     <div class="grid grid-3">
       <div class="f">
@@ -216,7 +343,7 @@
   <!-- ============ 4. NHẬP CHUỖI DỮ LIỆU THÔ ============ -->
   <div class="card">
     <div class="card-head">
-      <div><h2>4 · Dán chuỗi dữ liệu thô (theo từng Tổ / khung giờ)</h2><div class="sub">Dán nguyên văn dòng lọc từ hệ thống, hệ thống sẽ tự tách 5 số liệu: TX Offline+0Đ, DS&lt;300K+Offline&gt;3h, Vi phạm giao thông, Chưa bảo dưỡng, Ví Thấp</div></div>
+      <div><h2>4 · Dán chuỗi dữ liệu thô (theo từng Tổ / khung giờ)</h2><div class="sub">Dán dòng lọc từ hệ thống — tự tách 5 số liệu: Offline+0Đ, DS&lt;300K+Offline&gt;3h, Vi phạm, Chưa bảo dưỡng, Ví thấp.</div></div>
     </div>
     <div class="grid grid-3">
       <div class="f"><label class="f">Tổ</label><select id="rawTeam"></select></div>
@@ -241,6 +368,7 @@
       <button class="btn btn-ghost btn-sm" onclick="document.getElementById('fileImport').click()" title="Dùng khi lỡ mất dữ liệu trên máy, hoặc đồng đội gửi file báo cáo họ đã tải — nạp lại đúng file .xlsx đã xuất từ công cụ này vào báo cáo hôm nay.">⬆ Nạp lại file đã tải</button>
       <input type="file" id="fileImport" accept=".xlsx,.xls" style="display:none">
       <button class="btn btn-outline-warn btn-sm" onclick="clearTodayData()">⟳ Xoá dữ liệu hôm nay</button>
+      <button class="btn btn-outline-danger btn-sm" onclick="resetAllData()" title="Xoá sạch Đội/Tổ, khung giờ, mọi báo cáo &amp; lịch sử — đưa công cụ về trạng thái ban đầu">🗑 Làm mới tất cả dữ liệu</button>
     </div>
   </div>
   <div class="hint" id="importHint" style="margin-bottom:10px;"></div>
@@ -267,45 +395,150 @@
 ========================================================================= */
 const TRP_PASSWORD = '000000';
 const TRP_AUTH_KEY = 'trp_authed';
+const TRP_ATTEMPTS_KEY = 'trp_login_attempts';
+const TRP_LOCK_UNTIL_KEY = 'trp_login_lock_until';
+const TRP_MAX_ATTEMPTS = 5;              // Số lần nhập sai tối đa trước khi bị khoá
+const TRP_LOCK_MS = 15 * 60 * 1000;      // Thời gian khoá: 15 phút
+
 (function initLogin(){
   const gate = document.getElementById('loginGate');
-  try{ if(localStorage.getItem(TRP_AUTH_KEY) === '1'){ gate.classList.add('hidden'); return; } }catch(e){}
-  document.getElementById('loginForm').addEventListener('submit', e=>{
+  const alreadyAuthed = (()=>{ try{ return localStorage.getItem(TRP_AUTH_KEY) === '1'; }catch(e){ return false; } })();
+  if(alreadyAuthed){ gate.classList.add('hidden'); }
+
+  const form = document.getElementById('loginForm');
+  const passInput = document.getElementById('loginPass');
+  const errEl = document.getElementById('loginError');
+  const lockedEl = document.getElementById('loginLocked');
+  const lockedTextEl = document.getElementById('loginLockedText');
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  let lockTimer = null;
+
+  function getAttempts(){ try{ return parseInt(localStorage.getItem(TRP_ATTEMPTS_KEY),10) || 0; }catch(e){ return 0; } }
+  function setAttempts(n){ try{ localStorage.setItem(TRP_ATTEMPTS_KEY, String(n)); }catch(e){} }
+  function getLockUntil(){ try{ return parseInt(localStorage.getItem(TRP_LOCK_UNTIL_KEY),10) || 0; }catch(e){ return 0; } }
+  function setLockUntil(ts){ try{ localStorage.setItem(TRP_LOCK_UNTIL_KEY, String(ts)); }catch(e){} }
+  function clearLock(){ setAttempts(0); setLockUntil(0); }
+
+  function applyLockedUI(remainingMs){
+    errEl.classList.remove('show');
+    lockedEl.classList.add('show');
+    passInput.disabled = true;
+    submitBtn.disabled = true;
+    const tick = ()=>{
+      const left = getLockUntil() - Date.now();
+      if(left <= 0){
+        clearInterval(lockTimer); lockTimer = null;
+        clearLock();
+        lockedEl.classList.remove('show');
+        passInput.disabled = false; submitBtn.disabled = false;
+        passInput.value=''; passInput.focus();
+        return;
+      }
+      const mm = Math.floor(left/60000), ss = Math.floor((left%60000)/1000);
+      lockedTextEl.textContent = `Bạn đã nhập sai mật khẩu quá ${TRP_MAX_ATTEMPTS} lần. Vui lòng thử lại sau ${mm}:${String(ss).padStart(2,'0')} phút, hoặc liên hệ Hậu Lê Khắc để được hỗ trợ.`;
+    };
+    tick();
+    lockTimer = setInterval(tick, 1000);
+  }
+
+  function checkInitialLockState(){
+    const lockUntil = getLockUntil();
+    if(lockUntil && lockUntil > Date.now()){ applyLockedUI(); return true; }
+    if(lockUntil && lockUntil <= Date.now()){ clearLock(); }
+    return false;
+  }
+  // Chỉ cần kiểm tra khoá nếu màn hình đăng nhập đang thực sự hiển thị (chưa đăng nhập)
+  if(!alreadyAuthed){ checkInitialLockState(); }
+
+  // Hiện / ẩn mật khẩu
+  document.getElementById('toggleEyeBtn').addEventListener('click', ()=>{
+    const isPass = passInput.type === 'password';
+    passInput.type = isPass ? 'text' : 'password';
+    passInput.classList.toggle('pw-visible', isPass);
+    document.getElementById('eyeIcon').innerHTML = isPass
+      ? '<path d="M2 2l20 20"/><path d="M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-3.22 4.35M6.1 6.1A18.6 18.6 0 0 0 1 12s4 8 11 8a10.9 10.9 0 0 0 5.9-1.7M14.12 14.12A3 3 0 1 1 9.88 9.88"/>'
+      : '<path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/>';
+  });
+
+  form.addEventListener('submit', e=>{
     e.preventDefault();
-    const val = document.getElementById('loginPass').value;
+    if(getLockUntil() > Date.now()){ applyLockedUI(); return; }
+    const val = passInput.value;
     if(val === TRP_PASSWORD){
+      clearLock();
       if(document.getElementById('loginRemember').checked){ try{ localStorage.setItem(TRP_AUTH_KEY,'1'); }catch(err){} }
       gate.classList.add('hidden');
     } else {
-      document.getElementById('loginError').classList.add('show');
-      document.getElementById('loginPass').value=''; document.getElementById('loginPass').focus();
+      const attempts = getAttempts() + 1;
+      setAttempts(attempts);
+      const remaining = TRP_MAX_ATTEMPTS - attempts;
+      if(remaining <= 0){
+        setLockUntil(Date.now() + TRP_LOCK_MS);
+        applyLockedUI();
+      } else {
+        errEl.textContent = `Sai mật khẩu, thử lại. Còn ${remaining} lần thử trước khi bị khoá tạm thời.`;
+        errEl.classList.add('show');
+      }
+      passInput.value=''; passInput.focus();
     }
   });
+
+  // Nút "Thoát" trên topbar — đăng xuất khỏi công cụ, quay lại màn hình nhập mật khẩu.
+  // Gắn listener này KHÔNG PHỤ THUỘC vào trạng thái đăng nhập ban đầu, để nút luôn hoạt động.
+  const exitBtn = document.getElementById('btnExitTool');
+  if(exitBtn){
+    exitBtn.addEventListener('click', ()=>{
+      if(!confirm('Thoát khỏi công cụ? Lần sau mở lại sẽ cần nhập mật khẩu.')) return;
+      try{ localStorage.removeItem(TRP_AUTH_KEY); }catch(e){}
+      passInput.value = '';
+      errEl.classList.remove('show');
+      gate.classList.remove('hidden');
+      checkInitialLockState();
+      passInput.focus();
+    });
+  }
 })();
 
 /* =========================================================================
-   MẬT KHẨU KHOÁ ĐỘI — mỗi máy chỉ gắn với 1 số Đội.
-   Nếu ai đó nhập số Đội khác với Đội đã dùng trên máy này, hệ thống sẽ
-   yêu cầu nhập mật khẩu (liên hệ Hậu Lê Khắc để lấy mật khẩu).
+   TOAST — thông báo nhỏ góc màn hình
+========================================================================= */
+function showToast(msg){
+  const host = document.getElementById('toastHost');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  host.appendChild(el);
+  setTimeout(()=>{ el.remove(); }, 3500);
+}
+
+/* =========================================================================
+   MẬT KHẨU KHOÁ ĐỘI — file này chỉ dùng cho các Đội trong ALLOWED_TEAMS.
+   Nếu ai đó nhập số Đội khác, hệ thống sẽ yêu cầu nhập mật khẩu
+   (liên hệ Hậu Lê Khắc để lấy mật khẩu).
    Đổi mật khẩu tại TEAM_LOCK_PASSWORD bên dưới.
 ========================================================================= */
 const TEAM_LOCK_PASSWORD = 'HauLeKhac';
 
-// Số Đội DUY NHẤT được phép dùng trên FILE này (áp dụng cho MỌI thiết bị mở link/file này,
-// không phụ thuộc máy nào mở trước). Trước khi gửi link cho từng Đội, đổi số này thành số Đội
-// của Đội đó rồi lưu/gửi 1 bản riêng cho mỗi Đội (vd Đội 6 -> ALLOWED_DOI = 6).
-// Để null nếu muốn quay lại kiểu khoá theo máy (Đội đầu tiên nhập trên máy nào sẽ khoá máy đó).
-const ALLOWED_DOI = 6;
+// Danh sách các Đội ĐƯỢC PHÉP dùng trên FILE này (áp dụng cho MỌI thiết bị mở link/file này).
+// Để mảng rỗng [] nếu muốn quay lại kiểu khoá theo máy (Đội đầu tiên nhập trên máy nào sẽ khoá máy đó).
+const ALLOWED_TEAMS = [6, 8];
+// Nhãn hiển thị cho người dùng (chỉ show Đội 6 dù Đội 8 vẫn được dùng ngầm phía trên).
+const ALLOWED_TEAMS_DISPLAY_LABEL = '6';
 
-function askTeamPassword(doi, requiredDoi){
+// Lời chào riêng khi thêm đúng Đội/Tổ này (vd chào mừng thành viên mới của Đội 8 Tổ 2).
+const WELCOME_MESSAGES = [
+  { doi: 8, to: 2, message: 'Chào khầy Đông Anh nhé' }
+];
+
+function askTeamPassword(doi, requiredLabel){
   return new Promise(resolve=>{
     const gate = document.getElementById('teamPassGate');
     const input = document.getElementById('teamPassInput');
     const err = document.getElementById('teamPassError');
     const okBtn = document.getElementById('teamPassOk');
     const cancelBtn = document.getElementById('teamPassCancel');
-    document.getElementById('teamPassMsg').textContent = (requiredDoi!==null && requiredDoi!==undefined)
-      ? `Chỉ Đội ${requiredDoi} được phép dùng ở đây. Nhập mật khẩu để thêm Đội ${doi} (liên hệ Hậu Lê Khắc để lấy mật khẩu).`
+    document.getElementById('teamPassMsg').textContent = (requiredLabel!==null && requiredLabel!==undefined && requiredLabel!=='')
+      ? `Chỉ Đội ${requiredLabel} được phép dùng ở đây. Nhập mật khẩu để thêm Đội ${doi} (liên hệ Hậu Lê Khắc để lấy mật khẩu).`
       : `Số Đội ${doi} khác với Đội đang dùng trên máy này. Nhập mật khẩu để tiếp tục (liên hệ Hậu Lê Khắc để lấy mật khẩu).`;
     err.style.display = 'none';
     input.value = '';
@@ -371,6 +604,17 @@ async function kvSet(key,value){
 }
 async function kvGetJSON(key, fallback){ const v = await kvGet(key); if(v===null||v===undefined) return fallback; try{ return JSON.parse(v); }catch(e){ return fallback; } }
 async function kvSetJSON(key, obj){ return kvSet(key, JSON.stringify(obj)); }
+async function kvClearAll(){
+  try{
+    const db = await getDB();
+    return await new Promise(resolve=>{
+      const tx = db.transaction('kv','readwrite');
+      tx.objectStore('kv').clear();
+      tx.oncomplete = ()=> resolve(true);
+      tx.onerror = ()=> resolve(false);
+    });
+  }catch(e){ return false; }
+}
 
 /* =========================================================================
    STATE
@@ -417,16 +661,36 @@ function ensureTeamSlotIn(dataObj, teamId, slot){
 function ensureTeamSlot(teamId, slot){ return ensureTeamSlotIn(todayData, teamId, slot); }
 
 /* =========================================================================
+   THỨ TỰ KHUNG GIỜ — sắp theo giờ thực tế (không theo thứ tự thêm vào),
+   để không lặp lại tình trạng thêm "12H00" sau "21H00" mà bảng lại xếp
+   12H00 ở cuối cùng, gây sai lệch khi đọc báo cáo.
+========================================================================= */
+function slotSortKey(name){
+  const s = String(name||'').trim();
+  const m = s.match(/(\d{1,2})\s*[Hh:]\s*(\d{0,2})/);
+  if(m){
+    const hh = parseInt(m[1],10) || 0;
+    const mm = parseInt(m[2]||'0',10) || 0;
+    return hh*60+mm;
+  }
+  const n = s.match(/(\d{1,2})/);
+  if(n){ return (parseInt(n[1],10)||0)*60; }
+  return 9999; // không nhận diện được giờ -> xếp cuối
+}
+function sortSlots(){ slots.sort((a,b)=> slotSortKey(a)-slotSortKey(b)); }
+
+/* =========================================================================
    KHỞI TẠO / RESET THEO NGÀY
 ========================================================================= */
 async function loadConfig(){
   teams = await kvGetJSON('teams', []);
   slots = await kvGetJSON('slots', DEFAULT_SLOTS.slice());
+  sortSlots();
   depotPrefix = (await kvGet('depotPrefix')) || 'BDU';
   document.getElementById('cfgDepot').value = depotPrefix;
 }
 async function saveTeams(){ await kvSetJSON('teams', teams); }
-async function saveSlots(){ await kvSetJSON('slots', slots); }
+async function saveSlots(){ sortSlots(); await kvSetJSON('slots', slots); }
 
 async function loadTodayData(){
   const lastDate = await kvGet('lastDate');
@@ -459,28 +723,41 @@ async function addTeam(){
   const exists = teams.find(t=> String(t.doi)===String(doi) && String(t.to)===String(to));
   if(exists){ hint.textContent = 'Đội/Tổ này đã có trong danh sách.'; return; }
 
-  // Khoá Đội: nếu file này đã gán cố định ALLOWED_DOI, áp dụng cho MỌI thiết bị mở link này.
-  // Nếu ALLOWED_DOI để trống (null), quay lại kiểu cũ: khoá theo Đội đầu tiên nhập trên từng máy.
-  const authorizedDoi = await kvGet('authorizedDoi');
-  const requiredDoi = (ALLOWED_DOI !== null && ALLOWED_DOI !== undefined) ? ALLOWED_DOI : authorizedDoi;
-  if(requiredDoi !== null && requiredDoi !== undefined && String(requiredDoi) !== String(doi)){
-    hint.textContent = `Chỉ Đội ${requiredDoi} được phép dùng ở đây — cần mật khẩu...`;
-    const ok = await askTeamPassword(doi, requiredDoi);
-    if(!ok){
-      hint.textContent = `Không thể thêm Đội ${doi} (chỉ Đội ${requiredDoi} được phép dùng ở đây). Liên hệ Hậu Lê Khắc để lấy mật khẩu.`;
-      return;
+  // Khoá Đội: nếu file này đã gán cố định danh sách ALLOWED_TEAMS, áp dụng cho MỌI thiết bị mở link này.
+  // Nếu ALLOWED_TEAMS để rỗng, quay lại kiểu cũ: khoá theo Đội đầu tiên nhập trên từng máy.
+  if(ALLOWED_TEAMS.length){
+    if(!ALLOWED_TEAMS.map(String).includes(String(doi))){
+      const label = ALLOWED_TEAMS_DISPLAY_LABEL;
+      hint.textContent = `Chỉ Đội ${label} được phép dùng ở đây — cần mật khẩu...`;
+      const ok = await askTeamPassword(doi, label);
+      if(!ok){
+        hint.textContent = `Không thể thêm Đội ${doi} (chỉ Đội ${label} được phép dùng ở đây). Liên hệ Hậu Lê Khắc để lấy mật khẩu.`;
+        return;
+      }
     }
+  } else {
+    const authorizedDoi = await kvGet('authorizedDoi');
+    if(authorizedDoi !== null && String(authorizedDoi) !== String(doi)){
+      hint.textContent = `Số Đội ${doi} khác với Đội đang dùng trên máy này — cần mật khẩu...`;
+      const ok = await askTeamPassword(doi, null);
+      if(!ok){
+        hint.textContent = `Không thể thêm Đội ${doi} trên máy này. Liên hệ Hậu Lê Khắc để lấy mật khẩu.`;
+        return;
+      }
+    }
+    if(authorizedDoi === null){ await kvSet('authorizedDoi', String(doi)); }
   }
 
   const id = 't'+Date.now()+'_'+Math.random().toString(36).slice(2,6);
   teams.push({ id, doi: parseInt(doi,10), to: parseInt(to,10) });
   await saveTeams();
-  if(ALLOWED_DOI === null || ALLOWED_DOI === undefined){
-    if(authorizedDoi === null){ await kvSet('authorizedDoi', String(doi)); }
-  }
   document.getElementById('cfgDoi').value=''; document.getElementById('cfgTo').value='';
   hint.textContent = '';
   renderTeamChips(); renderSelectors(); renderReport();
+
+  // Lời chào riêng cho 1 số Đội/Tổ cụ thể
+  const w = WELCOME_MESSAGES.find(x=> String(x.doi)===String(doi) && String(x.to)===String(to));
+  if(w){ showToast(w.message); }
 }
 async function removeTeam(id){
   teams = teams.filter(t=>t.id!==id);
@@ -502,7 +779,7 @@ async function addSlot(){
   if(!name){ return; }
   if(slots.includes(name)){ el.value=''; return; }
   slots.push(name);
-  await saveSlots();
+  await saveSlots(); // saveSlots() tự sắp lại đúng thứ tự theo giờ
   el.value = '';
   renderSlotChips(); renderSelectors(); renderReport();
 }
@@ -531,7 +808,7 @@ function renderSelectors(){
 }
 
 /* =========================================================================
-   3. ĐỔ FILE WORKSPACE
+   3. ĐỔ FILE WORKSPACE — dùng chung cho mọi Đội đã có trong danh sách (Đội 6, Đội 8...)
 ========================================================================= */
 let workspaceWB = null;
 document.getElementById('fileWorkspace').addEventListener('change', e=>{
@@ -580,6 +857,7 @@ function parseWorkspace(){
   document.getElementById('wsHint').textContent = count
     ? `Đọc được ${count} dòng Tổ từ file. Chọn khung giờ rồi bấm "Đổ vào khung giờ đã chọn".`
     : 'Không đọc được dòng Tổ nào — kiểm tra lại file có đúng cột "Đội","Tổ","Tổng số tài xế","Tài xế vận doanh","Tổng tài xế offline","Tổng doanh thu" không.';
+  if(count>0){ showToast(`Đã đọc file Workspace thành công (${count} dòng Tổ).`); }
 }
 async function applyWorkspaceToSlot(){
   if(!wsParsedMap || !wsParsedMap.size){ return; }
@@ -600,6 +878,7 @@ async function applyWorkspaceToSlot(){
   await saveTodayData();
   document.getElementById('wsHint').textContent = `Đã đổ dữ liệu khung giờ "${slot}" cho ${matched}/${teams.length} Tổ.`
     + (unmatched.length ? ` Không khớp mã: ${unmatched.join(', ')} (kiểm tra lại số Đội/Tổ hoặc mã Depot).` : '');
+  if(matched>0){ showToast(`Đã cập nhật file thành công — khung giờ "${slot}" (${matched} Tổ).`); }
   renderReport();
 }
 
@@ -691,8 +970,8 @@ async function applyImportReport(blocks){
   // Báo cáo chỉ áp dụng cho HÔM NAY — file nạp lại luôn được gộp vào dữ liệu hôm nay.
   let addedTeams = 0, addedSlots = [], skippedTeams = [];
   for(const b of blocks){
-    // Tôn trọng khoá Đội (ALLOWED_DOI) nếu file này đã bị khoá cho 1 Đội cố định
-    if(ALLOWED_DOI !== null && ALLOWED_DOI !== undefined && Number(ALLOWED_DOI) !== b.doi){
+    // Tôn trọng khoá Đội (ALLOWED_TEAMS) nếu file này đã bị khoá cho các Đội cố định
+    if(ALLOWED_TEAMS.length && !ALLOWED_TEAMS.includes(b.doi)){
       skippedTeams.push(`Đội ${b.doi} Tổ ${b.to}`);
       continue;
     }
@@ -717,7 +996,7 @@ async function applyImportReport(blocks){
   }
 
   if(addedTeams){ await saveTeams(); }
-  if(addedSlots.length){ await saveSlots(); }
+  if(addedSlots.length){ await saveSlots(); } // saveSlots() tự sắp lại đúng thứ tự theo giờ
   await saveTodayData();
 
   const okCount = blocks.length - skippedTeams.length;
@@ -725,6 +1004,7 @@ async function applyImportReport(blocks){
     `Đã nạp lại ${okCount} Đội/Tổ vào báo cáo hôm nay`
     + (addedTeams ? ` (tự thêm ${addedTeams} Đội/Tổ mới vào danh sách)` : '')
     + (skippedTeams.length ? `. Bị chặn (khác Đội được phép ở đây): ${skippedTeams.join(', ')}` : '') + '.';
+  if(okCount>0){ showToast('Đã cập nhật file thành công.'); }
 
   renderTeamChips(); renderSlotChips(); renderSelectors(); renderReport();
 }
@@ -777,6 +1057,7 @@ async function applyRawText(){
   if(out.viPham===null) missing.push('Vi phạm giao thông'); if(out.chuaBaoDuong===null) missing.push('Chưa bảo dưỡng'); if(out.viThap===null) missing.push('Ví Thấp');
   hint.textContent = `Đã áp dụng cho ${t?teamLabel(t):''} — khung giờ ${slot} (nhận diện được ${found.length} mục trong chuỗi).`
     + (missing.length ? ` Chưa tìm thấy: ${missing.join(', ')}.` : '');
+  showToast('Đã cập nhật dữ liệu thành công.');
   document.getElementById('rawText').value='';
   renderReport();
 }
@@ -832,6 +1113,30 @@ async function clearTodayData(){
   todayData = {};
   await saveTodayData();
   renderReport();
+  showToast('Đã xoá dữ liệu hôm nay.');
+}
+
+/* Làm mới TẤT CẢ dữ liệu — đưa công cụ về trạng thái ban đầu (xoá cả Đội/Tổ,
+   khung giờ tuỳ chỉnh, mọi báo cáo & lịch sử theo ngày). Khác với "Xoá dữ liệu
+   hôm nay" (chỉ xoá số liệu ngày hiện tại, vẫn giữ Đội/Tổ & khung giờ đã cấu hình). */
+async function resetAllData(){
+  if(!confirm('⚠ Làm mới TẤT CẢ dữ liệu: xoá sạch Đội/Tổ, khung giờ tuỳ chỉnh, mọi báo cáo & lịch sử theo ngày. Hành động này KHÔNG thể hoàn tác.')) return;
+  if(!confirm('Xác nhận lần 2 — bạn chắc chắn muốn làm mới toàn bộ dữ liệu trên máy này?')) return;
+  await kvClearAll();
+  teams = [];
+  slots = DEFAULT_SLOTS.slice();
+  depotPrefix = 'BDU';
+  todayData = {};
+  document.getElementById('cfgDepot').value = depotPrefix;
+  await saveTeams();
+  await saveSlots();
+  await kvSet('depotPrefix', depotPrefix);
+  await kvSetJSON('day:'+todayStr(), todayData);
+  await kvSet('lastDate', todayStr());
+  await kvSetJSON('dayIndex', [todayStr()]);
+  renderTeamChips(); renderSlotChips(); renderSelectors(); renderReport();
+  await renderArchiveList();
+  showToast('Đã làm mới toàn bộ dữ liệu.');
 }
 
 /* =========================================================================
@@ -908,6 +1213,7 @@ async function exportReport(dateStr){
   a.href = url; a.download = `bao_cao_doi_${depotPrefix}_${dateStr}.xlsx`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
+  showToast(`Đã tải báo cáo thành công (${dateStr}).`);
 }
 
 /* =========================================================================
@@ -915,9 +1221,10 @@ async function exportReport(dateStr){
 ========================================================================= */
 (async function init(){
   document.getElementById('topToday').textContent = new Date().toLocaleDateString('vi-VN', {weekday:'long', year:'numeric', month:'2-digit', day:'2-digit'});
-  if(ALLOWED_DOI !== null && ALLOWED_DOI !== undefined){
+  if(ALLOWED_TEAMS.length){
     const n = document.getElementById('teamLockNotice');
-    n.textContent = `File này chỉ dùng cho Đội ${ALLOWED_DOI} — nhập số Đội khác sẽ bị chặn.`;
+    n.textContent = `✅ Dành cho Đội 6.`;
+    n.classList.remove('warn'); n.classList.add('ok');
     n.classList.remove('hidden');
   }
   await loadConfig();
