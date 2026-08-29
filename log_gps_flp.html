@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Phân tích nghi vấn lộ trình GPS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root{
+    --header-a:#0c8a80; --header-b:#14b8a6;
+    --page-bg:#eef3f2; --card-bg:#ffffff; --border:#e6ebec; --border-soft:#eef2f2;
+    --text:#16232a; --muted:#6b7c82; --muted-soft:#95a5aa;
+    --accent:#0c8a80; --accent-strong:#0a746c; --accent-soft:#e3f6f3;
+    --danger:#e5484d; --warn:#f0973b; --notice-bg:#fff4e0; --notice-border:#f3d9a4; --notice-text:#8a5a12;
+    --font:'Inter',system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --radius:14px; --radius-sm:8px;
+    --shadow-sm:0 1px 2px rgba(16,32,34,.06);
+    --shadow-md:0 6px 20px rgba(16,32,34,.08);
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--page-bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased}
+  .page{max-width:min(1560px,96vw);margin:0 auto;padding:22px 28px 60px}
+
+  .workRow2{display:grid;grid-template-columns:380px 1fr;gap:16px;align-items:start;margin-top:16px}
+  .workRow2 .card{margin-top:0}
+  .colNarrow{display:flex;flex-direction:column;gap:16px;min-width:0}
+  .colWide{position:sticky;top:20px;min-width:0}
+  .colWide .card{padding:20px 22px}
+  @media (max-width:1080px){
+    .workRow2{grid-template-columns:1fr}
+    .colWide{position:static}
+  }
+
+  /* ===== HERO HEADER ===== */
+  .hero{
+    background:linear-gradient(100deg,var(--header-a),var(--header-b));
+    border-radius:16px;padding:18px 26px;display:flex;align-items:center;gap:16px;
+    box-shadow:var(--shadow-md);color:#fff;flex-wrap:wrap;
+  }
+  .heroLeft{display:flex;align-items:center;gap:13px}
+  .heroLogo{
+    width:42px;height:42px;border-radius:11px;background:#fff;color:var(--accent-strong);
+    display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;letter-spacing:.3px;
+    flex-shrink:0;
+  }
+  .heroTitle{font-weight:800;font-size:17px;letter-spacing:.3px;line-height:1.25}
+  .heroSub{font-size:11px;font-weight:600;letter-spacing:.8px;opacity:.85;text-transform:uppercase;margin-top:2px}
+  .heroSpacer{flex:1}
+  .heroRight{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .pillBtn{
+    display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);
+    color:#fff;border-radius:999px;padding:8px 15px;font-size:12.5px;font-weight:600;cursor:pointer;
+    text-decoration:none;transition:background .15s;font-family:var(--font);
+  }
+  .pillBtn:hover{background:rgba(255,255,255,.28)}
+  .pillBtn svg{width:14px;height:14px}
+  .circleBtn{
+    width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.26);
+    display:flex;align-items:center;justify-content:center;color:#fff;cursor:pointer;transition:background .15s;
+  }
+  .circleBtn:hover{background:rgba(255,255,255,.28)}
+  .circleBtn svg{width:15px;height:15px}
+  .dateBadge{
+    background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);border-radius:999px;
+    padding:8px 14px;font-size:12px;font-weight:600;white-space:nowrap;
+  }
+
+  /* ===== NOTICE ===== */
+  .notice{
+    margin-top:16px;background:var(--notice-bg);border:1px solid var(--notice-border);color:var(--notice-text);
+    border-radius:12px;padding:12px 16px;font-size:12.6px;line-height:1.55;display:flex;gap:10px;align-items:flex-start;
+  }
+  .notice svg{width:16px;height:16px;flex-shrink:0;margin-top:1px}
+  .notice b{font-weight:700}
+
+  /* ===== CARDS ===== */
+  .card{
+    background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);padding:22px 24px;margin-top:16px;
+  }
+  .stepHead{font-size:14.5px;font-weight:700;margin-bottom:4px}
+  .stepDesc{font-size:12.3px;color:var(--muted);margin-bottom:16px;line-height:1.55}
+
+  /* mode tiles */
+  .modeTiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .tile{
+    border:1.5px solid var(--border);border-radius:12px;background:#fbfcfc;padding:15px 16px;text-align:left;
+    cursor:pointer;font-family:var(--font);transition:all .15s;
+  }
+  .tile:hover{border-color:var(--muted-soft)}
+  .tile .tName{font-size:13.6px;font-weight:700;color:var(--text);display:block;margin-bottom:3px}
+  .tile .tDesc{font-size:11.8px;color:var(--muted);display:block}
+  .tile .tBadge{
+    display:none;align-items:center;gap:5px;margin-top:10px;background:var(--accent-soft);color:var(--accent-strong);
+    font-size:11px;font-weight:700;padding:4px 9px;border-radius:999px;width:fit-content;
+  }
+  .tile .tBadge svg{width:11px;height:11px}
+  .tile.active{border-color:var(--accent);background:var(--accent-soft)}
+  .tile.active .tBadge{display:flex}
+
+  /* form bits */
+  .field{margin-bottom:14px}
+  .field label{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
+  .formGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .formGrid.cols2{grid-template-columns:repeat(2,1fr)}
+  input[type=text],input[type=file],textarea,select{
+    width:100%;box-sizing:border-box;padding:9px 11px;font-size:13px;font-family:var(--font);
+    background:#fbfcfc;color:var(--text);border:1px solid var(--border);border-radius:var(--radius-sm);outline:none;
+    transition:border-color .15s,box-shadow .15s;
+  }
+  textarea{font-family:var(--mono);font-size:12px;height:130px;resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  input[type=file]{padding:7px 9px;font-size:12px}
+  .subCardTitle{font-size:12.5px;font-weight:700;margin:18px 0 10px;padding-top:14px;border-top:1px solid var(--border-soft)}
+
+  /* buttons */
+  .actionRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .actionRow .spacer{flex:1}
+  .btn{
+    appearance:none;border:1px solid var(--border);background:#fff;color:var(--text);padding:9px 16px;
+    border-radius:var(--radius-sm);font-size:12.8px;font-weight:600;cursor:pointer;display:inline-flex;
+    align-items:center;gap:6px;transition:all .15s;font-family:var(--font);
+  }
+  .btn svg{width:14px;height:14px}
+  .btn:hover{border-color:var(--muted-soft);background:#f7f9f9}
+  .btn-primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  .btn-primary:hover{background:var(--accent-strong);border-color:var(--accent-strong)}
+  .btn-ghost{border-color:transparent;background:transparent;color:var(--muted)}
+  .btn-ghost:hover{background:#f2f6f6;color:var(--text)}
+  .btn-sm{padding:7px 12px;font-size:12px}
+
+  .segmented{display:inline-flex;flex-wrap:wrap;border:1px solid var(--border);border-radius:999px;padding:3px;background:#f7f9f9;gap:2px;margin-top:14px}
+  .segmented button{
+    border:none;background:transparent;padding:7px 14px;border-radius:999px;font-size:12px;font-weight:600;
+    color:var(--muted);cursor:pointer;font-family:var(--font);transition:all .15s;
+  }
+  .segmented button.active{background:var(--accent);color:#fff;box-shadow:var(--shadow-sm)}
+  .noteText{font-size:11.5px;color:var(--muted-soft);margin-top:9px;line-height:1.5}
+
+  /* map & playback */
+  .mapToolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+  .mapToolbar label{font-size:12px;font-weight:600;color:var(--muted);white-space:nowrap}
+  .mapToolbar select{width:auto;min-width:190px}
+  #map{width:100%;height:760px;border-radius:var(--radius-sm);border:1px solid var(--border)}
+  .mapHint{font-size:11.5px;color:var(--muted-soft);margin-top:9px}
+  .playbackBox{margin-top:16px;padding-top:16px;border-top:1px solid var(--border-soft)}
+  .playbackControls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:9px}
+  .speedGroup{display:flex;gap:4px;margin-left:auto}
+  input[type=range]{accent-color:var(--accent);width:100%}
+  .playTimeLabel{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:7px}
+
+  /* tables */
+  table{width:100%;border-collapse:collapse;font-size:12px}
+  th,td{border-bottom:1px solid var(--border-soft);padding:8px 7px;text-align:center}
+  th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.3px;background:#fafcfc}
+  tr{cursor:pointer;transition:background .12s}
+  tr:hover td{background:#f5f9f9}
+  tr.active td{background:var(--accent);color:#fff;font-weight:700}
+  .tableWrap{max-height:280px;overflow:auto;border:1px solid var(--border-soft);border-radius:var(--radius-sm)}
+  .tableWrap table{margin:0}
+  .tableWrap thead th{position:sticky;top:0}
+  .tableBlockTitle{font-size:12.5px;font-weight:700;margin:16px 0 8px}
+  .tableBlockTitle:first-child{margin-top:0}
+
+  ::-webkit-scrollbar{width:9px;height:9px}
+  ::-webkit-scrollbar-thumb{background:#d6dede;border-radius:8px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  @media (max-width:640px){
+    .hero{padding:16px}
+    .formGrid,.formGrid.cols2,.modeTiles{grid-template-columns:1fr}
+    .heroRight{width:100%;justify-content:flex-start}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="hero">
+    <div class="heroLeft">
+      <div class="heroLogo">GP</div>
+      <div>
+        <div class="heroTitle">PHÂN TÍCH NGHI VẤN LỘ TRÌNH GPS</div>
+        <div class="heroSub">Soi dữ liệu, rõ minh bạch</div>
+      </div>
+    </div>
+    <div class="heroSpacer"></div>
+    <div class="heroRight">
+      <a class="pillBtn" href="#" onclick="return false;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>
+        Trang chủ
+      </a>
+      <div class="circleBtn" id="resetAllBtn" title="Xóa toàn bộ dữ liệu đang nhập">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </div>
+      <div class="dateBadge" id="dateBadge">—</div>
+    </div>
+  </header>
+
+  <div class="notice">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
+    <div>Dữ liệu chỉ xử lý ngay trên trình duyệt, không tự lưu lại. Nhớ bấm <b>Xuất CSV / Xuất PDF</b> nếu cần giữ lại kết quả trước khi tải lại trang.</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="card">
+    <div class="stepHead">1 · Loại phân tích</div>
+    <div class="stepDesc">Chọn loại nghi vấn cần diễn giải. Có thể đổi lại bất cứ lúc nào, dữ liệu đã dán ở bước 2 sẽ được giữ nguyên.</div>
+    <div class="modeTiles">
+      <button class="tile active" id="tileFake">
+        <span class="tName">Fake GPS</span>
+        <span class="tDesc">Phát hiện đoạn di chuyển có vận tốc nghi vấn</span>
+        <span class="tBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Đang chọn</span>
+      </button>
+      <button class="tile" id="tileHc">
+        <span class="tName">Hủy chuyến vẫn chở khách</span>
+        <span class="tDesc">Phát hiện điểm dừng bất thường trên lộ trình</span>
+        <span class="tBadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>Đang chọn</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="workRow2">
+  <div class="colNarrow">
+
+  <!-- STEP 2 -->
+  <div class="card">
+    <div class="stepHead">2 · Dữ liệu GPS</div>
+    <div class="stepDesc">Dán dữ liệu GPS hoặc tải file. Hỗ trợ 2 định dạng: mỗi dòng "time_vn lat,lng", hoặc chuỗi 1 dòng "time | lat,lng -&gt; time | lat,lng -&gt; ...".</div>
+    <div class="field">
+      <label>Dán dữ liệu GPS</label>
+      <textarea id="gpsInput" placeholder="time_vn lat_lng&#10;2025-11-23T13:09:02 21.44497,105.88267&#10;..."></textarea>
+    </div>
+    <div class="field" style="margin-bottom:0">
+      <label>Hoặc tải file (.csv / .txt)</label>
+      <input type="file" id="gpsFile" accept=".csv,.txt">
+    </div>
+  </div>
+
+  <!-- STEP 3a: Fake GPS config -->
+  <div class="card" id="fakeConfigCard">
+    <div class="stepHead">3 · Cấu hình — Fake GPS</div>
+    <div class="stepDesc">Đặt ngưỡng vận tốc coi là nghi vấn và khoảng thời gian ngữ cảnh quanh mỗi đoạn để xem trước/sau.</div>
+    <div class="field"><label>Ngưỡng nghi vấn (km/h)</label><input type="text" id="fgpsThreshold" value="200"></div>
+    <div class="field"><label>Context trước (phút)</label><input type="text" id="fgpsContextBefore" value="10"></div>
+    <div class="field" style="margin-bottom:0"><label>Context sau (phút)</label><input type="text" id="fgpsContextAfter" value="10"></div>
+  </div>
+
+  <!-- STEP 3b: Hủy chuyến config -->
+  <div class="card" id="hcConfigCard" style="display:none">
+    <div class="stepHead">3 · Cấu hình — Hủy chuyến vẫn chở khách</div>
+    <div class="stepDesc">Đặt bán kính và thời lượng tối thiểu để một cụm điểm GPS được tính là điểm dừng.</div>
+    <div class="field"><label>Bán kính điểm dừng (m)</label><input type="text" id="hcRadius" value="30"></div>
+    <div class="field"><label>Thời lượng tối thiểu (s)</label><input type="text" id="hcMinSec" value="60"></div>
+    <div class="subCardTitle">Sự kiện nhập tay (tùy chọn)</div>
+    <div class="field"><label>Thời gian xác nhận nhận chuyến</label><input type="text" id="confirm_time" placeholder="YYYY-MM-DDTHH:MM:SS"></div>
+    <div class="field"><label>Thời gian báo đã đến điểm đón</label><input type="text" id="pickup_time" placeholder="YYYY-MM-DDTHH:MM:SS"></div>
+    <div class="field" style="margin-bottom:0"><label>Thời gian báo hủy chuyến</label><input type="text" id="cancel_time" placeholder="YYYY-MM-DDTHH:MM:SS"></div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="card">
+    <div class="stepHead">4 · Vẽ &amp; phân tích</div>
+    <div class="actionRow">
+      <button class="btn btn-primary" id="runBtn">Vẽ &amp; Phân tích</button>
+      <button class="btn" id="clearBtn">Xóa</button>
+    </div>
+    <div class="actionRow" style="margin-top:8px">
+      <button class="btn btn-ghost btn-sm" id="exportCSVBtn">Xuất CSV</button>
+      <button class="btn btn-ghost btn-sm" id="exportPDFBtn">Xuất PDF</button>
+    </div>
+    <div id="fgpsModeRow">
+      <div class="segmented">
+        <button id="fgpsModeAll">Tất cả</button>
+        <button id="fgpsModeOnlySusp">Chỉ nghi vấn</button>
+        <button id="fgpsModeOnlySelected">Đã chọn</button>
+      </div>
+      <div class="noteText">"Nghi vấn đã chọn" cần bấm 1 hàng trong bảng kết quả ở bước 6 trước.</div>
+    </div>
+  </div>
+
+  <!-- STEP 6 -->
+  <div class="card">
+    <div class="stepHead">6 · Kết quả chi tiết</div>
+
+    <div id="resultsFake">
+      <div class="tableBlockTitle">Sự kiện nghi vấn</div>
+      <div class="tableWrap">
+        <table id="fgpsTable">
+          <thead><tr><th>#</th><th>Từ</th><th>Đến</th><th>Δs(s)</th><th>Q.đường(m)</th><th>Tốc độ(km/h)</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="resultsHc" style="display:none">
+      <div class="tableBlockTitle">Điểm dừng phát hiện được</div>
+      <div class="tableWrap">
+        <table id="hcStopTable">
+          <thead><tr><th>#</th><th>Loại</th><th>Từ</th><th>Đến</th><th>Thời lượng</th><th>Lat</th><th>Lng</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="tableBlockTitle">Sự kiện nhập tay</div>
+      <div class="tableWrap">
+        <table id="hcManualTable">
+          <thead><tr><th>#</th><th>Mã</th><th>Thời gian</th><th>Lat</th><th>Lng</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="noteText">Điểm dừng trong 1/3 đầu chặng → gợi ý điểm đón. Trong 1/3 cuối → gợi ý điểm trả.</div>
+    </div>
+  </div>
+
+  </div>
+  <div class="colWide">
+  <!-- STEP 5 -->
+  <div class="card">
+    <div class="stepHead">5 · Bản đồ &amp; phát lại</div>
+    <div class="mapToolbar">
+      <label>Nền bản đồ</label>
+      <select id="mapTypeSelect">
+        <option value="carto_light">CARTO Sáng</option>
+        <option value="carto_voyager">CARTO Voyager</option>
+        <option value="carto_dark">CARTO Tối</option>
+        <option value="osm">OpenStreetMap</option>
+        <option value="osm_hot">OSM Nhân đạo (HOT)</option>
+        <option value="topo">OpenTopoMap (địa hình)</option>
+        <option value="esri_sat">Esri Vệ tinh</option>
+        <option value="esri_street">Esri Đường phố</option>
+      </select>
+    </div>
+    <div id="map"></div>
+    <div class="mapHint">Bấm marker để xem chi tiết. Bấm hàng trong bảng kết quả để zoom tới vị trí.</div>
+    <div class="playbackBox" id="playbackContainer"></div>
+  </div>
+  </div>
+  </div>
+
+  <div class="noteText" style="text-align:center;margin-top:22px">Được xây dựng bởi <b>Hậu Lê Khắc IT</b></div>
+</div>
+
+<script>
+
+function normalizeTimeStr(str){
+  if (!str) return str;
+  if (str.endsWith('Z')) {
+    const d = new Date(str);
+    d.setHours(d.getHours() + 7);
+    return d.toISOString().replace('T',' ').replace('Z','').replace('.000','');
+  }
+  return str.replace('T',' ');
+}
+
+// ================== CẤU HÌNH CHUNG ==================
+const CONTEXT_MINUTES = 10;
+const CONTEXT_MS = CONTEXT_MINUTES * 60 * 1000;
+
+let gpsPoints = [];
+let map, routeLayer, gpsLayer, extraLayer;
+let currentTrack = [], playMarker=null, playTimer=null, playIndex=0, playSpeed=1;
+
+let fgpsSuspicious = [];
+let fgpsMode = 'all';
+let fgpsSelectedIndex = null;
+let fgpsSuspiciousLayers = [];
+let fgpsContextBeforeMs = CONTEXT_MS;
+let fgpsContextAfterMs = CONTEXT_MS;
+
+let hcStops = [], hcManualEvents = [];
+let currentMode = 'fake';
+
+// ----------------- Parser -----------------
+function parseGPStext(text) {
+  if (!text) return [];
+  text = String(text).replace(/^\uFEFF/, '').replace(/\u00A0/g,' ').replace(/\u200B/g,'').trim();
+  if (text.includes('->')) {
+    text = text.split(/\s*->\s*/).map(s=>s.trim()).filter(s=>s.length>0).join('\n');
+  }
+  const rawLines = text.split(/[\r\n]+/).map(l=>l.trim()).filter(l=>l.length>0);
+  if (!rawLines.length) return [];
+  let startIdx = 0;
+  const first = rawLines[0].toLowerCase();
+  if (first.includes('time')||first.includes('lat')) startIdx = 1;
+  function splitRow(row){ const out=[]; let cur='', inQ=false;
+    for (let i=0;i<row.length;i++){ const ch=row[i];
+      if (ch === '"'){ inQ=!inQ; continue; }
+      if (!inQ && (ch === '\t' || ch === ';' || ch === '|')){ out.push(cur.trim()); cur=''; continue; }
+      if (!inQ && ch === ','){ out.push(cur.trim()); cur=''; continue; }
+      cur += ch;
+    }
+    out.push(cur.trim()); return out;
+  }
+  const pts=[];
+  const fastRe = /^(\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?(?:\.\d+)?)\s*[|,;\t ]\s*(-?\d+(?:\.\d+)?)\s*[,;]\s*(-?\d+(?:\.\d+)?)\s*$/;
+  for (let i=startIdx;i<rawLines.length;i++){
+    const fm = rawLines[i].match(fastRe);
+    if (fm){
+      const ts = new Date(fm[1].replace(' ','T')).getTime();
+      const lat = parseFloat(fm[2]), lng = parseFloat(fm[3]);
+      if (!isNaN(ts) && !isNaN(lat) && !isNaN(lng)){ pts.push({time:fm[1], ts, lat, lng}); continue; }
+    }
+    const cols = splitRow(rawLines[i]).map(c=>c.replace(/^"|"$/g,'').trim());
+    let timeCell = null;
+    for (let j=0;j<cols.length;j++){
+      if (!cols[j]) continue;
+      const t=Date.parse(cols[j]);
+      if (!isNaN(t)){ timeCell = cols[j]; break; }
+    }
+    if (!timeCell) continue;
+    let lat=null, lng=null;
+    for (let j=0;j<cols.length;j++){
+      if (cols[j] && /-?\d+(\.\d+)?\s*,\s*-?\d+(\.\d+)?/.test(cols[j])){
+        const parts = cols[j].split(/[,;]/).map(p=>p.trim());
+        if (parts.length>=2){ lat=parseFloat(parts[0]); lng=parseFloat(parts[1]); break; }
+      }
+    }
+    if (lat===null){
+      for (let j=0;j<cols.length-1;j++){
+        if (/^-?\d+(\.\d+)?$/.test(cols[j]) && /^-?\d+(\.\d+)?$/.test(cols[j+1])){
+          lat=parseFloat(cols[j]); lng=parseFloat(cols[j+1]); break;
+        }
+      }
+    }
+    const ts = new Date(timeCell).getTime();
+    if (isNaN(ts)) continue;
+    if (lat!==null && lng!==null && !isNaN(lat) && !isNaN(lng)){
+      pts.push({time:timeCell, ts, lat, lng});
+    } else {
+      pts.push({time:timeCell, ts, lat:null, lng:null});
+    }
+  }
+  pts.sort((a,b)=>a.ts-b.ts);
+  for (let i=0;i<pts.length;i++){
+    if (pts[i].lat === null){
+      let best=null, bestDelta=Infinity;
+      for (let j=0;j<pts.length;j++){
+        if (pts[j].lat !== null){
+          const d=Math.abs(pts[j].ts-pts[i].ts);
+          if (d<bestDelta){ bestDelta=d; best=pts[j]; }
+        }
+      }
+      if (best){ pts[i].lat=best.lat; pts[i].lng=best.lng; }
+    }
+  }
+  return pts.filter(p=>p.lat!==null && p.lng!==null && !isNaN(p.lat) && !isNaN(p.lng));
+}
+
+// ----------------- Map & helpers -----------------
+let baseTileLayer = null;
+const MAP_TYPES = {
+  carto_light:   { url:'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', attr:'&copy; OpenStreetMap &amp; CARTO', sub:'abcd', max:20 },
+  carto_voyager: { url:'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', attr:'&copy; OpenStreetMap &amp; CARTO', sub:'abcd', max:20 },
+  carto_dark:    { url:'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', attr:'&copy; OpenStreetMap &amp; CARTO', sub:'abcd', max:20 },
+  osm:           { url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png', attr:'&copy; OpenStreetMap contributors', sub:'abc', max:19 },
+  osm_hot:       { url:'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', attr:'&copy; OpenStreetMap contributors, HOT', sub:'abc', max:19 },
+  topo:          { url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', attr:'&copy; OpenStreetMap, SRTM | OpenTopoMap (CC-BY-SA)', sub:'abc', max:17 },
+  esri_sat:      { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', attr:'Tiles &copy; Esri', sub:'abc', max:19 },
+  esri_street:   { url:'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', attr:'Tiles &copy; Esri', sub:'abc', max:19 }
+};
+function applyMapType(key){
+  const cfg = MAP_TYPES[key] || MAP_TYPES.carto_light;
+  if (map){
+    if (baseTileLayer){ try{ map.removeLayer(baseTileLayer); }catch(e){} }
+    baseTileLayer = L.tileLayer(cfg.url, { attribution: cfg.attr, subdomains: cfg.sub, maxZoom: cfg.max }).addTo(map);
+  }
+  try { localStorage.setItem('tf_maptile', key); } catch(e){}
+}
+function initMapIfNeeded(center){
+  if (!map){
+    map = L.map('map').setView(center||[21.0278,105.8342], 14);
+    let saved = 'carto_light';
+    try { saved = localStorage.getItem('tf_maptile') || 'carto_light'; } catch(e){}
+    if (!MAP_TYPES[saved]) saved = 'carto_light';
+    const sel = document.getElementById('mapTypeSelect');
+    if (sel) sel.value = saved;
+    applyMapType(saved);
+    routeLayer = L.layerGroup().addTo(map);
+    gpsLayer = L.layerGroup().addTo(map);
+    extraLayer = L.layerGroup().addTo(map);
+  }
+}
+function haversine(a,b){
+  const R=6371000; const toRad=x=>x*Math.PI/180;
+  const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lng-a.lng);
+  const A=Math.sin(dLat/2)**2 + Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(A),Math.sqrt(1-A));
+}
+function drawGpsPointMarkers(layer, points, options = {}) {
+  if (!layer || !points || !points.length) return;
+  const radius = options.radius || 3;
+  const color = options.color || '#1f78b4';
+  const fillColor = options.fillColor || '#1f78b4';
+  const fillOpacity = (options.fillOpacity !== undefined) ? options.fillOpacity : 0.9;
+  points.forEach(p => {
+    try {
+      const m = L.circleMarker([p.lat, p.lng], { radius, color, fillColor, fillOpacity });
+      m.bindPopup(`Thời gian: ${p.time}`);
+      m.on('click', () => { m.openPopup(); });
+      m.addTo(layer);
+    } catch (e) { }
+  });
+}
+function drawFullRoute(){
+  routeLayer.clearLayers(); gpsLayer.clearLayers();
+  if (!gpsPoints.length) return;
+  const latlngs = gpsPoints.map(p=>[p.lat,p.lng]);
+  L.polyline(latlngs, {color:'#0c8a80', weight:3}).addTo(routeLayer);
+  drawGpsPointMarkers(gpsLayer, gpsPoints, { radius:3, color:'#1f78b4', fillColor:'#1f78b4', fillOpacity:0.9 });
+  map.fitBounds(latlngs,{padding:[20,20]});
+}
+function resetPlayMarker(){
+  if (playMarker){ try{ map.removeLayer(playMarker);}catch(e){} playMarker=null; }
+  if (currentTrack && currentTrack.length){ playMarker = L.circleMarker([currentTrack[0].lat,currentTrack[0].lng], {radius:6,color:'#0a746c',fillColor:'#0a746c',fillOpacity:1}).addTo(map); playIndex=0; }
+  updatePlaybackUI();
+}
+
+// ----------------- CSV / PDF helpers -----------------
+function downloadCSV(filename, rows) {
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+}
+function printElementToPDF(elem, title) {
+  const w = window.open('', '_blank');
+  if (!w) { alert('Trình duyệt chặn popup — bật popup để in.'); return; }
+  w.document.write('<html><head><title>' + (title||'In') + '</title>');
+  w.document.write('<style>body{font-family:Arial,sans-serif}table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:left}</style>');
+  w.document.write('</head><body>');
+  w.document.write('<h3>' + (title||'') + '</h3>');
+  w.document.write(elem.outerHTML);
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(()=>{ w.print(); }, 500);
+}
+
+// ----------------- Playback controls -----------------
+function updatePlaybackUI(){
+  const slider = document.getElementById('playSlider');
+  const label = document.getElementById('playTimeLabel');
+  if (!slider) return;
+  const n = (currentTrack && currentTrack.length) ? currentTrack.length : 0;
+  slider.max = Math.max(0, n - 1);
+  const i = Math.min(Math.max(0, Math.floor(playIndex)), Math.max(0, n - 1));
+  slider.value = i;
+  if (label) label.textContent = (n && currentTrack[i]) ? `${currentTrack[i].time}  (${i+1}/${n})` : '—';
+}
+function playbackTick(){
+  playIndex += playSpeed;
+  if (playIndex >= currentTrack.length){
+    playIndex = currentTrack.length - 1;
+    clearInterval(playTimer); playTimer=null;
+    updatePlaybackUI();
+    return;
+  }
+  const p = currentTrack[Math.floor(playIndex)];
+  if (playMarker && p) playMarker.setLatLng([p.lat,p.lng]);
+  updatePlaybackUI();
+}
+function setupPlaybackControls(){
+  if (document._playbackSetup) return; document._playbackSetup=true;
+  const container = document.getElementById('playbackContainer');
+  container.innerHTML = `
+    <div class="stepHead" style="font-size:12.5px;margin-bottom:10px">Phát lại lộ trình</div>
+    <div class="playbackControls">
+      <button class="btn btn-sm" id="playCommon">Phát</button>
+      <button class="btn btn-sm" id="pauseCommon">Tạm dừng</button>
+      <button class="btn btn-sm" id="stopCommon">Dừng</button>
+      <div class="speedGroup">
+        <button class="btn btn-sm spd" data-speed="1">x1</button>
+        <button class="btn btn-sm spd" data-speed="2">x2</button>
+        <button class="btn btn-sm spd" data-speed="4">x4</button>
+        <button class="btn btn-sm spd" data-speed="8">x8</button>
+      </div>
+    </div>
+    <input type="range" id="playSlider" min="0" max="0" value="0" step="1">
+    <div class="playTimeLabel" id="playTimeLabel">—</div>`;
+  document.getElementById('playCommon').onclick = ()=> {
+    if (!currentTrack || !currentTrack.length) return;
+    if (playTimer) return;
+    if (playIndex >= currentTrack.length - 1) playIndex = 0;
+    playTimer = setInterval(playbackTick, 300);
+  };
+  document.getElementById('pauseCommon').onclick = ()=> { if (playTimer){ clearInterval(playTimer); playTimer=null; } };
+  document.getElementById('stopCommon').onclick = ()=> { if (playTimer){ clearInterval(playTimer); playTimer=null; } playIndex=0; if (playMarker && currentTrack.length) playMarker.setLatLng([currentTrack[0].lat,currentTrack[0].lng]); updatePlaybackUI(); };
+  document.getElementById('playSlider').oninput = (e)=> {
+    if (!currentTrack || !currentTrack.length) return;
+    playIndex = Number(e.target.value) || 0;
+    const p = currentTrack[Math.floor(playIndex)];
+    if (playMarker && p) playMarker.setLatLng([p.lat,p.lng]);
+    const label = document.getElementById('playTimeLabel');
+    if (label && p) label.textContent = `${p.time}  (${Math.floor(playIndex)+1}/${currentTrack.length})`;
+  };
+  document.querySelectorAll('.spd').forEach(b=> b.onclick = ()=> { playSpeed = Number(b.dataset.speed)||1; document.querySelectorAll('.spd').forEach(x=>x.classList.remove('active')); b.classList.add('active'); });
+}
+
+// ----------------- MODULE 1: Fake GPS -----------------
+function updateFgpsModeButtons(){
+  const btnAll = document.getElementById('fgpsModeAll');
+  const btnOnly = document.getElementById('fgpsModeOnlySusp');
+  const btnSel = document.getElementById('fgpsModeOnlySelected');
+  if (!btnAll) return;
+  btnAll.classList.remove('active'); btnOnly.classList.remove('active'); btnSel.classList.remove('active');
+  if (fgpsMode === 'all') btnAll.classList.add('active');
+  if (fgpsMode === 'only_susp') btnOnly.classList.add('active');
+  if (fgpsMode === 'only_selected') btnSel.classList.add('active');
+}
+document.getElementById('fgpsModeAll').onclick = ()=> { fgpsMode='all'; updateFgpsModeButtons(); updateFgpsView(); };
+document.getElementById('fgpsModeOnlySusp').onclick = ()=> { fgpsMode='only_susp'; updateFgpsModeButtons(); updateFgpsView(); };
+document.getElementById('fgpsModeOnlySelected').onclick = ()=> { fgpsMode='only_selected'; updateFgpsModeButtons(); updateFgpsView(); };
+updateFgpsModeButtons();
+
+function runFakeGPS(raw){
+  gpsPoints = parseGPStext(raw||'');
+  if (!gpsPoints.length){ alert('Không đọc được dữ liệu GPS. Kiểm tra định dạng (time_vn lat,lng).'); return; }
+  initMapIfNeeded([gpsPoints[0].lat,gpsPoints[0].lng]);
+  const beforeMin = Math.max(0, parseInt(document.getElementById('fgpsContextBefore').value || CONTEXT_MINUTES, 10) || CONTEXT_MINUTES);
+  const afterMin  = Math.max(0, parseInt(document.getElementById('fgpsContextAfter').value || CONTEXT_MINUTES, 10) || CONTEXT_MINUTES);
+  fgpsContextBeforeMs = beforeMin * 60 * 1000;
+  fgpsContextAfterMs = afterMin * 60 * 1000;
+
+  const segs = [];
+  for (let i=0;i<gpsPoints.length-1;i++){
+    const a=gpsPoints[i], b=gpsPoints[i+1];
+    const dt = (b.ts - a.ts)/1000; if (dt<=0) continue;
+    const dist = haversine(a,b);
+    const speed_kmh = (dist/dt)*3.6;
+    if (isFinite(speed_kmh)) segs.push({iFrom:i,iTo:i+1,dt,dist,speed_kmh, midTs: Math.round((a.ts+b.ts)/2)});
+  }
+  const thr = Number(document.getElementById('fgpsThreshold').value) || 200;
+  segs.forEach(s=> s.susp = s.speed_kmh > thr);
+
+  const suspicious = [];
+  let cluster = null;
+  for (let s of segs){
+    if (s.susp){
+      if (!cluster) cluster = {iFrom:s.iFrom, iTo:s.iTo, dist:s.dist, maxSpeed:s.speed_kmh, startTs:gpsPoints[s.iFrom].ts, endTs:gpsPoints[s.iTo].ts};
+      else { cluster.iTo = s.iTo; cluster.dist += s.dist; cluster.endTs = gpsPoints[s.iTo].ts; cluster.maxSpeed = Math.max(cluster.maxSpeed, s.speed_kmh); }
+    } else {
+      if (cluster){ suspicious.push(cluster); cluster = null; }
+    }
+  }
+  if (cluster) suspicious.push(cluster);
+  fgpsSuspicious = suspicious;
+  fgpsSelectedIndex = null;
+  fgpsMode = 'all';
+  updateFgpsModeButtons();
+
+  drawFullRoute();
+  buildFgpsLayers(segs);
+  populateFgpsTable();
+  currentTrack = gpsPoints.slice();
+  resetPlayMarker();
+  updateFgpsView();
+}
+
+function buildFgpsLayers(segs){
+  fgpsSuspiciousLayers = [];
+  for (let idx=0; idx<fgpsSuspicious.length; idx++){
+    const c = fgpsSuspicious[idx];
+    const startIdx = Math.max(0, c.iFrom);
+    const endIdx = Math.min(gpsPoints.length - 1, c.iTo);
+    const segPts = gpsPoints.slice(startIdx, endIdx + 1).map(p => [p.lat, p.lng]);
+
+    const polyThick = L.polyline(segPts, {color: '#e5484d', weight: 8, opacity: 0.95});
+    const polyThin  = L.polyline(segPts, {color: '#f28b8e', weight: 4, opacity: 0.85});
+
+    const startPt = gpsPoints[startIdx];
+    const endPt = gpsPoints[endIdx];
+    const midIdx = Math.floor((startIdx + endIdx) / 2);
+    const midPt = gpsPoints[midIdx];
+
+    const markerStart = L.circleMarker([startPt.lat, startPt.lng], {radius:6, color:'#b3272b', fillColor:'#b3272b', fillOpacity:1});
+    const markerMid   = L.circleMarker([midPt.lat, midPt.lng],     {radius:10, color:'#e5484d', fillColor:'#e5484d', fillOpacity:1});
+    const markerEnd   = L.circleMarker([endPt.lat, endPt.lng],     {radius:6, color:'#7a1c1f', fillColor:'#7a1c1f', fillOpacity:1});
+
+    const popup = `<b>Đoạn nghi vấn ${idx+1}</b><br/>Tốc độ tối đa: ${Math.round(c.maxSpeed)} km/h<br/>Từ: ${normalizeTimeStr(new Date(c.startTs).toISOString())}<br/>Đến: ${normalizeTimeStr(new Date(c.endTs).toISOString())}`;
+    markerMid.bindPopup(popup);
+    markerStart.bindPopup(`Bắt đầu: ${normalizeTimeStr(new Date(c.startTs).toISOString())}`);
+    markerEnd.bindPopup(`Kết thúc: ${normalizeTimeStr(new Date(c.endTs).toISOString())}`);
+
+    markerMid.on('click', ()=> {
+      fgpsSelectedIndex = idx;
+      highlightFgpsRow(idx);
+      if (fgpsMode === 'only_selected') updateFgpsView();
+      focusAndPlayRange(c.startTs - (fgpsContextBeforeMs || CONTEXT_MS), c.endTs + (fgpsContextAfterMs || CONTEXT_MS));
+      markerMid.openPopup();
+    });
+
+    fgpsSuspiciousLayers.push({
+      polyThick, polyThin, markerStart, markerMid, markerEnd, iFrom:startIdx, iTo:endIdx, meta: c
+    });
+  }
+}
+
+function populateFgpsTable(){
+  const tbody = document.querySelector('#fgpsTable tbody'); tbody.innerHTML = '';
+  fgpsSuspicious.forEach((c,idx)=>{
+    const durSec = Math.round((c.endTs - c.startTs)/1000);
+    const tr = document.createElement('tr');
+    tr.id = 'fgpsRow_'+idx;
+    tr.innerHTML = `<td>${idx+1}</td><td>${normalizeTimeStr(new Date(c.startTs).toISOString())}</td><td>${normalizeTimeStr(new Date(c.endTs).toISOString())}</td><td>${durSec}</td><td>${Math.round(c.dist)}</td><td>${Math.round(c.maxSpeed)}</td>`;
+    tr.onclick = ()=> {
+      fgpsSelectedIndex = idx;
+      highlightFgpsRow(idx);
+      if (fgpsMode === 'only_selected') updateFgpsView();
+      focusAndPlayRange(c.startTs - (fgpsContextBeforeMs || CONTEXT_MS), c.endTs + (fgpsContextAfterMs || CONTEXT_MS));
+    };
+    tbody.appendChild(tr);
+  });
+  if (!fgpsSuspicious.length) tbody.innerHTML = '<tr><td colspan="6">Không tìm thấy đoạn nghi vấn với ngưỡng hiện tại</td></tr>';
+  if (fgpsSelectedIndex !== null) highlightFgpsRow(fgpsSelectedIndex);
+}
+function highlightFgpsRow(idx){
+  document.querySelectorAll('#fgpsTable tbody tr').forEach(r=>r.classList.remove('active'));
+  const r = document.getElementById('fgpsRow_'+idx); if (r) r.classList.add('active');
+}
+
+function updateFgpsView(){
+  routeLayer.clearLayers();
+  gpsLayer.clearLayers();
+  extraLayer.clearLayers();
+
+  const allCoords = gpsPoints.map(p=>[p.lat,p.lng]);
+  if (allCoords.length) L.polyline(allCoords, {color:'#7f8c8d', weight:2, opacity:0.3}).addTo(extraLayer);
+
+  if (fgpsMode === 'all'){
+    drawFullRoute();
+    fgpsSuspiciousLayers.forEach(obj=>{
+      obj.polyThick.addTo(extraLayer);
+      obj.polyThin.addTo(extraLayer);
+      obj.markerStart.addTo(extraLayer);
+      obj.markerMid.addTo(extraLayer);
+      obj.markerEnd.addTo(extraLayer);
+    });
+    drawGpsPointMarkers(extraLayer, gpsPoints, { radius:3, color:'#1f78b4', fillColor:'#1f78b4', fillOpacity:0.95 });
+    if (gpsPoints.length) map.fitBounds(gpsPoints.map(p=>[p.lat,p.lng]), {padding:[20,20]});
+  }
+  else if (fgpsMode === 'only_susp'){
+    let pointsToShow = [];
+    fgpsSuspicious.forEach((c, idx)=>{
+      const fromTs = c.startTs - (fgpsContextBeforeMs || CONTEXT_MS);
+      const toTs   = c.endTs + (fgpsContextAfterMs || CONTEXT_MS);
+      const subset = gpsPoints.filter(p=>p.ts>=fromTs && p.ts<=toTs);
+      if (subset.length){
+        const latlngs = subset.map(p=>[p.lat,p.lng]);
+        L.polyline(latlngs, {color:'#e5484d', weight:6}).addTo(extraLayer);
+        pointsToShow = pointsToShow.concat(subset);
+      }
+    });
+    const uniq = {}; const uniquePoints = [];
+    pointsToShow.forEach(p=>{ if (!uniq[p.ts]){ uniq[p.ts]=1; uniquePoints.push(p); } });
+    if (uniquePoints.length){
+      drawGpsPointMarkers(extraLayer, uniquePoints, { radius:3, color:'#1f78b4', fillColor:'#1f78b4', fillOpacity:0.95 });
+      map.fitBounds(uniquePoints.map(p=>[p.lat,p.lng]), {padding:[20,20]});
+    } else {
+      if (fgpsSuspicious.length){
+        const c = fgpsSuspicious[0];
+        const subset = gpsPoints.filter(p=>p.ts >= c.startTs - (fgpsContextBeforeMs||CONTEXT_MS) && p.ts <= c.endTs + (fgpsContextAfterMs||CONTEXT_MS));
+        if (subset.length) map.fitBounds(subset.map(p=>[p.lat,p.lng]), {padding:[20,20]});
+      }
+    }
+    fgpsSuspiciousLayers.forEach(obj=>{
+      obj.markerMid.addTo(extraLayer);
+    });
+  }
+  else if (fgpsMode === 'only_selected'){
+    if (fgpsSelectedIndex === null){ alert('Vui lòng chọn 1 nghi vấn trong bảng trước (bấm 1 hàng).'); fgpsMode='only_susp'; updateFgpsModeButtons(); updateFgpsView(); return; }
+    const obj = fgpsSuspiciousLayers[fgpsSelectedIndex];
+    if (!obj){ alert('Index nghi vấn không hợp lệ'); return; }
+    const meta = obj.meta || fgpsSuspicious[fgpsSelectedIndex];
+    const fromTs = meta.startTs - (fgpsContextBeforeMs || CONTEXT_MS);
+    const toTs   = meta.endTs   + (fgpsContextAfterMs || CONTEXT_MS);
+    const subset = gpsPoints.filter(p=>p.ts>=fromTs && p.ts<=toTs);
+    if (subset.length){
+      const latlngs = subset.map(p=>[p.lat,p.lng]);
+      L.polyline(latlngs, {color:'#7f8c8d', weight:2}).addTo(extraLayer);
+      drawGpsPointMarkers(extraLayer, subset, { radius:3, color:'#1f78b4', fillColor:'#1f78b4', fillOpacity:0.95 });
+      obj.polyThick.addTo(extraLayer);
+      obj.polyThin.addTo(extraLayer);
+      obj.markerStart.addTo(extraLayer);
+      obj.markerMid.addTo(extraLayer);
+      obj.markerEnd.addTo(extraLayer);
+      const mid = subset[Math.floor(subset.length/2)];
+      if (mid) L.circleMarker([mid.lat, mid.lng], {radius:8, color:'#e5484d', fillColor:'#e5484d'}).addTo(extraLayer);
+      map.fitBounds(latlngs, {padding:[20,20]});
+    } else {
+      alert('Không có điểm GPS trong khoảng thời gian mở rộng của nghi vấn này');
+    }
+  }
+
+  populateFgpsTable();
+  updateFgpsModeButtons();
+}
+
+function exportFgpsCSV(){
+  if (!fgpsSuspicious || !fgpsSuspicious.length){ alert('Không có nghi vấn để xuất'); return; }
+  const rows = [['#','from','to','dur_sec','dist_m','max_speed_kmh']];
+  fgpsSuspicious.forEach((c,idx)=>{
+    rows.push([idx+1, normalizeTimeStr(new Date(c.startTs).toISOString()), normalizeTimeStr(new Date(c.endTs).toISOString()), Math.round((c.endTs-c.startTs)/1000), Math.round(c.dist), Math.round(c.maxSpeed)]);
+  });
+  downloadCSV('fake_gps_suspicious.csv', rows);
+}
+function exportFgpsPDF(){
+  const table = document.querySelector('#fgpsTable');
+  if (!table) { alert('Không có bảng để in'); return; }
+  printElementToPDF(table, 'Danh sách nghi vấn - Fake GPS');
+}
+
+// ----------------- focus & play range shared -----------------
+function focusAndPlayRange(tsStart, tsEnd){
+  currentTrack = gpsPoints.filter(p=>p.ts>=tsStart && p.ts<=tsEnd);
+  if (!currentTrack.length){ alert('Không có điểm trong khoảng này'); return; }
+  map.fitBounds(currentTrack.map(p=>[p.lat,p.lng]), {padding:[20,20]});
+  resetPlayMarker();
+  if (playTimer) clearInterval(playTimer);
+  playIndex = 0;
+  updatePlaybackUI();
+  playTimer = setInterval(playbackTick, 300);
+}
+
+// ----------------- MODULE 2: Hủy chuyến vẫn chở khách -----------------
+function detectStopsLocal(gps, radius=30, minSec=60){
+  const stops=[];
+  const n=gps.length; let i=0;
+  while(i<n){
+    let cluster=[gps[i]]; let j=i+1;
+    while(j<n){
+      const d=haversine(gps[i], gps[j]);
+      if (d<=radius){ cluster.push(gps[j]); j++; } else break;
+    }
+    const first=cluster[0], last=cluster[cluster.length-1];
+    const dur=(last.ts - first.ts)/1000;
+    if (dur>=minSec && cluster.length>=2){
+      const sum = cluster.reduce((s,p)=>{ s.lat+=p.lat; s.lng+=p.lng; return s; }, {lat:0,lng:0});
+      const centerLat=sum.lat/cluster.length, centerLng=sum.lng/cluster.length;
+      stops.push({indexStart: gps.indexOf(first), indexEnd: gps.indexOf(last), startTime:first.time, endTime:last.time, durationSec:dur, centerLat, centerLng});
+      i=j;
+    } else i++;
+  }
+  return stops;
+}
+
+function runHuyChuyen(raw){
+  gpsPoints = parseGPStext(raw||'');
+  if (!gpsPoints.length){ alert('Không đọc được dữ liệu GPS. Kiểm tra định dạng (time_vn lat,lng).'); return; }
+  initMapIfNeeded([gpsPoints[0].lat,gpsPoints[0].lng]);
+  const radius = Number(document.getElementById('hcRadius').value) || 30;
+  const minSec = Number(document.getElementById('hcMinSec').value) || 60;
+  const rawStops = detectStopsLocal(gpsPoints, radius, minSec);
+  hcStops = rawStops.map(s=>{
+    const mid = Math.round((s.indexStart + s.indexEnd)/2);
+    const ratio = mid / Math.max(1, gpsPoints.length-1);
+    let type = 'Dừng';
+    if (ratio <= 0.33) type = 'Gợi ý: điểm đón';
+    else if (ratio >= 0.66) type = 'Gợi ý: điểm trả';
+    return {...s, type};
+  });
+  hcManualEvents = [];
+  const confirmStr = document.getElementById('confirm_time').value.trim();
+  const pickupStr = document.getElementById('pickup_time').value.trim();
+  const cancelStr = document.getElementById('cancel_time').value.trim();
+  if (confirmStr){ const ts=new Date(confirmStr).getTime(); if(!isNaN(ts)) hcManualEvents.push({code:'Xác nhận nhận chuyến', timeStr:confirmStr, ts, lat:null, lng:null}); }
+  if (pickupStr){ const ts=new Date(pickupStr).getTime(); if(!isNaN(ts)) hcManualEvents.push({code:'Báo đã đến điểm đón', timeStr:pickupStr, ts, lat:null, lng:null}); }
+  if (cancelStr){ const ts=new Date(cancelStr).getTime(); if(!isNaN(ts)) hcManualEvents.push({code:'Báo hủy chuyến', timeStr:cancelStr, ts, lat:null, lng:null}); }
+  hcManualEvents.forEach(ev=>{
+    if (ev.lat==null){ let best=null, bestDelta=Infinity; for (const p of gpsPoints){ const d=Math.abs(p.ts-ev.ts); if (d<bestDelta){ bestDelta=d; best=p; } } if (best){ ev.lat=best.lat; ev.lng=best.lng; } }
+  });
+  drawFullRoute();
+  drawHcExtras();
+  buildHcTables();
+  currentTrack = gpsPoints.slice();
+  resetPlayMarker();
+}
+
+function drawHcExtras(){
+  extraLayer.clearLayers();
+  hcStops.forEach((s,idx)=>{
+    let color = '#f0973b'; if (s.type==='Gợi ý: điểm đón') color='#2f9e44'; else if (s.type==='Gợi ý: điểm trả') color='#7048e8';
+    const seg = L.circleMarker([s.centerLat, s.centerLng], {radius:8,color:color,fillColor:color,fillOpacity:0.95}).addTo(extraLayer);
+    seg.bindPopup(`<b>${s.type}</b><br/>Từ: ${s.startTime}<br/>Đến: ${s.endTime}<br/>Thời lượng: ${Math.floor(s.durationSec/60)}m ${Math.round(s.durationSec%60)}s`);
+    seg.on('click', ()=> { highlightHcStopRow(idx); focusHcStop(idx); focusAndPlayRange(new Date(s.startTime).getTime() - CONTEXT_MS, new Date(s.endTime).getTime() + CONTEXT_MS); });
+  });
+  hcManualEvents.forEach((ev,idx)=>{
+    const m=L.circleMarker([ev.lat, ev.lng], {radius:7,color:'#0c8a80',fillColor:'#0c8a80',fillOpacity:1}).addTo(extraLayer);
+    m.bindPopup(`<b>${ev.code}</b><br/>${ev.timeStr}`);
+    m.on('click', ()=> { highlightHcManualRow(idx); focusHcMan(idx); });
+  });
+}
+
+function buildHcTables(){
+  const tbody=document.querySelector('#hcStopTable tbody'); tbody.innerHTML='';
+  if (!hcStops.length){ tbody.innerHTML='<tr><td colspan="7">Không phát hiện điểm dừng</td></tr>'; }
+  else {
+    hcStops.forEach((s,idx)=>{ const tr=document.createElement('tr'); tr.id='hcStop_'+idx; tr.innerHTML = `<td>${idx+1}</td><td>${s.type}</td><td>${s.startTime}</td><td>${s.endTime}</td><td>${Math.floor(s.durationSec/60)}m ${Math.round(s.durationSec%60)}s</td><td>${s.centerLat.toFixed(6)}</td><td>${s.centerLng.toFixed(6)}</td>`; tr.onclick=()=>focusHcStop(idx); tbody.appendChild(tr); });
+  }
+  const tbody2=document.querySelector('#hcManualTable tbody'); tbody2.innerHTML='';
+  if (!hcManualEvents.length){ tbody2.innerHTML='<tr><td colspan="5">Không có sự kiện nhập tay</td></tr>'; }
+  else {
+    hcManualEvents.forEach((ev,idx)=>{ const tr=document.createElement('tr'); tr.id='hcMan_'+idx; tr.innerHTML=`<td>${idx+1}</td><td>${ev.code}</td><td>${ev.timeStr}</td><td>${ev.lat?.toFixed(6)||''}</td><td>${ev.lng?.toFixed(6)||''}</td>`; tr.onclick=()=>focusHcMan(idx); tbody2.appendChild(tr); });
+  }
+}
+
+function highlightHcStopRow(idx){ document.querySelectorAll('#hcStopTable tbody tr').forEach(r=>r.classList.remove('active')); const r=document.getElementById('hcStop_'+idx); if(r) r.classList.add('active'); }
+function focusHcStop(idx){ highlightHcStopRow(idx); const s=hcStops[idx]; if(!s) return; map.setView([s.centerLat,s.centerLng],18,{animate:true}); extraLayer.eachLayer(layer=>{ try{ const ll=layer.getLatLng(); if (Math.abs(ll.lat - s.centerLat) < 1e-6 && Math.abs(ll.lng - s.centerLng) < 1e-6) layer.openPopup(); }catch(e){} }); }
+function highlightHcManualRow(idx){ document.querySelectorAll('#hcManualTable tbody tr').forEach(r=>r.classList.remove('active')); const r=document.getElementById('hcMan_'+idx); if(r) r.classList.add('active'); }
+function focusHcMan(idx){ highlightHcManualRow(idx); const ev=hcManualEvents[idx]; if(!ev) return; map.setView([ev.lat,ev.lng],18,{animate:true}); extraLayer.eachLayer(layer=>{ try{ const ll=layer.getLatLng(); if (Math.abs(ll.lat-ev.lat) < 1e-6 && Math.abs(ll.lng-ev.lng) < 1e-6) layer.openPopup(); }catch(e){} }); }
+
+function exportHcCSV(){
+  if (!hcStops || !hcStops.length){ alert('Không có điểm dừng để xuất'); return; }
+  const rows = [['#','type','from','to','dur_sec','lat','lng']];
+  hcStops.forEach((s,idx)=> rows.push([idx+1, s.type, s.startTime, s.endTime, Math.round(s.durationSec), s.centerLat.toFixed(6), s.centerLng.toFixed(6)]));
+  downloadCSV('huy_chuyen_stops.csv', rows);
+}
+function exportHcPDF(){
+  const table = document.querySelector('#hcStopTable');
+  if (!table) { alert('Không có bảng để in'); return; }
+  printElementToPDF(table, 'Danh sách điểm dừng - Hủy chuyến');
+}
+
+// ----------------- Mode switching (Fake GPS / Hủy chuyến) -----------------
+function selectMode(mode){
+  currentMode = mode;
+  document.getElementById('tileFake').classList.toggle('active', mode==='fake');
+  document.getElementById('tileHc').classList.toggle('active', mode==='hc');
+  document.getElementById('fakeConfigCard').style.display = mode==='fake' ? '' : 'none';
+  document.getElementById('hcConfigCard').style.display = mode==='hc' ? '' : 'none';
+  document.getElementById('fgpsModeRow').style.display = mode==='fake' ? '' : 'none';
+  document.getElementById('resultsFake').style.display = mode==='fake' ? '' : 'none';
+  document.getElementById('resultsHc').style.display = mode==='hc' ? '' : 'none';
+}
+document.getElementById('tileFake').onclick = ()=> selectMode('fake');
+document.getElementById('tileHc').onclick = ()=> selectMode('hc');
+
+document.getElementById('runBtn').onclick = ()=> {
+  const f = document.getElementById('gpsFile').files[0];
+  const go = (text)=> { if (currentMode==='fake') runFakeGPS(text); else runHuyChuyen(text); };
+  if (f){ const r=new FileReader(); r.onload=e=> go(String(e.target.result)); r.readAsText(f,'utf-8'); }
+  else go(document.getElementById('gpsInput').value);
+};
+document.getElementById('clearBtn').onclick = ()=> {
+  document.getElementById('gpsInput').value=''; document.getElementById('gpsFile').value='';
+  if (routeLayer) routeLayer.clearLayers();
+  if (gpsLayer) gpsLayer.clearLayers();
+  if (extraLayer) extraLayer.clearLayers();
+  fgpsSuspicious=[]; fgpsMode='all'; fgpsSelectedIndex=null; fgpsSuspiciousLayers=[];
+  hcStops=[]; hcManualEvents=[];
+  document.querySelector('#fgpsTable tbody').innerHTML='';
+  document.querySelector('#hcStopTable tbody').innerHTML='';
+  document.querySelector('#hcManualTable tbody').innerHTML='';
+  updateFgpsModeButtons();
+};
+document.getElementById('exportCSVBtn').onclick = ()=> currentMode==='fake' ? exportFgpsCSV() : exportHcCSV();
+document.getElementById('exportPDFBtn').onclick = ()=> currentMode==='fake' ? exportFgpsPDF() : exportHcPDF();
+
+document.getElementById('resetAllBtn').onclick = ()=> {
+  if (confirm('Xóa toàn bộ dữ liệu đang nhập trên trang này?')) document.getElementById('clearBtn').click();
+};
+
+const mapTypeSel = document.getElementById('mapTypeSelect');
+if (mapTypeSel) mapTypeSel.onchange = ()=> applyMapType(mapTypeSel.value);
+
+// ----------------- Date badge -----------------
+(function initDateBadge(){
+  const days = ['Chủ Nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
+  const d = new Date();
+  const label = `${days[d.getDay()]}, ${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  document.getElementById('dateBadge').textContent = label;
+})();
+
+// ----------------- Init -----------------
+initMapIfNeeded([21.0278,105.8342]);
+setupPlaybackControls();
+selectMode('fake');
+
+</script>
+</body>
+</html>
