@@ -170,6 +170,8 @@
   ::-webkit-scrollbar{width:9px;height:9px}
   ::-webkit-scrollbar-thumb{background:#d6dede;border-radius:8px}
   ::-webkit-scrollbar-track{background:transparent}
+  .car-marker{background:transparent;border:none}
+  .car-marker .carRotate{transition:transform .25s linear;transform-origin:50% 50%}
 
   @media (max-width:640px){
     .hero{padding:16px}
@@ -514,9 +516,38 @@ function drawFullRoute(){
   drawGpsPointMarkers(gpsLayer, gpsPoints, { radius:3, color:'#1f78b4', fillColor:'#1f78b4', fillOpacity:0.9 });
   map.fitBounds(latlngs,{padding:[20,20]});
 }
+function bearingDeg(a,b){
+  const toRad=x=>x*Math.PI/180, toDeg=x=>x*180/Math.PI;
+  const lat1=toRad(a.lat), lat2=toRad(b.lat);
+  const dLon=toRad(b.lng-a.lng);
+  const y=Math.sin(dLon)*Math.cos(lat2);
+  const x=Math.cos(lat1)*Math.sin(lat2)-Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+  return (toDeg(Math.atan2(y,x))+360)%360;
+}
+function carIcon(angle){
+  const a = isFinite(angle) ? angle : 0;
+  return L.divIcon({
+    className:'car-marker',
+    html:`<div class="carRotate" style="width:28px;height:28px;transform:rotate(${a}deg)">
+      <svg viewBox="0 0 24 24" width="28" height="28">
+        <rect x="7" y="3" width="10" height="16" rx="3" fill="#0c8a80" stroke="#ffffff" stroke-width="1.3"/>
+        <rect x="9" y="5.3" width="6" height="4.6" rx="1.1" fill="#ffffff" opacity=".55"/>
+        <circle cx="8.3" cy="6.3" r="1.25" fill="#16232a"/>
+        <circle cx="15.7" cy="6.3" r="1.25" fill="#16232a"/>
+        <circle cx="8.3" cy="16.3" r="1.25" fill="#16232a"/>
+        <circle cx="15.7" cy="16.3" r="1.25" fill="#16232a"/>
+      </svg>
+    </div>`,
+    iconSize:[28,28], iconAnchor:[14,14]
+  });
+}
 function resetPlayMarker(){
   if (playMarker){ try{ map.removeLayer(playMarker);}catch(e){} playMarker=null; }
-  if (currentTrack && currentTrack.length){ playMarker = L.circleMarker([currentTrack[0].lat,currentTrack[0].lng], {radius:6,color:'#0a746c',fillColor:'#0a746c',fillOpacity:1}).addTo(map); playIndex=0; }
+  if (currentTrack && currentTrack.length){
+    const initAngle = currentTrack.length>1 ? bearingDeg(currentTrack[0], currentTrack[1]) : 0;
+    playMarker = L.marker([currentTrack[0].lat,currentTrack[0].lng], {icon: carIcon(initAngle), zIndexOffset:1000}).addTo(map);
+    playIndex=0;
+  }
   updatePlaybackUI();
 }
 
@@ -554,6 +585,7 @@ function updatePlaybackUI(){
   if (label) label.textContent = (n && currentTrack[i]) ? `${currentTrack[i].time}  (${i+1}/${n})` : '—';
 }
 function playbackTick(){
+  const prevIdx = Math.max(0, Math.floor(playIndex));
   playIndex += playSpeed;
   if (playIndex >= currentTrack.length){
     playIndex = currentTrack.length - 1;
@@ -561,8 +593,13 @@ function playbackTick(){
     updatePlaybackUI();
     return;
   }
-  const p = currentTrack[Math.floor(playIndex)];
-  if (playMarker && p) playMarker.setLatLng([p.lat,p.lng]);
+  const idx = Math.floor(playIndex);
+  const p = currentTrack[idx];
+  const prev = currentTrack[prevIdx];
+  if (playMarker && p){
+    playMarker.setLatLng([p.lat,p.lng]);
+    if (prev && (prev.lat!==p.lat || prev.lng!==p.lng)) playMarker.setIcon(carIcon(bearingDeg(prev,p)));
+  }
   updatePlaybackUI();
 }
 function setupPlaybackControls(){
@@ -590,12 +627,27 @@ function setupPlaybackControls(){
     playTimer = setInterval(playbackTick, 300);
   };
   document.getElementById('pauseCommon').onclick = ()=> { if (playTimer){ clearInterval(playTimer); playTimer=null; } };
-  document.getElementById('stopCommon').onclick = ()=> { if (playTimer){ clearInterval(playTimer); playTimer=null; } playIndex=0; if (playMarker && currentTrack.length) playMarker.setLatLng([currentTrack[0].lat,currentTrack[0].lng]); updatePlaybackUI(); };
+  document.getElementById('stopCommon').onclick = ()=> {
+    if (playTimer){ clearInterval(playTimer); playTimer=null; }
+    playIndex=0;
+    if (playMarker && currentTrack.length){
+      playMarker.setLatLng([currentTrack[0].lat,currentTrack[0].lng]);
+      const angle = currentTrack.length>1 ? bearingDeg(currentTrack[0],currentTrack[1]) : 0;
+      playMarker.setIcon(carIcon(angle));
+    }
+    updatePlaybackUI();
+  };
   document.getElementById('playSlider').oninput = (e)=> {
     if (!currentTrack || !currentTrack.length) return;
+    const prevIdx = Math.max(0, Math.floor(playIndex));
     playIndex = Number(e.target.value) || 0;
-    const p = currentTrack[Math.floor(playIndex)];
-    if (playMarker && p) playMarker.setLatLng([p.lat,p.lng]);
+    const idx = Math.floor(playIndex);
+    const p = currentTrack[idx];
+    const prev = currentTrack[Math.max(0, prevIdx===idx ? Math.max(0,idx-1) : prevIdx)];
+    if (playMarker && p){
+      playMarker.setLatLng([p.lat,p.lng]);
+      if (prev && (prev.lat!==p.lat || prev.lng!==p.lng)) playMarker.setIcon(carIcon(bearingDeg(prev,p)));
+    }
     const label = document.getElementById('playTimeLabel');
     if (label && p) label.textContent = `${p.time}  (${Math.floor(playIndex)+1}/${currentTrack.length})`;
   };
