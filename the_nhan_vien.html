@@ -88,9 +88,10 @@
   .cropEmpty{width:210px;height:auto;aspect-ratio:268/456;border-radius:6px;border:1.5px dashed var(--border);display:flex;align-items:center;justify-content:center;color:var(--muted-soft);font-size:12px;text-align:center;padding:12px;flex-shrink:0}
 
   /* preview */
-  .previewRow{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
-  .previewCard{text-align:center}
-  .previewCard canvas{width:170px;height:auto;border-radius:8px;border:1px solid var(--border);box-shadow:var(--shadow-sm);background:#fff}
+  .previewRow{display:flex;justify-content:center;overflow-x:auto;padding:2px 0 4px}
+  .previewWorkspace{position:relative;display:flex;gap:20px;align-items:flex-start;flex-shrink:0;touch-action:none}
+  .previewCard{text-align:center;position:relative}
+  .previewCard canvas{width:170px;height:auto;border-radius:8px;border:1px solid var(--border);box-shadow:var(--shadow-sm);background:#fff;display:block;touch-action:none}
   .previewCard .lbl{font-size:11.5px;color:var(--muted);font-weight:600;margin-top:8px}
 
   /* table */
@@ -122,6 +123,27 @@
   .colorRow span,.rangeValue{font-size:11px;color:var(--muted);font-family:var(--mono)}
   .rangeValue{margin-top:3px;text-align:right}
   .styleHint{font-size:10.8px;color:var(--muted-soft);line-height:1.45;margin-top:10px}
+
+  /* stamp editor */
+  .stampTools{
+    margin-top:14px;padding:14px;background:#fff8f8;border:1px solid #f1dede;
+    border-radius:10px;
+  }
+  .stampTitle{font-size:12.5px;font-weight:700;color:var(--text);margin-bottom:10px}
+  .stampActions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .stampStatus{font-size:11px;color:var(--muted)}
+  .stampOpacityRow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin-top:11px;font-size:11.5px;color:var(--muted)}
+  .stampOpacityRow input[type=range]{width:100%;margin:0}
+  .stampOpacityRow .rangeValue{margin:0;min-width:38px;text-align:right}
+  .stampHint{font-size:10.8px;color:var(--muted-soft);line-height:1.45;margin-top:9px}
+  .stampFile{max-width:100%;font-size:12px}
+  .stampEditor{
+    margin-top:12px;display:flex;justify-content:center;align-items:center;
+    min-height:120px;padding:10px;background:repeating-conic-gradient(#f7f7f7 0 25%,#fff 0 50%) 50%/16px 16px;
+    border:1px dashed #ddd;border-radius:8px;
+  }
+  .stampEditor canvas{max-width:100%;height:auto;border:1px solid var(--border);border-radius:8px;background:#fff;touch-action:none;cursor:default}
+  .stampEmpty{font-size:11.5px;color:var(--muted-soft);text-align:center}
   @media (max-width:640px){
     .hero{padding:16px}
     .formGrid{grid-template-columns:1fr}
@@ -253,6 +275,25 @@
             </div>
             <div class="styleHint">Bạn có thể chỉnh vị trí, font, màu, độ đậm, cỡ chữ, khoảng cách chữ và khoảng cách hàng ngay trên preview.</div>
           </div>
+
+          <div id="stampTools" class="stampTools">
+            <div class="stampTitle">Mộc dấu trên mặt trước</div>
+            <div class="stampActions">
+              <input class="stampFile" type="file" id="stampInput" accept="image/png,image/webp,image/*">
+              <button class="btn btn-sm" id="removeStampBtn" type="button" style="display:none">Xóa mộc</button>
+              <button class="btn btn-sm" id="resetStampBtn" type="button" style="display:none">Đặt lại vị trí</button>
+              <span class="stampStatus" id="stampStatus">Chưa tải mộc</span>
+            </div>
+            <div class="stampOpacityRow">
+              <label for="stampOpacity">Độ mờ / đậm của mộc</label>
+              <input type="range" id="stampOpacity" min="10" max="100" value="100" step="1">
+              <span class="rangeValue"><span id="stampOpacityText">100</span>%</span>
+            </div>
+            <div class="stampHint">
+              Tải ảnh mộc PNG nền trong suốt. Sau khi tải, kéo trực tiếp mộc trên vùng xem trước <b>cả mặt trước và mặt sau</b>;
+              có thể kéo qua lại giữa 2 thẻ và kéo các nút ở góc để phóng to/thu nhỏ. Mộc sẽ được xuất đúng vị trí vào PDF.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -263,13 +304,15 @@
     <div class="stepHead">2 · Xem trước thẻ</div>
     <div class="stepDesc">Mặt trước cập nhật theo thông tin bạn nhập ở trên. Mặt sau dùng chung mẫu quy định cho mọi tài xế.</div>
     <div class="previewRow">
-      <div class="previewCard">
-        <canvas id="frontPreview" width="465" height="746"></canvas>
-        <div class="lbl">Mặt trước</div>
-      </div>
-      <div class="previewCard">
-        <canvas id="backPreview" width="465" height="746"></canvas>
-        <div class="lbl">Mặt sau (cố định)</div>
+      <div class="previewWorkspace" id="previewWorkspace">
+        <div class="previewCard">
+          <canvas id="frontPreview" width="465" height="746"></canvas>
+          <div class="lbl">Mặt trước</div>
+        </div>
+        <div class="previewCard">
+          <canvas id="backPreview" width="465" height="746"></canvas>
+          <div class="lbl">Mặt sau (cố định)</div>
+        </div>
       </div>
     </div>
     <div class="actionRow" style="margin-top:18px;justify-content:center">
@@ -339,6 +382,26 @@ const INFO_STYLE = {
   lineSpacing: 14
 };
 
+// Mộc dấu: tọa độ theo canvas gốc 465x746.
+// x/y là góc trái; w/h là kích thước mộc. Mộc được vẽ SAU cùng.
+const STAMP_STYLE = {
+  src: null,
+  x: 275,
+  y: 390,
+  w: 105,
+  h: 105
+};
+let stampImg = new Image();
+let stampLoaded = false;
+let stampOpacity = 1;
+let stampSelected = false;
+let stampDragging = false;
+let stampResizing = false;
+let stampResizeHandle = null;
+let stampDragStartX = 0, stampDragStartY = 0;
+let stampOrig = {x:0,y:0,w:0,h:0};
+const STAMP_MIN = 25;
+
 let frontTplImg = new Image();
 let backTplImg = new Image();
 let assetsReady = 0;
@@ -352,7 +415,7 @@ frontTplImg.src = FRONT_TEMPLATE_SRC;
 backTplImg.src = BACK_TEMPLATE_SRC;
 
 // ============== State ==============
-let cards = []; // {id, name, vehicle, code, photoDataURL, thumbDataURL}
+let cards = []; // {id, name, vehicle, code, photoDataURL, thumbDataURL} — dùng chung mộc hiện tại
 let editingId = null;
 let uid = 1;
 
@@ -377,6 +440,70 @@ document.getElementById('photoInput').addEventListener('change', (e)=>{
   const reader = new FileReader();
   reader.onload = (ev)=> loadImageIntoCropper(ev.target.result);
   reader.readAsDataURL(f);
+});
+
+const stampInput = document.getElementById('stampInput');
+const stampStatus = document.getElementById('stampStatus');
+const removeStampBtn = document.getElementById('removeStampBtn');
+const resetStampBtn = document.getElementById('resetStampBtn');
+
+stampInput.addEventListener('change', (e)=>{
+  const f = e.target.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    const dataUrl = ev.target.result;
+    const img = new Image();
+    img.onload = ()=>{
+      stampImg = img;
+      stampLoaded = true;
+      STAMP_STYLE.src = dataUrl;
+
+      // Mặc định kích thước hợp lý, giữ nguyên tỷ lệ PNG.
+      const maxSize = 110;
+      const scale = Math.min(maxSize / img.width, maxSize / img.height);
+      STAMP_STYLE.w = Math.max(STAMP_MIN, img.width * scale);
+      STAMP_STYLE.h = Math.max(STAMP_MIN, img.height * scale);
+      STAMP_STYLE.x = Math.round((TPL_W - STAMP_STYLE.w) / 2);
+      STAMP_STYLE.y = Math.round(PHOTO_BOX.y + PHOTO_BOX.h * 0.68 - STAMP_STYLE.h / 2);
+
+      stampSelected = true;
+      stampStatus.textContent = 'Đã tải mộc • kéo trên preview để di chuyển';
+      removeStampBtn.style.display = 'inline-flex';
+      resetStampBtn.style.display = 'inline-flex';
+      scheduleFrontPreview();
+    };
+    img.src = dataUrl;
+  };
+  reader.readAsDataURL(f);
+});
+
+removeStampBtn.addEventListener('click', ()=>{
+  stampImg = new Image();
+  stampLoaded = false;
+  stampSelected = false;
+  STAMP_STYLE.src = null;
+  stampStatus.textContent = 'Chưa tải mộc';
+  removeStampBtn.style.display = 'none';
+  resetStampBtn.style.display = 'none';
+  stampInput.value = '';
+  scheduleFrontPreview();
+});
+
+resetStampBtn.addEventListener('click', ()=>{
+  if (!stampLoaded) return;
+  STAMP_STYLE.x = Math.round((TPL_W - STAMP_STYLE.w) / 2);
+  STAMP_STYLE.y = Math.round(PHOTO_BOX.y + PHOTO_BOX.h * 0.68 - STAMP_STYLE.h / 2);
+  stampSelected = true;
+  scheduleFrontPreview();
+});
+
+const stampOpacityInput = document.getElementById('stampOpacity');
+const stampOpacityText = document.getElementById('stampOpacityText');
+stampOpacityInput.addEventListener('input', ()=>{
+  stampOpacity = Number(stampOpacityInput.value) / 100;
+  stampOpacityText.textContent = stampOpacityInput.value;
+  scheduleFrontPreview();
 });
 
 function loadImageIntoCropper(dataUrl){
@@ -518,6 +645,213 @@ window.addEventListener('touchmove', (e)=>{
 
 window.addEventListener('touchend', pointerUp);
 
+// ============== Mộc dấu: kéo / resize trên cả mặt trước + mặt sau ==============
+const previewWorkspace = document.getElementById('previewWorkspace');
+const frontPreviewCanvas = document.getElementById('frontPreview');
+const backPreviewCanvas = document.getElementById('backPreview');
+
+function getPreviewGeometry(){
+  const workspaceRect = previewWorkspace.getBoundingClientRect();
+  const frontRect = frontPreviewCanvas.getBoundingClientRect();
+  const backRect = backPreviewCanvas.getBoundingClientRect();
+  const scale = frontRect.width ? (frontPreviewCanvas.width / frontRect.width) : 1;
+  const gapCss = Math.max(0, backRect.left - frontRect.right);
+  const gap = gapCss * scale;
+  return {
+    workspaceRect,
+    scale,
+    gap,
+    backOffsetX: TPL_W + gap,
+    totalW: TPL_W * 2 + gap,
+    totalH: TPL_H
+  };
+}
+
+function stampWorkspacePoint(e){
+  const g = getPreviewGeometry();
+  return {
+    x: (e.clientX - g.workspaceRect.left) * g.scale,
+    y: (e.clientY - g.workspaceRect.top) * g.scale
+  };
+}
+
+function getStampHandleAt(x,y){
+  if (!stampLoaded) return null;
+  const hs = 12;
+  const handles = {
+    nw:{x:STAMP_STYLE.x,y:STAMP_STYLE.y},
+    ne:{x:STAMP_STYLE.x+STAMP_STYLE.w,y:STAMP_STYLE.y},
+    sw:{x:STAMP_STYLE.x,y:STAMP_STYLE.y+STAMP_STYLE.h},
+    se:{x:STAMP_STYLE.x+STAMP_STYLE.w,y:STAMP_STYLE.y+STAMP_STYLE.h}
+  };
+  for (const [name,p] of Object.entries(handles)){
+    if (Math.abs(x-p.x)<=hs && Math.abs(y-p.y)<=hs) return name;
+  }
+  return null;
+}
+
+function pointInStamp(x,y){
+  return stampLoaded &&
+    x>=STAMP_STYLE.x && x<=STAMP_STYLE.x+STAMP_STYLE.w &&
+    y>=STAMP_STYLE.y && y<=STAMP_STYLE.y+STAMP_STYLE.h;
+}
+
+function clampStamp(){
+  if (!stampLoaded) return;
+  const g = getPreviewGeometry();
+  STAMP_STYLE.w = Math.max(STAMP_MIN, Math.min(g.totalW, STAMP_STYLE.w));
+  STAMP_STYLE.h = Math.max(STAMP_MIN, Math.min(g.totalH, STAMP_STYLE.h));
+  STAMP_STYLE.x = Math.max(0, Math.min(g.totalW - STAMP_STYLE.w, STAMP_STYLE.x));
+  STAMP_STYLE.y = Math.max(0, Math.min(g.totalH - STAMP_STYLE.h, STAMP_STYLE.y));
+}
+
+function stampPointerDown(e){
+  if (!stampLoaded) return;
+  const p = stampWorkspacePoint(e);
+  const handle = getStampHandleAt(p.x,p.y);
+
+  if (handle){
+    stampResizing = true;
+    stampResizeHandle = handle;
+  } else if (pointInStamp(p.x,p.y)){
+    stampDragging = true;
+  } else {
+    stampSelected = false;
+    scheduleFrontPreview();
+    e.preventDefault();
+    return;
+  }
+
+  stampSelected = true;
+  stampDragStartX = p.x;
+  stampDragStartY = p.y;
+  stampOrig = {...STAMP_STYLE};
+  previewWorkspace.setPointerCapture?.(e.pointerId);
+  e.preventDefault();
+  scheduleFrontPreview();
+}
+
+function stampPointerMove(e){
+  if (!stampLoaded || (!stampDragging && !stampResizing)) return;
+  const p = stampWorkspacePoint(e);
+  const dx = p.x - stampDragStartX;
+  const dy = p.y - stampDragStartY;
+
+  if (stampDragging){
+    STAMP_STYLE.x = stampOrig.x + dx;
+    STAMP_STYLE.y = stampOrig.y + dy;
+  } else {
+    const ratio = stampOrig.w / stampOrig.h;
+    let newW = stampOrig.w, newH = stampOrig.h, newX = stampOrig.x, newY = stampOrig.y;
+
+    if (stampResizeHandle.includes('e')) newW = stampOrig.w + dx;
+    if (stampResizeHandle.includes('w')) { newW = stampOrig.w - dx; newX = stampOrig.x + dx; }
+    if (stampResizeHandle.includes('s')) newH = stampOrig.h + dy;
+    if (stampResizeHandle.includes('n')) { newH = stampOrig.h - dy; newY = stampOrig.y + dy; }
+
+    const scaleX = newW / stampOrig.w;
+    const scaleY = newH / stampOrig.h;
+    let scale = Math.abs(scaleX-1) >= Math.abs(scaleY-1) ? scaleX : scaleY;
+    if (!isFinite(scale)) scale = 1;
+    scale = Math.max(STAMP_MIN / stampOrig.w, scale);
+
+    const w = stampOrig.w * scale;
+    const h = w / ratio;
+
+    if (stampResizeHandle.includes('w')) newX = stampOrig.x + stampOrig.w - w;
+    else newX = stampOrig.x;
+    if (stampResizeHandle.includes('n')) newY = stampOrig.y + stampOrig.h - h;
+    else newY = stampOrig.y;
+
+    STAMP_STYLE.x = newX;
+    STAMP_STYLE.y = newY;
+    STAMP_STYLE.w = w;
+    STAMP_STYLE.h = h;
+  }
+
+  clampStamp();
+  scheduleFrontPreview();
+  e.preventDefault();
+}
+
+function stampPointerUp(){
+  stampDragging = false;
+  stampResizing = false;
+  stampResizeHandle = null;
+}
+
+previewWorkspace.addEventListener('pointerdown', stampPointerDown);
+previewWorkspace.addEventListener('pointermove', stampPointerMove);
+previewWorkspace.addEventListener('pointerup', stampPointerUp);
+previewWorkspace.addEventListener('pointercancel', stampPointerUp);
+previewWorkspace.addEventListener('pointerleave', (e)=>{
+  if (stampDragging || stampResizing) stampPointerMove(e);
+});
+
+function drawStampOnCanvas(ctx, canvas, canvasOffsetX){
+  if (!stampLoaded || !stampImg.complete || !STAMP_STYLE.src) return;
+  const x = STAMP_STYLE.x - canvasOffsetX;
+  const y = STAMP_STYLE.y;
+  ctx.save();
+  ctx.globalAlpha = stampOpacity;
+  ctx.drawImage(stampImg, x, y, STAMP_STYLE.w, STAMP_STYLE.h);
+  ctx.restore();
+}
+
+function drawStampSelectionOnCanvas(ctx, canvas, canvasOffsetX){
+  if (!stampLoaded || !stampSelected) return;
+
+  const localX = STAMP_STYLE.x - canvasOffsetX;
+  const localY = STAMP_STYLE.y;
+  const localRight = localX + STAMP_STYLE.w;
+  const localBottom = localY + STAMP_STYLE.h;
+
+  if (localRight < 0 || localX > canvas.width || localBottom < 0 || localY > canvas.height) return;
+
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0,0,canvas.width,canvas.height);
+  ctx.clip();
+
+  ctx.strokeStyle='#147f77';
+  ctx.lineWidth=2;
+  ctx.setLineDash([6,4]);
+  ctx.strokeRect(localX,localY,STAMP_STYLE.w,STAMP_STYLE.h);
+  ctx.setLineDash([]);
+
+  const hs=7;
+  const points=[
+    [localX,localY],
+    [localX+STAMP_STYLE.w,localY],
+    [localX,localY+STAMP_STYLE.h],
+    [localX+STAMP_STYLE.w,localY+STAMP_STYLE.h]
+  ];
+  points.forEach(([px,py])=>{
+    ctx.fillStyle='#fff';
+    ctx.strokeStyle='#147f77';
+    ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.rect(px-hs,py-hs,hs*2,hs*2);
+    ctx.fill();
+    ctx.stroke();
+  });
+  ctx.restore();
+}
+
+function getCanvasCursor(e){
+  if (!stampLoaded) return 'default';
+  const p=stampWorkspacePoint(e);
+  const h=getStampHandleAt(p.x,p.y);
+  if (h==='nw'||h==='se') return 'nwse-resize';
+  if (h==='ne'||h==='sw') return 'nesw-resize';
+  if (pointInStamp(p.x,p.y)) return 'move';
+  return 'default';
+}
+previewWorkspace.addEventListener('pointermove', (e)=>{
+  if (!stampDragging && !stampResizing) previewWorkspace.style.cursor=getCanvasCursor(e);
+});
+
+// ============== Crop photo ==============
 function getCroppedPhotoDataURL(){
   if (!cropState) return null;
 
@@ -559,7 +893,7 @@ function getImageCached(src, cb){
   photoImgCache[src] = img;
 }
 
-function drawFrontCard(ctx, entry, photoImg){
+function drawFrontCard(ctx, entry, photoImg, drawStamp = true, drawSelection = true){
   ctx.clearRect(0,0,TPL_W,TPL_H);
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(0,0,TPL_W,TPL_H);
@@ -621,6 +955,13 @@ function drawFrontCard(ctx, entry, photoImg){
   // Mã nhân viên
   ctx.font = `${Math.max(400, weight - 100)} ${Math.max(7, size - 1)}px "${fontFamily}", Arial, sans-serif`;
   fillTextSpaced('Mã nhân viên: ' + (entry.code||''), cx, baseY + lineSpacing * 2);
+
+  // 4) Mộc dấu — nằm trên cùng và dùng tọa độ chung của cả 2 mặt.
+  if (drawStamp){
+    const canvasOffsetX = ctx.canvas.id === 'backPreview' ? getPreviewGeometry().backOffsetX : 0;
+    drawStampOnCanvas(ctx, ctx.canvas, canvasOffsetX);
+    if (drawSelection) drawStampSelectionOnCanvas(ctx, ctx.canvas, canvasOffsetX);
+  }
 }
 
 function drawBackPreview(){
@@ -628,6 +969,8 @@ function drawBackPreview(){
   const ctx = c.getContext('2d');
   ctx.clearRect(0,0,TPL_W,TPL_H);
   if (backTplImg.complete) ctx.drawImage(backTplImg, 0, 0, TPL_W, TPL_H);
+  drawStampOnCanvas(ctx, c, getPreviewGeometry().backOffsetX);
+  drawStampSelectionOnCanvas(ctx, c, getPreviewGeometry().backOffsetX);
 }
 
 let frontPreviewTimer = null;
@@ -648,9 +991,13 @@ function redrawFrontPreview(){
   const entry = currentFormEntry();
   if (cropState){
     const photoUrl = getCroppedPhotoDataURL();
-    getImageCached(photoUrl, (img)=> drawFrontCard(ctx, entry, img));
+    getImageCached(photoUrl, (img)=>{
+      drawFrontCard(ctx, entry, img);
+      drawBackPreview();
+    });
   } else {
     drawFrontCard(ctx, entry, null);
+    drawBackPreview();
   }
 }
 ['fName','fVehicle','fCode'].forEach(id=>{
@@ -829,47 +1176,100 @@ document.getElementById('exportPdfBtn').onclick = async ()=>{
     const perPage = cols*rows;
     const includeBack = document.getElementById('includeBack').value === 'yes';
 
-    // pre-render all front canvases
-    const frontDataUrls = [];
+    // Pre-render từng cặp MẶT TRƯỚC | MẶT SAU trên MỘT canvas chung.
+    // Quan trọng: mộc được vẽ SAU CẢ HAI MẶT, nên nếu mộc nằm vắt qua
+    // đường giữa thì nó không bị cắt thành 2 canvas độc lập.
+    const pairDataUrls = [];
+    const previewGap = (() => {
+      try {
+        const g = getPreviewGeometry();
+        return Math.max(0, Number(g.gap) || 0);
+      } catch (_) { return 0; }
+    })();
+
     for (const entry of cards){
       await new Promise(resolve=>{
-        renderEntryCanvas(entry, (canvas)=>{ frontDataUrls.push(canvas.toDataURL('image/jpeg', 0.95)); resolve(); });
+        getImageCached(entry.photoDataURL, (img)=>{
+          const pairCanvas = document.createElement('canvas');
+          pairCanvas.width = TPL_W * 2;
+          pairCanvas.height = TPL_H;
+          const pctx = pairCanvas.getContext('2d');
+          pctx.imageSmoothingEnabled = true;
+          pctx.imageSmoothingQuality = 'high';
+
+          // Vẽ mặt trước và mặt sau, KHÔNG vẽ mộc ở từng canvas riêng.
+          const frontCanvas = document.createElement('canvas');
+          frontCanvas.width = TPL_W; frontCanvas.height = TPL_H;
+          const fctx = frontCanvas.getContext('2d');
+          drawFrontCard(fctx, entry, img, false, false);
+          pctx.drawImage(frontCanvas, 0, 0);
+
+          if (includeBack){
+            pctx.drawImage(backTplImg, TPL_W, 0, TPL_W, TPL_H);
+
+            if (stampLoaded && stampImg.complete && STAMP_STYLE.src){
+              // STAMP_STYLE dùng tọa độ của workspace preview có khoảng gap.
+              // PDF không có gap giữa 2 mặt, nên bỏ đúng phần gap khi sang mặt sau.
+              let sx = STAMP_STYLE.x;
+              if (sx >= TPL_W) sx -= previewGap;
+
+              pctx.save();
+              pctx.globalAlpha = stampOpacity;
+              pctx.drawImage(
+                stampImg,
+                sx, STAMP_STYLE.y,
+                STAMP_STYLE.w, STAMP_STYLE.h
+              );
+              pctx.restore();
+            }
+          } else if (stampLoaded && stampImg.complete && STAMP_STYLE.src){
+            // Không in mặt sau: chỉ phần mộc nằm trên mặt trước được in.
+            pctx.save();
+            pctx.beginPath();
+            pctx.rect(0,0,TPL_W,TPL_H);
+            pctx.clip();
+            pctx.save();
+    pctx.globalAlpha = stampOpacity;
+    pctx.drawImage(stampImg, STAMP_STYLE.x, STAMP_STYLE.y, STAMP_STYLE.w, STAMP_STYLE.h);
+    pctx.restore();
+            pctx.restore();
+          }
+
+          pairDataUrls.push(pairCanvas.toDataURL('image/jpeg', 0.95));
+          resolve();
+        });
       });
     }
-    const backDataUrl = (()=>{
-      const c = document.createElement('canvas'); c.width=TPL_W; c.height=TPL_H;
-      const ctx = c.getContext('2d'); ctx.drawImage(backTplImg,0,0,TPL_W,TPL_H);
-      return c.toDataURL('image/jpeg', 0.92);
-    })();
 
     // A4 NGANG: mỗi thẻ là một cặp MẶT TRƯỚC | MẶT SAU nằm chung một khung.
     // Mặt sau được giữ nguyên hướng của template để khi gấp đôi theo đường giữa,
     // nội dung quay đúng chiều theo mẫu gốc.
     const doc = new jsPDF({ unit:'mm', format:'a4', orientation:'landscape' });
 
-    function drawPairGrid(frontItems, backItems, isFirstPageOfDoc){
+    function drawPairGrid(pairItems, isFirstPageOfDoc){
       if (!isFirstPageOfDoc) doc.addPage();
       const gridW = cols*(pairW) + (cols-1)*gap;
       const gridH = rows*cardHmm + (rows-1)*gap;
       const startX = (pageW - gridW)/2;
       const startY = (pageH - gridH)/2;
-      frontItems.forEach((frontUrl, i)=>{
+
+      pairItems.forEach((pairUrl, i)=>{
         const r = Math.floor(i/cols), c = i%cols;
         const pairX = startX + c*(pairW+gap);
         const y = startY + r*(cardHmm+gap);
-        const frontX = pairX;
-        const backX = pairX + cardWmm;
-        doc.addImage(frontUrl, 'JPEG', frontX, y, cardWmm, cardHmm);
-        if (includeBack && backItems[i]) doc.addImage(backItems[i], 'JPEG', backX, y, cardWmm, cardHmm);
 
+        // Một ảnh duy nhất cho cả 2 mặt. Vì vậy mộc có thể vắt qua
+        // đường giữa mà không bị cắt bởi ranh giới 2 canvas.
+        doc.addImage(pairUrl, 'JPEG', pairX, y, pairW, cardHmm);
+
+        // Khung 2 mặt + đường gấp.
         doc.setDrawColor(180,180,180);
         doc.setLineDashPattern([1,1], 0);
-        doc.rect(frontX, y, cardWmm, cardHmm);
+        doc.rect(pairX, y, cardWmm, cardHmm);
         if (includeBack){
-          doc.rect(backX, y, cardWmm, cardHmm);
-          // Đường gấp ở giữa hai mặt.
+          doc.rect(pairX + cardWmm, y, cardWmm, cardHmm);
           doc.setLineDashPattern([2,2], 0);
-          doc.line(backX, y, backX, y + cardHmm);
+          doc.line(pairX + cardWmm, y, pairX + cardWmm, y + cardHmm);
           doc.setLineDashPattern([1,1], 0);
         }
       });
@@ -877,10 +1277,9 @@ document.getElementById('exportPdfBtn').onclick = async ()=>{
     }
 
     let first = true;
-    for (let i=0; i<frontDataUrls.length; i+=perPage){
-      const chunk = frontDataUrls.slice(i, i+perPage);
-      const backChunk = chunk.map(()=>backDataUrl);
-      drawPairGrid(chunk, backChunk, first);
+    for (let i=0; i<pairDataUrls.length; i+=perPage){
+      const chunk = pairDataUrls.slice(i, i+perPage);
+      drawPairGrid(chunk, first);
       first = false;
     }
 
