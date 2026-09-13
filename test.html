@@ -1,0 +1,183 @@
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mã xác nhận hủy liên kết</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #f5f6f8;
+        }
+
+        .box {
+            width: 450px;
+            max-width: 92%;
+            background: #fff;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin: 0 0 25px;
+            text-align: center;
+            font-size: 21px;
+            color: #222;
+        }
+
+        .content {
+            color: #333;
+            line-height: 1.6;
+            font-size: 15px;
+        }
+
+        .code {
+            margin: 20px 0;
+            padding: 18px 10px;
+            text-align: center;
+            font-size: 30px;
+            font-weight: bold;
+            letter-spacing: 6px;
+            background: #f1f3f5;
+            border-radius: 10px;
+            user-select: all;
+        }
+
+        .warning {
+            color: #d93025;
+            font-weight: bold;
+        }
+
+        button {
+            width: 100%;
+            margin-top: 10px;
+            padding: 13px;
+            border: none;
+            border-radius: 8px;
+            background: #222;
+            color: white;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #444;
+        }
+
+        #message {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #188038;
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="box">
+    <div class="content">
+
+        <p>Chào bạn,</p>
+
+        <p>Mã xác nhận của bạn là:</p>
+
+        <div class="code" id="verificationCode">
+            3547128
+        </div>
+
+        <p>
+            Vui lòng xác nhận với Admin trong trang
+            hỗ trợ để được hủy liên kết Telegram.
+        </p>
+
+        <p class="warning">
+            ⚠️ Lưu ý: Không cung cấp mã xác nhận cho bất kỳ ai.
+        </p>
+
+        <p>
+            Xin cảm ơn!
+        </p>
+
+    </div>
+
+    <button onclick="generateCode()">
+        🔄 Tạo mã xác nhận mới
+    </button>
+
+    <button onclick="copyMessage()">
+        📋 Copy nội dung gửi Mail
+    </button>
+
+    <div id="message">
+        ✅ Đã copy nội dung!
+    </div>
+
+</div>
+
+<script>
+
+    // Tạo mã 7 số
+    function generateCode() {
+        const code = Math.floor(1000000 + Math.random() * 9000000);
+
+        document.getElementById("verificationCode").textContent = code;
+
+        document.getElementById("message").style.display = "none";
+    }
+
+
+    // Copy toàn bộ nội dung
+    function copyMessage() {
+
+        const code =
+            document.getElementById("verificationCode").textContent;
+
+        const message =
+`Chào bạn,
+
+Mã xác nhận của bạn là ${code}
+
+Vui lòng xác nhận với Admin trong trang hỗ trợ để được hủy liên kết Telegram.
+
+Lưu ý: Không cung cấp mã xác nhận cho bất kỳ ai.
+
+Xin cảm ơn!`;
+
+        navigator.clipboard.writeText(message).then(() => {
+
+            const notification =
+                document.getElementById("message");
+
+            notification.style.display = "block";
+
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 2500);
+
+        }).catch(() => {
+
+            alert("Không thể copy tự động. Vui lòng thử lại!");
+
+        });
+    }
+
+</script>
+
+</body>
+</html>
+```

@@ -1,0 +1,981 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Đối soát ODO &amp; Bảo dưỡng — Green Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --teal-1:#0E9E86; --teal-2:#0B7F8F; --ink:#1B2A2F; --muted:#66787A; --muted-2:#93A3A4;
+  --line:#E4EAE9; --line-soft:#EEF3F2; --panel:#FFFFFF; --bg:#F3F6F5;
+  --green:#0E8F5C; --green-bg:#E7F5EE; --amber:#B4700F; --amber-bg:#FBEEDA;
+  --red:#B23B3B; --red-bg:#FBE9E8; --grey:#7B8B85; --grey-bg:#EEF1EF; --accent-2:#F2C438;
+  --radius:12px; --shadow:0 1px 2px rgba(20,40,38,.05), 0 6px 20px rgba(20,40,38,.06);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{ background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:14px; line-height:1.45; }
+.mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+
+/* ---------- Top bar ---------- */
+.topbar{
+  background: linear-gradient(100deg, var(--teal-1) 0%, var(--teal-2) 100%);
+  padding: 14px 26px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+}
+.topbar-left{ display:flex; align-items:center; gap:12px; }
+.logo-badge{
+  width:38px; height:38px; border-radius:9px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35);
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; flex-shrink:0;
+}
+.topbar-title h1{ color:#fff; font-size:16.5px; margin:0; font-weight:700; letter-spacing:0.2px; }
+.topbar-title p{ color:rgba(255,255,255,0.85); margin:1px 0 0; font-size:11.5px; letter-spacing:0.3px; }
+.topbar-right{ display:flex; align-items:center; gap:10px; color:#fff; font-size:13px; }
+.pill{
+  background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.3); border-radius:8px;
+  padding:6px 12px; font-size:12.5px; font-weight:600;
+}
+.crumbs{ padding: 14px 26px 0; color:var(--muted); font-size:12.5px; }
+.crumbs b{ color:var(--ink); }
+
+.app{ max-width:1320px; margin:0 auto; padding: 16px 26px 60px; }
+
+/* ---------- Upload card ---------- */
+.card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px; }
+.card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.card-head h2{ margin:0; font-size:15.5px; font-weight:700; }
+.icon-btn{ background:none; border:none; cursor:pointer; color:var(--muted); padding:6px; border-radius:6px; }
+.icon-btn:hover{ background:var(--line-soft); }
+
+.upload-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:14px; margin-bottom:18px; }
+.upload-slot label.slot-label{ display:block; font-size:12.5px; font-weight:600; color:var(--ink); margin-bottom:6px; }
+.upload-slot .slot-sub{ font-size:11px; color:var(--muted-2); margin-bottom:7px; }
+.drop-box{
+  border:1.5px dashed var(--line); border-radius:9px; background:var(--line-soft); padding:11px 12px;
+  display:flex; align-items:center; gap:9px; cursor:pointer; transition: all .12s ease; position:relative;
+}
+.drop-box:hover{ border-color: var(--teal-1); background:#EAF7F4; }
+.drop-box.filled{ border-style:solid; border-color:var(--teal-1); background:#EAF7F4; }
+.drop-box input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-icon{ width:26px; height:26px; border-radius:6px; background:#fff; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--teal-2); }
+.drop-text{ min-width:0; flex:1; }
+.drop-text .fname{ font-size:12.5px; color:var(--muted-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.drop-box.filled .fname{ color:var(--ink); font-weight:600; }
+.drop-text .frows{ font-size:10.5px; color:var(--teal-2); margin-top:1px; font-weight:600; }
+.drop-check{ color:var(--teal-1); flex-shrink:0; display:none; }
+.drop-box.filled .drop-check{ display:block; }
+
+.action-row{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.btn{
+  border-radius:9px; border:1px solid transparent; cursor:pointer; font-family:inherit; font-size:13.5px;
+  font-weight:700; padding:11px 20px; display:inline-flex; align-items:center; gap:8px; transition: all .12s ease;
+}
+.btn:disabled{ opacity:0.45; cursor:not-allowed; }
+.btn-primary{ background: var(--teal-1); color:#fff; }
+.btn-primary:not(:disabled):hover{ background:#0C8C77; }
+.btn-secondary{ background:#fff; color:var(--teal-2); border-color:var(--line); }
+.btn-secondary:not(:disabled):hover{ border-color:var(--teal-1); }
+.action-hint{ font-size:12.5px; color:var(--muted-2); }
+.action-hint b{ color:var(--ink); }
+
+.progress-note{ display:flex; align-items:center; gap:8px; font-size:12.5px; color: var(--teal-2); font-weight:600; }
+.spinner{ width:14px; height:14px; border:2px solid var(--line); border-top-color:var(--teal-1); border-radius:50%; animation:spin .7s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+
+/* ---------- Empty state ---------- */
+.empty-card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:80px 20px; text-align:center; color:var(--muted); }
+.empty-plus{ width:46px; height:46px; border-radius:50%; border:2px dashed var(--line); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:var(--muted-2); font-size:22px; font-weight:300; }
+.empty-card b{ color:var(--ink); }
+
+/* ---------- Stat strip ---------- */
+.stats{ display:grid; grid-template-columns: repeat(6, 1fr); gap:12px; margin-bottom:16px; }
+.stat{ background:var(--panel); border-radius:var(--radius); padding:15px 17px; box-shadow:var(--shadow); cursor:pointer; border:1.5px solid transparent; transition: transform .12s ease, border-color .12s ease; position:relative; overflow:hidden; }
+.stat:hover{ transform: translateY(-2px); }
+.stat.active{ border-color: var(--stat-color, var(--teal-1)); }
+.stat .bar{ position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--stat-color, var(--teal-1)); }
+.stat-label{ color:var(--muted); font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; }
+.stat-value{ font-size:28px; font-weight:800; color:var(--ink); line-height:1; }
+.stat-sub{ color:var(--muted-2); font-size:11px; margin-top:4px; }
+
+/* ---------- Toolbar ---------- */
+.toolbar{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:13px 15px; margin-bottom:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.search-box{ flex:1 1 240px; position:relative; min-width:200px; }
+.search-box input{ width:100%; padding:9px 12px 9px 34px; border-radius:8px; border:1px solid var(--line); font-family:inherit; font-size:13.5px; background:var(--line-soft); color:var(--ink); }
+.search-box input:focus{ outline:2px solid var(--teal-1); outline-offset:1px; background:#fff; }
+.search-box svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); width:15px; height:15px; color:var(--muted-2); }
+select{ padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--line-soft); font-family:inherit; font-size:13px; color:var(--ink); cursor:pointer; }
+select:focus{ outline:2px solid var(--teal-1); outline-offset:1px; }
+.toggle{ display:flex; align-items:center; gap:7px; padding:8px 12px; border-radius:8px; background:var(--line-soft); border:1px solid var(--line); cursor:pointer; font-size:13px; font-weight:500; user-select:none; }
+.toggle input{ accent-color: var(--teal-1); width:14px; height:14px; }
+.toolbar-spacer{ flex:1 1 auto; }
+
+/* ---------- Table ---------- */
+.table-wrap{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); overflow:hidden; }
+.table-scroll{ overflow-x:auto; }
+table{ border-collapse:collapse; width:100%; min-width:1280px; }
+thead th{ text-align:left; padding:11px 12px; font-size:11.2px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:var(--muted); background:var(--line-soft); border-bottom:1px solid var(--line); white-space:nowrap; cursor:pointer; position:sticky; top:0; z-index:2; }
+thead th:hover{ color:var(--teal-2); }
+thead th.sorted::after{ content:' ' attr(data-arrow); }
+tbody td{ padding:10px 12px; border-bottom:1px solid var(--line-soft); white-space:nowrap; font-size:13px; vertical-align:middle; }
+tbody tr{ cursor:pointer; transition: background .1s; }
+tbody tr:hover{ background: var(--line-soft); }
+tbody tr:last-child td{ border-bottom:none; }
+
+.badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11.2px; font-weight:700; }
+.badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge-red{ background:var(--red-bg); color:var(--red); }
+.badge-amber{ background:var(--amber-bg); color:var(--amber); }
+.badge-green{ background:var(--green-bg); color:var(--green); }
+.badge-grey{ background:var(--grey-bg); color:var(--grey); }
+.tag-new{ display:inline-block; padding:2px 7px; border-radius:5px; font-size:10.2px; font-weight:800; background:var(--accent-2); color:#4A3600; letter-spacing:0.3px; }
+.vin-plate{ font-weight:700; }
+.vin-num{ color:var(--muted-2); font-size:11.2px; }
+.odo-cell{ font-weight:600; }
+.odo-src{ color:var(--muted-2); font-size:10.8px; display:block; margin-top:1px; font-weight:400; }
+.na{ color:var(--muted-2); }
+.km-remain-neg{ color:var(--red); font-weight:700; }
+.km-remain-pos{ color:var(--green); font-weight:600; }
+
+.pager{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-top:1px solid var(--line); flex-wrap:wrap; gap:10px; }
+.pager-info{ color:var(--muted); font-size:12.3px; }
+.pager-btns{ display:flex; gap:6px; align-items:center; }
+.pager-btns button{ border:1px solid var(--line); background:#fff; border-radius:6px; padding:6px 10px; cursor:pointer; font-size:12.3px; font-family:inherit; color:var(--ink); }
+.pager-btns button:disabled{ opacity:0.4; cursor:not-allowed; }
+.pager-btns button.active{ background:var(--teal-1); color:#fff; border-color:var(--teal-1); font-weight:700; }
+.empty-state{ padding:60px 20px; text-align:center; color:var(--muted); }
+
+/* ---------- Modal ---------- */
+.modal-backdrop{ position:fixed; inset:0; background:rgba(15,30,28,.5); backdrop-filter:blur(2px); display:none; align-items:flex-start; justify-content:center; z-index:50; padding:40px 16px; overflow-y:auto; }
+.modal-backdrop.open{ display:flex; }
+.modal{ background:#fff; border-radius:14px; width:100%; max-width:760px; box-shadow:0 30px 60px rgba(0,0,0,.35); overflow:hidden; animation:modalIn .16s ease; }
+@keyframes modalIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;} }
+.modal-head{ padding:18px 22px; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.modal-head h2{ margin:0 0 3px; font-size:19px; }
+.modal-head p{ margin:0; color:var(--muted); font-size:12.3px; }
+.modal-close{ background:none; border:none; cursor:pointer; color:var(--muted); font-size:20px; line-height:1; padding:4px; }
+.modal-body{ padding:18px 22px 22px; }
+.detail-grid{ display:grid; grid-template-columns: repeat(2, 1fr); gap:10px; margin-bottom:18px; }
+.detail-item{ background:var(--line-soft); border-radius:8px; padding:10px 12px; }
+.detail-item .k{ color:var(--muted); font-size:10.8px; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:3px; font-weight:600; }
+.detail-item .v{ font-size:13.5px; font-weight:600; }
+.source-table{ width:100%; border-collapse:collapse; margin-top:6px; }
+.source-table th{ text-align:left; font-size:10.8px; color:var(--muted); text-transform:uppercase; padding:6px 8px; border-bottom:1px solid var(--line); }
+.source-table td{ padding:8px; border-bottom:1px solid var(--line-soft); font-size:13px; }
+.source-table tr:last-child td{ border-bottom:none; }
+
+footer{ text-align:center; color:var(--muted-2); font-size:11.3px; margin-top:22px; }
+
+@media (max-width: 1100px){
+  .stats{ grid-template-columns: repeat(3,1fr); }
+}
+@media (max-width: 900px){
+  .upload-grid{ grid-template-columns: 1fr 1fr; }
+  .stats{ grid-template-columns: repeat(2,1fr); }
+  .detail-grid{ grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-badge">GC</div>
+    <div class="topbar-title">
+      <h1>HỆ THỐNG QUẢN LÝ GREEN PORTAL</h1>
+      <p>ĐỐI SOÁT ODO &amp; BẢO DƯỠNG ĐỘI XE</p>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span>Xin chào, Đội xe!</span>
+    <span class="pill" id="processedPill">Chưa xử lý dữ liệu</span>
+  </div>
+</div>
+<div class="crumbs">Green Portal / <b>Đối soát ODO &amp; Bảo dưỡng</b></div>
+
+<div class="app">
+
+  <div class="card">
+    <div class="card-head">
+      <h2>Bộ dữ liệu đối soát</h2>
+      <button class="icon-btn" id="btnReset" title="Làm lại từ đầu">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M3 12a9 9 0 1 1 3 6.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M3 21v-6h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="upload-grid" id="uploadGrid"></div>
+
+    <div class="action-row">
+      <button class="btn btn-primary" id="btnProcess" disabled>Tổng hợp ngay</button>
+      <button class="btn btn-secondary" id="btnExportXlsx" disabled>⬇ Tải file kết quả (.xlsx)</button>
+      <button class="btn btn-secondary" id="btnExportCsv" disabled>⬇ Xuất CSV (đã lọc)</button>
+      <span class="action-hint" id="actionHint">tải ít nhất 1 file để bắt đầu</span>
+      <span class="progress-note" id="progressNote" style="display:none;"><span class="spinner"></span> Đang đọc và đối soát dữ liệu…</span>
+    </div>
+  </div>
+
+  <div id="emptyState" class="empty-card">
+    <div class="empty-plus">+</div>
+    Tải lên các file dữ liệu rồi bấm <b>Tổng hợp ngay</b> để bắt đầu.
+  </div>
+
+  <div id="resultsWrap" style="display:none;">
+    <div class="stats" id="statStrip"></div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        <input type="text" id="searchInput" placeholder="Tìm biển số, số khung, xưởng dịch vụ…">
+      </div>
+      <select id="filterDoi"><option value="">Tất cả đội</option></select>
+      <select id="filterTo"><option value="">Tất cả tổ</option></select>
+      <select id="filterDongXe"><option value="">Tất cả dòng xe</option></select>
+      <label class="toggle"><input type="checkbox" id="filterNew"> Chỉ xe mới (ngoài master)</label>
+      <label class="toggle"><input type="checkbox" id="filterFlag"> Chỉ số liệu nghi ngờ</label>
+      <label class="toggle"><input type="checkbox" id="filterXuong"> Chỉ lệch số km xưởng</label>
+      <div class="toolbar-spacer"></div>
+      <span class="pager-info" id="resultCount"></span>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table id="mainTable">
+          <thead>
+            <tr>
+              <th data-key="trang_thai">Trạng thái</th>
+              <th data-key="doi">Đội / Tổ</th>
+              <th data-key="bien_so">Biển số / Số khung</th>
+              <th data-key="dong_xe">Dòng xe</th>
+              <th data-key="odo_he_thong">1. Hệ thống GP</th>
+              <th data-key="odo_gcat">2. Giao ca an toàn<br><span style="font-weight:400;text-transform:none;">(mới nhất)</span></th>
+              <th data-key="odo_dinhvi">3. Định vị<br><span style="font-weight:400;text-transform:none;">ODO GPS</span></th>
+              <th data-key="odo_booking">Booking<br><span style="font-weight:400;text-transform:none;">lúc đặt lịch</span></th>
+              <th data-key="odo_thuc_te">ODO thực tế<br><span style="font-weight:400;text-transform:none;">tổng hợp</span></th>
+              <th data-key="moc_bd">Mốc BD tiếp theo</th>
+              <th data-key="con_lai">Còn lại (km)</th>
+              <th data-key="booking_status">Trạng thái đặt lịch</th>
+              <th data-key="odo_xuong">ODO Xưởng<br><span style="font-weight:400;text-transform:none;">(lúc vào xưởng)</span></th>
+              <th data-key="doi_soat_xuong">Đối chiếu xưởng</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <div class="pager-info" id="pagerInfo"></div>
+        <div class="pager-btns" id="pagerBtns"></div>
+      </div>
+    </div>
+  </div>
+
+  <footer>Toàn bộ việc đọc file &amp; đối soát dữ liệu chạy ngay trong trình duyệt của bạn — không tải file lên máy chủ nào.</footer>
+</div>
+
+<div class="modal-backdrop" id="detailModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><h2 id="mBienSo">—</h2><p id="mSoKhung">—</p></div>
+      <button class="modal-close" id="mClose">&times;</button>
+    </div>
+    <div class="modal-body" id="mBody"></div>
+  </div>
+</div>
+
+<script>// ===== Shared parsing helpers =====
+function toNum(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') return v;
+  const s = String(v).trim().replace(/,/g, '');
+  if (s === '') return null;
+  const n = parseFloat(s);
+  return isNaN(n) ? null : n;
+}
+
+function excelSerialToDate(n) {
+  // Excel date serial (1900 system), matches SheetJS default epoch
+  const utc_days = Math.floor(n - 25569);
+  const utc_value = utc_days * 86400;
+  const date_info = new Date(utc_value * 1000);
+  const fractional_day = n - Math.floor(n) + 0.0000001;
+  let seconds = Math.floor(86400 * fractional_day);
+  const H = Math.floor(seconds / 3600); seconds -= H * 3600;
+  const M = Math.floor(seconds / 60); seconds -= M * 60;
+  return new Date(Date.UTC(date_info.getUTCFullYear(), date_info.getUTCMonth(), date_info.getUTCDate(), H, M, seconds));
+}
+
+function parseVNDateTime(v) {
+  if (v === null || v === undefined || v === '') return null;
+  if (typeof v === 'number') {
+    try { return excelSerialToDate(v); } catch (e) { return null; }
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?$/);
+  if (!m) return null;
+  const [, d, mo, y, h, mi, se] = m;
+  return new Date(+y, +mo - 1, +d, +(h || 0), +(mi || 0), +(se || 0));
+}
+
+function fmtDt(dt) {
+  if (!dt) return null;
+  const p2 = n => String(n).padStart(2, '0');
+  return `${p2(dt.getDate())}/${p2(dt.getMonth() + 1)}/${dt.getFullYear()} ${p2(dt.getHours())}:${p2(dt.getMinutes())}`;
+}
+
+function sheetRows(workbook, sheetIndex) {
+  const name = workbook.SheetNames[sheetIndex !== undefined ? sheetIndex : 0];
+  const ws = workbook.Sheets[name];
+  if (!ws) return [];
+  return XLSX.utils.sheet_to_json(ws, { header: 1, defval: null, raw: true, blankrows: false });
+}
+
+const INTERVAL = 15000;
+
+// ===== Main ETL: takes parsed workbooks keyed by source id, returns array of records =====
+function buildFleetReport(workbooks) {
+  const fleet = {};       // vin -> master roster info
+  const odoGp = {};       // vin -> {odo, bien_so, doi, to, dong_xe, nam_sx}
+  const odoPool = {};
+  const gcatLatest = {};  // vin -> {odo, dt, driver}
+  const dinhviLatest = {}; // plate -> {odo, dt, khu_vuc}
+  const bookingLatest = {}; // vin -> {...}
+  const xuongLatest = {};   // vin -> {odo, dt, trang_thai, ma_lenh}
+
+  // ---- 1. MASTER ('TỔNG HỢP BD XE CHUẨN' - sheet 'dữ liệu master', rows from index 2) ----
+  if (workbooks.master) {
+    const rows = sheetRows(workbooks.master, 0);
+    for (let i = 2; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const vin = r[5] ? String(r[5]).trim() : null;
+      if (!vin) continue;
+      fleet[vin] = {
+        doi: r[0], to: r[1], nam_sx: r[2], dong_xe: r[3],
+        bien_so: r[4] ? String(r[4]).trim() : null,
+        so_khung: vin,
+        moc_bd_master: toNum(r[9]),
+        is_new: false,
+      };
+    }
+  }
+
+  // ---- 2/3. GP + POOL fleets ('Result' sheet, rows from index 1) ----
+  function loadFleetOdo(wb, target) {
+    if (!wb) return;
+    const rows = sheetRows(wb, 0);
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const vin = r[1] ? String(r[1]).trim() : null;
+      if (!vin) continue;
+      target[vin] = {
+        odo: toNum(r[10]), bien_so: r[9], doi: r[13], to: r[14],
+        dong_xe: r[2], nam_sx: r[5],
+      };
+    }
+  }
+  loadFleetOdo(workbooks.gp, odoGp);
+  loadFleetOdo(workbooks.pool, odoPool);
+
+  // ---- 4. GCAT (Giao ca an toàn) — latest per VIN by 'Thời gian cập nhật' ----
+  if (workbooks.gcat) {
+    const rows = sheetRows(workbooks.gcat, 0);
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const vin = r[3] ? String(r[3]).trim() : null;
+      if (!vin) continue;
+      const odo = toNum(r[50]);
+      if (odo === null) continue;
+      const dt = parseVNDateTime(r[5]);
+      const cur = gcatLatest[vin];
+      if (!cur || (dt && (!cur.dt || dt > cur.dt))) {
+        gcatLatest[vin] = { odo, dt, driver: r[2] };
+      }
+    }
+  }
+
+  // ---- 5. DINH VI (GPS) — latest per plate by 'Ngày' ----
+  if (workbooks.dinhvi) {
+    const rows = sheetRows(workbooks.dinhvi, 0);
+    for (let i = 2; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const plate = r[3] ? String(r[3]).trim() : null;
+      if (!plate) continue;
+      const odo = toNum(r[6]);
+      if (odo === null) continue;
+      const dt = parseVNDateTime(r[2]);
+      const cur = dinhviLatest[plate];
+      if (!cur || (dt && (!cur.dt || dt > cur.dt))) {
+        dinhviLatest[plate] = { odo, dt, khu_vuc: r[1] };
+      }
+    }
+  }
+
+  // ---- 6. BOOKING — latest per VIN by 'Ngày tạo đặt lịch' ----
+  if (workbooks.booking) {
+    const rows = sheetRows(workbooks.booking, 0);
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const vin = r[2] ? String(r[2]).trim() : null;
+      if (!vin) continue;
+      const ngayTao = parseVNDateTime(r[18]);
+      const cur = bookingLatest[vin];
+      if (!cur || (ngayTao && (!cur.ngay_tao || ngayTao > cur.ngay_tao))) {
+        const hoanThanh = r[12], quaHan = r[13], huy = r[14];
+        let status = 'Đã đặt lịch / chờ BD';
+        if (hoanThanh === 'Có') status = 'Đã hoàn thành BD';
+        else if (huy === 'Có') status = 'Đã hủy';
+        else if (quaHan === 'Có') status = 'Quá hạn (chưa BD)';
+        bookingLatest[vin] = {
+          bien_so: r[3], depot: r[4], doi: r[5], to: r[6],
+          ngay_bd: r[8], cap_bd: r[9], moc_bd: toNum(r[10]), odo: toNum(r[11]),
+          status, xuong_dv: r[16], ngay_tao: ngayTao,
+        };
+      }
+    }
+  }
+
+  // ---- 7. FILE XƯỞNG (LSSC service-order export) — latest per VIN by 'Ngày và giờ đến thực tế', fallback 'Ngày giao dịch' ----
+  if (workbooks.xuong) {
+    const rows = sheetRows(workbooks.xuong, 0);
+    for (let i = 1; i < rows.length; i++) {
+      const r = rows[i];
+      if (!r) continue;
+      const vin = r[20] ? String(r[20]).trim() : null;
+      if (!vin) continue;
+      const odo = toNum(r[19]);
+      let dt = parseVNDateTime(r[11]);      // Ngày và giờ đến thực tế
+      if (!dt) dt = parseVNDateTime(r[5]);  // fallback: Ngày giao dịch
+      const trangThai = r[7];
+      const maLenh = r[4];
+      const cur = xuongLatest[vin];
+      if (!cur || (dt && (!cur.dt || dt > cur.dt))) {
+        xuongLatest[vin] = { odo, dt, trang_thai: trangThai, ma_lenh: maLenh };
+      }
+    }
+  }
+
+  // ---- UNION of all known VINs ----
+  // NOTE: the workshop file (LSSC) is company-wide across many depots, not just this fleet,
+  // so it is used only to ENRICH vehicles already known from the other 5 sources — it never
+  // introduces new VINs into the report on its own (that would pollute the fleet list with
+  // unrelated vehicles from other depots/regions).
+  const allVins = new Set([
+    ...Object.keys(fleet), ...Object.keys(odoGp), ...Object.keys(odoPool),
+    ...Object.keys(gcatLatest), ...Object.keys(bookingLatest),
+  ]);
+
+  const records = [];
+  allVins.forEach(vin => {
+    const base = fleet[vin] || {};
+    const gp = odoGp[vin], pool = odoPool[vin], gc = gcatLatest[vin], bk = bookingLatest[vin], xu = xuongLatest[vin];
+
+    let bienSo = base.bien_so || (gp && gp.bien_so) || (pool && pool.bien_so) || (bk && bk.bien_so) || null;
+    if (bienSo) bienSo = String(bienSo).trim();
+    const dv = bienSo ? dinhviLatest[bienSo] : null;
+
+    const doi = base.doi || (gp && gp.doi) || (pool && pool.doi) || (bk && bk.doi) || null;
+    const to = base.to || (gp && gp.to) || (pool && pool.to) || (bk && bk.to) || null;
+    const dongXe = base.dong_xe || (gp && gp.dong_xe) || (pool && pool.dong_xe) || null;
+    const namSx = base.nam_sx || (gp && gp.nam_sx) || (pool && pool.nam_sx) || null;
+
+    const odoGpVal = gp ? gp.odo : null;
+    const odoPoolVal = pool ? pool.odo : null;
+    const odoHeThong = odoGpVal || odoPoolVal || null;
+
+    const odoGcatVal = gc ? gc.odo : null, gcatDt = gc ? gc.dt : null;
+    const odoDinhviVal = dv ? dv.odo : null, dinhviDt = dv ? dv.dt : null;
+    const odoBookingVal = bk ? bk.odo : null, bookingDt = bk ? bk.ngay_tao : null;
+
+    // candidates: filter outliers vs median, then prefer most recent timestamp
+    const candidates = [];
+    if (odoGcatVal) candidates.push([odoGcatVal, gcatDt, 'Giao ca an toàn']);
+    if (odoDinhviVal) candidates.push([odoDinhviVal, dinhviDt, 'Định vị']);
+    if (odoBookingVal) candidates.push([odoBookingVal, bookingDt, 'Booking']);
+    if (odoHeThong) candidates.push([odoHeThong, null, 'Hệ thống GP']);
+
+    let odoThucTe = null, odoSource = null, odoFlag = false;
+    if (candidates.length) {
+      const valsSorted = candidates.map(c => c[0]).sort((a, b) => a - b);
+      const n = valsSorted.length;
+      const median = n % 2 ? valsSorted[(n - 1) / 2] : (valsSorted[n / 2 - 1] + valsSorted[n / 2]) / 2;
+      let valid = candidates.filter(c => median <= 0 || (c[0] >= 0.5 * median && c[0] <= 2 * median));
+      if (!valid.length) valid = candidates;
+      if (valid.length < candidates.length) odoFlag = true;
+      const withDt = valid.filter(c => c[1]);
+      let best;
+      if (withDt.length) best = withDt.reduce((a, b) => (b[1] > a[1] ? b : a));
+      else best = valid.reduce((a, b) => (b[0] > a[0] ? b : a));
+      odoThucTe = best[0]; odoSource = best[2];
+    }
+
+    // ---- Đối chiếu với file xưởng (LSSC) ----
+    const odoXuongVal = xu ? xu.odo : null;
+    const xuongDt = xu ? xu.dt : null;
+    const xuongTrangThai = xu ? xu.trang_thai : null;
+    const xuongMaLenh = xu ? xu.ma_lenh : null;
+    let doiSoatXuong = 'Chưa có dữ liệu xưởng';
+    let chenhLechXuong = null;
+    if (odoXuongVal !== null && odoThucTe !== null) {
+      chenhLechXuong = odoThucTe - odoXuongVal; // dương = bình thường (đã chạy thêm từ lúc vào xưởng)
+      if (chenhLechXuong < 0) doiSoatXuong = 'Lệch bất thường';
+      else doiSoatXuong = 'Khớp';
+    } else if (odoXuongVal !== null) {
+      doiSoatXuong = 'Chỉ có dữ liệu xưởng';
+    }
+
+    // Next maintenance milestone
+    const bkMoc = (bk && bk.moc_bd) || base.moc_bd_master || null;
+    const bkStatus = bk ? bk.status : null;
+    let mocBd = null;
+    if (bkMoc) {
+      if (bkStatus === 'Đã hoàn thành BD') {
+        mocBd = bkMoc + INTERVAL;
+        while (odoThucTe !== null && odoThucTe >= mocBd) mocBd += INTERVAL;
+      } else {
+        mocBd = bkMoc;
+      }
+    } else if (odoThucTe !== null) {
+      mocBd = Math.ceil((odoThucTe + 1) / INTERVAL) * INTERVAL;
+    }
+
+    const conLai = (mocBd !== null && odoThucTe !== null) ? (mocBd - odoThucTe) : null;
+
+    let trangThai;
+    if (odoThucTe !== null && mocBd) {
+      if (odoThucTe >= mocBd) trangThai = 'Quá hạn bảo dưỡng';
+      else if (mocBd - odoThucTe <= 1000) trangThai = 'Sắp đến hạn';
+      else trangThai = 'Bình thường';
+    } else {
+      trangThai = 'Chưa đủ dữ liệu';
+    }
+
+    records.push({
+      so_khung: vin, bien_so: bienSo, doi, to, dong_xe: dongXe, nam_sx: namSx,
+      odo_he_thong: odoHeThong, odo_gcat: odoGcatVal, gcat_time: fmtDt(gcatDt),
+      odo_dinhvi: odoDinhviVal, dinhvi_time: fmtDt(dinhviDt),
+      odo_booking: odoBookingVal, booking_time: fmtDt(bookingDt),
+      odo_thuc_te: odoThucTe, odo_source: odoSource, odo_flag: odoFlag,
+      moc_bd: mocBd, con_lai: conLai, trang_thai: trangThai,
+      booking_status: bkStatus, cap_bd: bk ? bk.cap_bd : null,
+      ngay_bd_du_kien: bk ? bk.ngay_bd : null, xuong_dv: bk ? bk.xuong_dv : null,
+      depot: bk ? bk.depot : null, khu_vuc_dinhvi: dv ? dv.khu_vuc : null,
+      odo_xuong: odoXuongVal, xuong_time: fmtDt(xuongDt), xuong_trang_thai: xuongTrangThai,
+      xuong_ma_lenh: xuongMaLenh, doi_soat_xuong: doiSoatXuong, chenh_lech_xuong: chenhLechXuong,
+      is_new: !fleet[vin],
+    });
+  });
+
+  const order = { 'Quá hạn bảo dưỡng': 0, 'Sắp đến hạn': 1, 'Bình thường': 2, 'Chưa đủ dữ liệu': 3 };
+  records.sort((a, b) => (order[a.trang_thai] - order[b.trang_thai]) || ((b.odo_thuc_te || 0) - (a.odo_thuc_te || 0)));
+  return records;
+}
+
+
+</script>
+<script>// ================= Upload slot config =================
+const SLOTS = [
+  { key: 'master', label: 'Bước 1 · TỔNG HỢP BD XE CHUẨN.xlsx', sub: 'Danh sách gốc (dữ liệu master) — Đội, Tổ, Biển số, Số khung', sheetHint: 0 },
+  { key: 'booking', label: 'Bước 2 · booking.xlsx', sub: 'Lịch sử đặt lịch bảo dưỡng', sheetHint: 0 },
+  { key: 'dinhvi', label: 'Bước 3 · định_vị.xlsx', sub: 'Báo cáo định vị GPS — ODO cuối ngày', sheetHint: 0 },
+  { key: 'gcat', label: 'Bước 4 · odo_gcat.xlsx', sub: 'Giao ca an toàn — ODO tài xế khai báo mỗi ca', sheetHint: 0 },
+  { key: 'gp', label: 'Bước 5 · odo_gp.xlsx', sub: 'ODO xe đang vận doanh (hệ thống GP)', sheetHint: 0 },
+  { key: 'pool', label: 'Bước 6 · pool_xe_tổng.xlsx', sub: 'ODO xe nằm bãi / pool tổng', sheetHint: 0 },
+  { key: 'xuong', label: 'Bước 7 · File xưởng (LSSC)', sub: 'Lệnh sửa chữa — Ngày đến thực tế, Số km hiện tại, Trạng thái', sheetHint: 0 },
+];
+
+var uploaded = {}; // key -> { workbook, filename, rowCount }
+var DATA = [];
+
+// ================= Build upload grid UI =================
+function fileIconSvg() {
+  return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M6 2h9l5 5v13a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="currentColor" stroke-width="1.7"/><path d="M15 2v5h5" stroke="currentColor" stroke-width="1.7"/></svg>`;
+}
+function checkSvg() {
+  return `<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+
+function buildUploadGrid() {
+  const grid = document.getElementById('uploadGrid');
+  grid.innerHTML = SLOTS.map(s => `
+    <div class="upload-slot" data-key="${s.key}">
+      <label class="slot-label">${s.label}</label>
+      <div class="slot-sub">${s.sub}</div>
+      <div class="drop-box" id="drop-${s.key}">
+        <div class="drop-icon">${fileIconSvg()}</div>
+        <div class="drop-text">
+          <div class="fname" id="fname-${s.key}">Chọn file .xlsx…</div>
+          <div class="frows" id="frows-${s.key}" style="display:none;"></div>
+        </div>
+        <div class="drop-check">${checkSvg()}</div>
+        <input type="file" accept=".xlsx,.xls" id="file-${s.key}">
+      </div>
+    </div>`).join('');
+
+  SLOTS.forEach(s => {
+    document.getElementById(`file-${s.key}`).addEventListener('change', e => handleFile(s.key, e.target.files[0]));
+  });
+}
+
+function handleFile(key, file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+      const wb = XLSX.read(evt.target.result, { type: 'array' });
+      const rows = sheetRows(wb, 0);
+      uploaded[key] = { workbook: wb, filename: file.name, rowCount: Math.max(0, rows.length - 1) };
+      const box = document.getElementById(`drop-${key}`);
+      box.classList.add('filled');
+      document.getElementById(`fname-${key}`).textContent = file.name;
+      const fr = document.getElementById(`frows-${key}`);
+      fr.style.display = 'block';
+      fr.textContent = `✓ Đã đọc ${uploaded[key].rowCount.toLocaleString('vi-VN')} dòng`;
+      updateActionState();
+    } catch (err) {
+      alert('Không đọc được file "' + file.name + '". Hãy kiểm tra đây có đúng là file .xlsx không.\n' + err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function updateActionState() {
+  const count = Object.keys(uploaded).length;
+  const hint = document.getElementById('actionHint');
+  const btnProcess = document.getElementById('btnProcess');
+  if (count === 0) {
+    hint.innerHTML = 'tải ít nhất 1 file để bắt đầu';
+    btnProcess.disabled = true;
+  } else {
+    hint.innerHTML = `đã tải <b>${count}/${SLOTS.length}</b> file${count < SLOTS.length ? ' — có thể tổng hợp ngay với dữ liệu hiện có, hoặc tải thêm để kết quả đầy đủ hơn' : ' — đầy đủ dữ liệu!'}`;
+    btnProcess.disabled = false;
+  }
+}
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (!confirm('Xóa toàn bộ file đã tải và làm lại từ đầu?')) return;
+  location.reload();
+});
+
+document.getElementById('btnProcess').addEventListener('click', () => {
+  const note = document.getElementById('progressNote');
+  note.style.display = 'inline-flex';
+  document.getElementById('btnProcess').disabled = true;
+  setTimeout(() => {
+    try {
+      const workbooks = {};
+      Object.keys(uploaded).forEach(k => workbooks[k] = uploaded[k].workbook);
+      DATA = buildFleetReport(workbooks);
+      document.getElementById('emptyState').style.display = 'none';
+      document.getElementById('resultsWrap').style.display = 'block';
+      document.getElementById('btnExportXlsx').disabled = false;
+      document.getElementById('btnExportCsv').disabled = false;
+      const now = new Date();
+      const p2 = n => String(n).padStart(2, '0');
+      document.getElementById('processedPill').textContent =
+        `Đã xử lý lúc ${p2(now.getHours())}:${p2(now.getMinutes())} — ${p2(now.getDate())}/${p2(now.getMonth() + 1)}/${now.getFullYear()}`;
+      refreshDropdowns();
+      renderAll();
+    } catch (err) {
+      alert('Có lỗi khi tổng hợp dữ liệu: ' + err.message);
+      console.error(err);
+    } finally {
+      note.style.display = 'none';
+      document.getElementById('btnProcess').disabled = false;
+    }
+  }, 30);
+});
+
+// ================= Dashboard rendering (reused pattern) =================
+const STATUS_META = {
+  'Quá hạn bảo dưỡng': { cls: 'red', label: 'Quá hạn bảo dưỡng' },
+  'Sắp đến hạn': { cls: 'amber', label: 'Sắp đến hạn' },
+  'Bình thường': { cls: 'green', label: 'Bình thường' },
+  'Chưa đủ dữ liệu': { cls: 'grey', label: 'Chưa đủ dữ liệu' },
+};
+const STATUS_ORDER = { 'Quá hạn bảo dưỡng': 0, 'Sắp đến hạn': 1, 'Bình thường': 2, 'Chưa đủ dữ liệu': 3 };
+
+var state = {
+  search: '', doi: '', to: '', dongXe: '', onlyNew: false, onlyFlag: false, onlyXuongMismatch: false,
+  statusFilter: null, sortKey: 'trang_thai', sortDir: 1, page: 1, pageSize: 50,
+};
+
+function fmtNum(v) { return (v === null || v === undefined) ? null : Math.round(v).toLocaleString('vi-VN'); }
+function esc(s) { return (s === null || s === undefined) ? '' : String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function uniqSorted(arr) { return [...new Set(arr.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), 'vi')); }
+function populateSelect(id, values) {
+  const sel = document.getElementById(id);
+  const keep = sel.value;
+  sel.innerHTML = sel.options[0].outerHTML + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  sel.value = keep && values.includes(keep) ? keep : '';
+}
+function refreshDropdowns() {
+  populateSelect('filterDoi', uniqSorted(DATA.map(r => r.doi)));
+  const toSource = state.doi ? DATA.filter(r => r.doi === state.doi) : DATA;
+  populateSelect('filterTo', uniqSorted(toSource.map(r => r.to)));
+  populateSelect('filterDongXe', uniqSorted(DATA.map(r => r.dong_xe)));
+}
+
+function computeStats() {
+  const total = DATA.length;
+  const counts = { 'Quá hạn bảo dưỡng': 0, 'Sắp đến hạn': 0, 'Bình thường': 0, 'Chưa đủ dữ liệu': 0 };
+  let newCount = 0, xuongMismatch = 0;
+  DATA.forEach(r => {
+    counts[r.trang_thai] = (counts[r.trang_thai] || 0) + 1;
+    if (r.is_new) newCount++;
+    if (r.doi_soat_xuong === 'Lệch bất thường') xuongMismatch++;
+  });
+  return { total, counts, newCount, xuongMismatch };
+}
+
+function isStatActive(key) {
+  if (key === null) return !state.statusFilter && !state.onlyNew && !state.onlyXuongMismatch;
+  if (key === '__new__') return state.onlyNew;
+  if (key === '__xuong__') return state.onlyXuongMismatch;
+  return state.statusFilter === key;
+}
+
+function renderStats() {
+  const { total, counts, newCount, xuongMismatch } = computeStats();
+  const cards = [
+    { key: null, label: 'Tổng số xe', value: total, sub: 'toàn bộ dữ liệu tổng hợp', color: 'var(--teal-2)' },
+    { key: 'Quá hạn bảo dưỡng', label: 'Quá hạn bảo dưỡng', value: counts['Quá hạn bảo dưỡng'], sub: 'ODO đã vượt mốc', color: 'var(--red)' },
+    { key: 'Sắp đến hạn', label: 'Sắp đến hạn', value: counts['Sắp đến hạn'], sub: 'còn dưới 1.000km', color: 'var(--amber)' },
+    { key: 'Bình thường', label: 'Bình thường', value: counts['Bình thường'], sub: 'chưa đến hạn bảo dưỡng', color: 'var(--green)' },
+    { key: '__new__', label: 'Xe mới', value: newCount, sub: 'chưa có trong file master', color: '#B58900' },
+    { key: '__xuong__', label: 'Lệch số km xưởng', value: xuongMismatch, sub: 'ODO xưởng > ODO thực tế', color: '#8E2DE2' },
+  ];
+  document.getElementById('statStrip').innerHTML = cards.map(c => `
+    <div class="stat ${isStatActive(c.key) ? 'active' : ''}" style="--stat-color:${c.color}" data-statkey="${c.key ?? ''}">
+      <div class="bar"></div>
+      <div class="stat-label">${c.label}</div>
+      <div class="stat-value">${c.value.toLocaleString('vi-VN')}</div>
+      <div class="stat-sub">${c.sub}</div>
+    </div>`).join('');
+  document.querySelectorAll('.stat').forEach(el => el.addEventListener('click', () => {
+    const k = el.dataset.statkey;
+    if (k === '') { state.statusFilter = null; state.onlyNew = false; state.onlyXuongMismatch = false; }
+    else if (k === '__new__') { state.onlyNew = !state.onlyNew; state.statusFilter = null; state.onlyXuongMismatch = false; }
+    else if (k === '__xuong__') { state.onlyXuongMismatch = !state.onlyXuongMismatch; state.statusFilter = null; state.onlyNew = false; }
+    else { state.statusFilter = state.statusFilter === k ? null : k; state.onlyNew = false; state.onlyXuongMismatch = false; }
+    document.getElementById('filterNew').checked = state.onlyNew;
+    state.page = 1;
+    renderAll();
+  }));
+}
+
+function getFiltered() {
+  const q = state.search.trim().toLowerCase();
+  let rows = DATA.filter(r => {
+    if (state.statusFilter && r.trang_thai !== state.statusFilter) return false;
+    if (state.onlyNew && !r.is_new) return false;
+    if (state.onlyFlag && !r.odo_flag) return false;
+    if (state.onlyXuongMismatch && r.doi_soat_xuong !== 'Lệch bất thường') return false;
+    if (state.doi && r.doi !== state.doi) return false;
+    if (state.to && r.to !== state.to) return false;
+    if (state.dongXe && r.dong_xe !== state.dongXe) return false;
+    if (q) {
+      const hay = [r.bien_so, r.so_khung, r.doi, r.to, r.dong_xe, r.xuong_dv, r.depot, r.xuong_ma_lenh].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+  rows.sort((a, b) => {
+    let av = a[state.sortKey], bv = b[state.sortKey];
+    if (state.sortKey === 'trang_thai') { av = STATUS_ORDER[av]; bv = STATUS_ORDER[bv]; }
+    if (av === null || av === undefined) av = -Infinity;
+    if (bv === null || bv === undefined) bv = -Infinity;
+    if (typeof av === 'string') return av.localeCompare(bv, 'vi') * state.sortDir;
+    return (av - bv) * state.sortDir;
+  });
+  return rows;
+}
+
+function statusBadge(status) {
+  const m = STATUS_META[status] || STATUS_META['Chưa đủ dữ liệu'];
+  return `<span class="badge badge-${m.cls}">${m.label}</span>`;
+}
+function odoCell(val, sub) {
+  if (val === null || val === undefined) return `<span class="na">—</span>`;
+  return `<span class="odo-cell">${fmtNum(val)}</span>${sub ? `<span class="odo-src">${esc(sub)}</span>` : ''}`;
+}
+function xuongBadge(status) {
+  if (status === 'Khớp') return `<span class="badge badge-green">Khớp</span>`;
+  if (status === 'Lệch bất thường') return `<span class="badge badge-red">Lệch bất thường</span>`;
+  if (status === 'Chỉ có dữ liệu xưởng') return `<span class="badge badge-amber">Chỉ có xưởng</span>`;
+  return `<span class="badge badge-grey">Chưa có dữ liệu</span>`;
+}
+
+function renderTable() {
+  const filtered = getFiltered();
+  const total = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(total / state.pageSize));
+  if (state.page > totalPages) state.page = totalPages;
+  const start = (state.page - 1) * state.pageSize;
+  const pageRows = filtered.slice(start, start + state.pageSize);
+
+  document.getElementById('resultCount').textContent = `${total.toLocaleString('vi-VN')} xe khớp bộ lọc`;
+
+  if (pageRows.length === 0) {
+    document.getElementById('tableBody').innerHTML = `<tr><td colspan="14"><div class="empty-state">Không có xe nào khớp với bộ lọc hiện tại.</div></td></tr>`;
+  } else {
+    document.getElementById('tableBody').innerHTML = pageRows.map((r, i) => `
+      <tr data-idx="${start + i}">
+        <td>${statusBadge(r.trang_thai)}</td>
+        <td>${esc(r.doi || '')}<br><span class="odo-src">${esc(r.to || '')}</span></td>
+        <td>
+          <span class="vin-plate">${esc(r.bien_so || '—')}</span> ${r.is_new ? '<span class="tag-new">MỚI</span>' : ''}
+          <br><span class="vin-num mono">${esc(r.so_khung)}</span>
+        </td>
+        <td>${esc(r.dong_xe || '—')}</td>
+        <td class="mono">${odoCell(r.odo_he_thong)}</td>
+        <td class="mono">${odoCell(r.odo_gcat, r.gcat_time)}</td>
+        <td class="mono">${odoCell(r.odo_dinhvi, r.dinhvi_time)}</td>
+        <td class="mono">${odoCell(r.odo_booking, r.booking_time)}</td>
+        <td class="mono">${odoCell(r.odo_thuc_te, r.odo_source)}${r.odo_flag ? ' ⚠️' : ''}</td>
+        <td class="mono">${r.moc_bd ? fmtNum(r.moc_bd) : '<span class="na">—</span>'}</td>
+        <td class="mono ${r.con_lai !== null && r.con_lai < 0 ? 'km-remain-neg' : (r.con_lai !== null ? 'km-remain-pos' : '')}">${r.con_lai !== null && r.con_lai !== undefined ? fmtNum(r.con_lai) : '<span class="na">—</span>'}</td>
+        <td>${esc(r.booking_status || '—')}</td>
+        <td class="mono">${odoCell(r.odo_xuong, r.xuong_time)}</td>
+        <td>${xuongBadge(r.doi_soat_xuong)}${r.chenh_lech_xuong !== null && r.chenh_lech_xuong !== undefined ? `<span class="odo-src">chênh ${r.chenh_lech_xuong >= 0 ? '+' : ''}${fmtNum(r.chenh_lech_xuong)} km</span>` : ''}</td>
+      </tr>`).join('');
+    document.querySelectorAll('#tableBody tr[data-idx]').forEach(tr => {
+      tr.addEventListener('click', () => openDetail(filtered[+tr.dataset.idx - start]));
+    });
+  }
+
+  renderPager(total, totalPages);
+  document.querySelectorAll('#mainTable thead th').forEach(th => {
+    th.classList.remove('sorted'); th.removeAttribute('data-arrow');
+    if (th.dataset.key === state.sortKey) { th.classList.add('sorted'); th.setAttribute('data-arrow', state.sortDir === 1 ? '↑' : '↓'); }
+  });
+}
+
+function renderPager(total, totalPages) {
+  const info = document.getElementById('pagerInfo');
+  const from = total === 0 ? 0 : (state.page - 1) * state.pageSize + 1;
+  const to = Math.min(state.page * state.pageSize, total);
+  info.textContent = `Hiển thị ${from.toLocaleString('vi-VN')}–${to.toLocaleString('vi-VN')} trong ${total.toLocaleString('vi-VN')}`;
+
+  const btns = document.getElementById('pagerBtns');
+  let html = `<button ${state.page === 1 ? 'disabled' : ''} data-p="1">«</button><button ${state.page === 1 ? 'disabled' : ''} data-p="${state.page - 1}">‹</button>`;
+  const pages = [];
+  for (let p = 1; p <= totalPages; p++) {
+    if (p === 1 || p === totalPages || Math.abs(p - state.page) <= 1) pages.push(p);
+    else if (pages[pages.length - 1] !== '…') pages.push('…');
+  }
+  pages.forEach(p => {
+    if (p === '…') html += `<span style="padding:0 4px;color:var(--muted-2)">…</span>`;
+    else html += `<button class="${p === state.page ? 'active' : ''}" data-p="${p}">${p}</button>`;
+  });
+  html += `<button ${state.page === totalPages ? 'disabled' : ''} data-p="${state.page + 1}">›</button><button ${state.page === totalPages ? 'disabled' : ''} data-p="${totalPages}">»</button>`;
+  btns.innerHTML = html;
+  btns.querySelectorAll('button[data-p]').forEach(b => b.addEventListener('click', () => { state.page = +b.dataset.p; renderTable(); window.scrollTo({ top: document.querySelector('.table-wrap').offsetTop - 20, behavior: 'smooth' }); }));
+}
+
+function openDetail(r) {
+  document.getElementById('mBienSo').textContent = r.bien_so || 'Chưa rõ biển số';
+  document.getElementById('mSoKhung').innerHTML = `Số khung: <span class="mono">${esc(r.so_khung)}</span> · ${esc(r.doi || '')} / ${esc(r.to || '')}`;
+
+  const rows = [
+    ['1. Hệ thống GP (xe nằm / xe vận doanh)', r.odo_he_thong, null],
+    ['2. Giao ca an toàn (mới nhất)', r.odo_gcat, r.gcat_time],
+    ['3. Định vị GPS (mới nhất)', r.odo_dinhvi, r.dinhvi_time],
+    ['Booking (lúc đặt lịch gần nhất)', r.odo_booking, r.booking_time],
+    ['File xưởng (LSSC, lần vào xưởng gần nhất)', r.odo_xuong, r.xuong_time],
+  ];
+  const sourceRows = rows.map(([label, val, time]) => `
+    <tr><td>${label}</td><td class="mono">${val !== null && val !== undefined ? fmtNum(val) + ' km' : '—'}</td><td>${time ? esc(time) : '—'}</td></tr>`).join('');
+
+  const detailItems = [
+    ['Trạng thái bảo dưỡng', statusBadge(r.trang_thai)],
+    ['ODO thực tế (tổng hợp)', r.odo_thuc_te !== null ? `${fmtNum(r.odo_thuc_te)} km <span class="odo-src">nguồn: ${esc(r.odo_source || '—')}${r.odo_flag ? ' · có số liệu bất thường bị loại' : ''}</span>` : '—'],
+    ['Mốc bảo dưỡng tiếp theo', r.moc_bd ? `${fmtNum(r.moc_bd)} km` : '—'],
+    ['Còn lại đến mốc BD', r.con_lai !== null && r.con_lai !== undefined ? `${fmtNum(r.con_lai)} km` : '—'],
+    ['Trạng thái đặt lịch', esc(r.booking_status || '—')],
+    ['Đối chiếu với file xưởng', xuongBadge(r.doi_soat_xuong) + (r.chenh_lech_xuong !== null && r.chenh_lech_xuong !== undefined ? ` <span class="odo-src">chênh lệch ${r.chenh_lech_xuong >= 0 ? '+' : ''}${fmtNum(r.chenh_lech_xuong)} km so với ODO thực tế</span>` : '')],
+    ['Trạng thái lệnh sửa chữa (xưởng)', esc(r.xuong_trang_thai || '—') + (r.xuong_ma_lenh ? ` <span class="odo-src">(${esc(r.xuong_ma_lenh)})</span>` : '')],
+    ['Cấp bảo dưỡng gần nhất', esc(r.cap_bd || '—')],
+    ['Ngày bảo dưỡng dự kiến', esc(r.ngay_bd_du_kien || '—')],
+    ['Xưởng dịch vụ', esc(r.xuong_dv || '—')],
+    ['Depot', esc(r.depot || '—')],
+    ['Khu vực định vị', esc(r.khu_vuc_dinhvi || '—')],
+    ['Dòng xe / Năm SX', `${esc(r.dong_xe || '—')} ${r.nam_sx ? '/ ' + esc(r.nam_sx) : ''}`],
+    ['Ghi chú', r.is_new ? '<span class="tag-new">MỚI</span> Chưa có trong file master gốc' : 'Đã có trong file master gốc'],
+  ];
+
+  document.getElementById('mBody').innerHTML = `
+    <div class="detail-grid">${detailItems.map(([k, v]) => `<div class="detail-item"><div class="k">${k}</div><div class="v">${v}</div></div>`).join('')}</div>
+    <table class="source-table"><thead><tr><th>Nguồn ODO</th><th>Giá trị</th><th>Thời gian ghi nhận</th></tr></thead><tbody>${sourceRows}</tbody></table>`;
+  document.getElementById('detailModal').classList.add('open');
+}
+document.getElementById('mClose').addEventListener('click', () => document.getElementById('detailModal').classList.remove('open'));
+document.getElementById('detailModal').addEventListener('click', e => { if (e.target.id === 'detailModal') e.currentTarget.classList.remove('open'); });
+
+// ================= Exports =================
+const EXPORT_HEADERS = ['Trạng thái bảo dưỡng', 'Xe mới', 'Đội', 'Tổ', 'Biển số', 'Số khung', 'Dòng xe', 'Năm SX',
+  'ODO Hệ thống GP (km)', 'ODO Giao ca an toàn (km)', 'Thời gian giao ca an toàn', 'ODO Định vị (km)', 'Thời gian định vị',
+  'ODO Booking (km)', 'Thời gian booking', 'ODO thực tế (km)', 'Nguồn ODO thực tế', 'Cảnh báo số liệu bất thường',
+  'Mốc bảo dưỡng tiếp theo (km)', 'Còn lại đến mốc BD (km)', 'Trạng thái đặt lịch', 'Cấp bảo dưỡng gần nhất',
+  'Ngày bảo dưỡng dự kiến', 'Xưởng dịch vụ', 'Depot', 'Khu vực định vị',
+  'ODO Xưởng - LSSC (km)', 'Thời gian đến xưởng', 'Trạng thái lệnh xưởng', 'Mã lệnh xưởng',
+  'Đối chiếu xưởng', 'Chênh lệch xưởng vs thực tế (km)'];
+
+function toExportRow(r) {
+  return [r.trang_thai, r.is_new ? 'Có' : 'Không', r.doi, r.to, r.bien_so, r.so_khung, r.dong_xe, r.nam_sx,
+    r.odo_he_thong, r.odo_gcat, r.gcat_time, r.odo_dinhvi, r.dinhvi_time, r.odo_booking, r.booking_time,
+    r.odo_thuc_te, r.odo_source, r.odo_flag ? 'Có' : 'Không', r.moc_bd, r.con_lai, r.booking_status,
+    r.cap_bd, r.ngay_bd_du_kien, r.xuong_dv, r.depot, r.khu_vuc_dinhvi,
+    r.odo_xuong, r.xuong_time, r.xuong_trang_thai, r.xuong_ma_lenh, r.doi_soat_xuong, r.chenh_lech_xuong];
+}
+
+document.getElementById('btnExportXlsx').addEventListener('click', () => {
+  const rows = getFiltered();
+  const aoa = [EXPORT_HEADERS, ...rows.map(toExportRow)];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = EXPORT_HEADERS.map(() => ({ wch: 16 }));
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: EXPORT_HEADERS.length - 1 } }) };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'BÁO CÁO TỔNG HỢP ODO');
+  const ts = new Date().toISOString().slice(0, 10);
+  XLSX.writeFile(wb, `bao_cao_bao_duong_${ts}.xlsx`);
+});
+
+document.getElementById('btnExportCsv').addEventListener('click', () => {
+  const rows = getFiltered();
+  const lines = [EXPORT_HEADERS.join(',')];
+  rows.forEach(r => {
+    lines.push(toExportRow(r).map(v => `"${(v === null || v === undefined ? '' : String(v)).replace(/"/g, '""')}"`).join(','));
+  });
+  const blob = new Blob(['\uFEFF' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `bao_cao_bao_duong_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+});
+
+// ================= Events =================
+function renderAll() { renderStats(); renderTable(); }
+
+document.getElementById('searchInput').addEventListener('input', e => { state.search = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('filterDoi').addEventListener('change', e => { state.doi = e.target.value; state.to = ''; state.page = 1; refreshDropdowns(); renderTable(); });
+document.getElementById('filterTo').addEventListener('change', e => { state.to = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('filterDongXe').addEventListener('change', e => { state.dongXe = e.target.value; state.page = 1; renderTable(); });
+document.getElementById('filterNew').addEventListener('change', e => { state.onlyNew = e.target.checked; state.page = 1; renderAll(); });
+document.getElementById('filterFlag').addEventListener('change', e => { state.onlyFlag = e.target.checked; state.page = 1; renderTable(); });
+document.getElementById('filterXuong').addEventListener('change', e => { state.onlyXuongMismatch = e.target.checked; state.page = 1; renderAll(); });
+document.querySelectorAll('#mainTable thead th').forEach(th => th.addEventListener('click', () => {
+  const key = th.dataset.key;
+  if (state.sortKey === key) state.sortDir *= -1; else { state.sortKey = key; state.sortDir = 1; }
+  renderTable();
+}));
+
+// ================= Init =================
+buildUploadGrid();
+updateActionState();
+</script>
+</body>
+</html>
