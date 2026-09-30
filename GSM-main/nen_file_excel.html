@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Đổi định dạng &amp; tối ưu file Excel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper: #F6F4EE;
+    --paper-line: rgba(28,35,33,0.07);
+    --ink: #1C2321;
+    --ink-soft: #5B6663;
+    --panel: #FFFFFF;
+    --panel-border: #E4E1D6;
+    --teal: #0F766E;
+    --teal-dark: #0B5B54;
+    --amber: #C2703D;
+    --amber-bg: #FBEEE3;
+    --danger: #B3452F;
+    --radius: 10px;
+    --mono: 'IBM Plex Mono', monospace;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0/ 100% 32px,
+      linear-gradient(90deg, var(--paper-line) 1px, transparent 1px) 0 0/ 32px 100%,
+      var(--paper);
+    color:var(--ink);
+    font-family:var(--body);
+    min-height:100vh;
+    padding:40px 20px 80px;
+  }
+
+  .wrap{max-width:880px; margin:0 auto;}
+
+  header{margin-bottom:36px;}
+  .eyebrow{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:.08em;
+    color:var(--teal-dark);
+    background:#E4F1EE;
+    display:inline-block;
+    padding:3px 9px;
+    border-radius:4px;
+    margin-bottom:14px;
+  }
+  h1{
+    font-family:var(--display);
+    font-size:clamp(28px,4vw,40px);
+    font-weight:700;
+    margin:0 0 10px;
+    letter-spacing:-0.01em;
+  }
+  header p{
+    color:var(--ink-soft);
+    font-size:15.5px;
+    max-width:560px;
+    line-height:1.55;
+    margin:0;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:var(--radius);
+    padding:26px;
+    margin-bottom:22px;
+    box-shadow: 0 1px 2px rgba(28,35,33,0.04);
+  }
+
+  .drop{
+    border:1.5px dashed #C7C2B3;
+    border-radius:var(--radius);
+    padding:38px 20px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s, background .15s;
+    position:relative;
+  }
+  .drop:hover, .drop.dragover{
+    border-color:var(--teal);
+    background:#F4FAF9;
+  }
+  .drop-icon{
+    width:40px; height:40px; margin:0 auto 14px;
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px solid var(--panel-border);
+    border-radius:8px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-soft);
+    background:var(--paper);
+  }
+  .drop-title{font-weight:600; font-size:15px; margin-bottom:4px;}
+  .drop-sub{font-size:13px; color:var(--ink-soft);}
+  .drop input{display:none;}
+
+  /* file summary */
+  .file-summary{display:none;}
+  .file-summary.show{display:block;}
+  .file-row{
+    display:flex; align-items:center; justify-content:space-between;
+    gap:14px; flex-wrap:wrap;
+    padding-bottom:16px; margin-bottom:18px;
+    border-bottom:1px solid var(--panel-border);
+  }
+  .file-name{font-weight:600; font-size:15px; word-break:break-all;}
+  .file-meta{font-family:var(--mono); font-size:12.5px; color:var(--ink-soft); margin-top:3px;}
+  .change-btn{
+    font-family:var(--mono); font-size:12px; color:var(--teal-dark);
+    background:none; border:1px solid var(--teal-dark); border-radius:6px;
+    padding:6px 10px; cursor:pointer;
+  }
+  .change-btn:hover{background:#E4F1EE;}
+
+  .sheet-tags{display:flex; flex-wrap:wrap; gap:6px;}
+  .sheet-tag{
+    font-family:var(--mono); font-size:11.5px;
+    background:var(--paper); border:1px solid var(--panel-border);
+    padding:3px 8px; border-radius:5px; color:var(--ink-soft);
+  }
+  .sheet-tag.hidden-tag{border-color:var(--amber); color:var(--amber); background:var(--amber-bg);}
+
+  h2.section-title{
+    font-family:var(--display);
+    font-size:14px;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 16px;
+  }
+
+  .options{display:flex; flex-direction:column; gap:12px;}
+  .opt{
+    display:flex; align-items:flex-start; gap:12px;
+    padding:12px 14px; border:1px solid var(--panel-border); border-radius:8px;
+    cursor:pointer;
+  }
+  .opt:hover{background:#FAF9F5;}
+  .opt input{margin-top:3px; width:16px; height:16px; accent-color:var(--teal);}
+  .opt-title{font-weight:600; font-size:14px;}
+  .opt-desc{font-size:12.5px; color:var(--ink-soft); margin-top:2px; line-height:1.4;}
+
+  .format-row{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:6px;}
+  .format-chip{
+    font-family:var(--mono); font-size:13px;
+    border:1.5px solid var(--panel-border); border-radius:7px;
+    padding:9px 16px; cursor:pointer; background:var(--panel);
+    transition:all .12s;
+  }
+  .format-chip:hover{border-color:var(--teal);}
+  .format-chip.active{border-color:var(--teal); background:var(--teal); color:#fff;}
+
+  select.sheet-picker{
+    font-family:var(--mono); font-size:13px; padding:8px 10px;
+    border:1.5px solid var(--panel-border); border-radius:7px;
+    background:var(--panel); color:var(--ink); margin-top:10px;
+  }
+  .hint{font-size:12.5px; color:var(--amber); margin-top:8px; display:none;}
+  .hint.show{display:block;}
+
+  /* transparency / analysis banner */
+  .analysis{
+    display:none; border:1px solid #DCE6DE; background:#F2F7F1; border-radius:8px;
+    padding:14px 16px; margin-bottom:18px;
+  }
+  .analysis.show{display:block;}
+  .analysis-title{
+    font-family:var(--mono); font-size:11.5px; letter-spacing:.04em;
+    color:var(--teal-dark); text-transform:uppercase; margin-bottom:8px; font-weight:600;
+  }
+  .analysis ul{margin:0; padding-left:18px;}
+  .analysis li{font-size:13px; line-height:1.6; color:var(--ink);}
+  .analysis li b{font-weight:600;}
+
+  .hidden-sheets-box{margin-bottom:6px;}
+  .hs-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:10px 12px; border:1px solid var(--panel-border); border-radius:8px;
+    margin-bottom:8px; background:var(--panel);
+  }
+  .hs-row label{display:flex; align-items:center; gap:10px; font-size:13.5px; cursor:pointer;}
+  .hs-row input{width:16px; height:16px; accent-color:var(--amber);}
+  .hs-badge{
+    font-family:var(--mono); font-size:10.5px; color:var(--amber);
+    background:var(--amber-bg); padding:2px 7px; border-radius:4px;
+  }
+
+  .run-btn{
+    width:100%;
+    font-family:var(--display); font-weight:600; font-size:15.5px;
+    background:var(--teal); color:#fff; border:none; border-radius:9px;
+    padding:15px; cursor:pointer; letter-spacing:.01em;
+    transition:background .15s;
+  }
+  .run-btn:hover{background:var(--teal-dark);}
+  .run-btn:disabled{background:#C7C2B3; cursor:not-allowed;}
+
+  /* result */
+  .result{display:none;}
+  .result.show{display:block;}
+  .cells{
+    display:flex; align-items:stretch; gap:0; margin-bottom:18px;
+    border:1px solid var(--panel-border); border-radius:10px; overflow:hidden;
+  }
+  .cell{flex:1; padding:18px 16px; position:relative;}
+  .cell:first-child{border-right:1px solid var(--panel-border);}
+  .cell-ref{
+    font-family:var(--mono); font-size:10.5px; color:var(--ink-soft);
+    letter-spacing:.05em; margin-bottom:8px; display:block;
+  }
+  .cell-val{font-family:var(--mono); font-size:22px; font-weight:600;}
+  .cell.before{background:#FAF9F5;}
+  .cell.after{background:#F4FAF9;}
+  .cell.after .cell-val{color:var(--teal-dark);}
+
+  .savings-badge{
+    display:inline-flex; align-items:center; gap:8px;
+    background:var(--amber-bg); color:var(--amber);
+    font-family:var(--mono); font-weight:600; font-size:14px;
+    padding:9px 14px; border-radius:8px; margin-bottom:18px;
+  }
+
+  .download-btn{
+    display:block; width:100%; text-align:center; text-decoration:none;
+    font-family:var(--display); font-weight:600; font-size:15.5px;
+    background:var(--ink); color:#fff; border-radius:9px; padding:15px;
+  }
+  .download-btn:hover{background:#333;}
+
+  .error{
+    display:none; background:#FBEAE6; color:var(--danger);
+    border:1px solid #EBC3B7; border-radius:8px; padding:12px 14px;
+    font-size:13.5px; margin-top:14px;
+  }
+  .error.show{display:block;}
+
+  footer{
+    text-align:center; font-size:12px; color:var(--ink-soft);
+    margin-top:36px; font-family:var(--mono);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <span class="eyebrow">A1 · CÔNG CỤ EXCEL CỤC BỘ</span>
+    <h1>Đổi định dạng &amp; giảm dung lượng file Excel</h1>
+    <p>Tải file lên, chọn định dạng đầu ra và các tuỳ chọn tối ưu. Mọi xử lý diễn ra ngay trên trình duyệt của bạn — file không được gửi lên bất kỳ máy chủ nào.</p>
+  </header>
+
+  <div class="panel">
+    <div class="drop" id="dropZone">
+      <input type="file" id="fileInput" accept=".xlsx,.xls,.xlsm,.csv,.ods">
+      <div class="drop-icon">XLS</div>
+      <div class="drop-title">Kéo thả file vào đây, hoặc bấm để chọn</div>
+      <div class="drop-sub">Hỗ trợ .xlsx · .xls · .xlsm · .csv · .ods</div>
+    </div>
+
+    <div class="file-summary" id="fileSummary">
+      <div class="file-row">
+        <div>
+          <div class="file-name" id="fName"></div>
+          <div class="file-meta" id="fMeta"></div>
+        </div>
+        <button class="change-btn" id="changeBtn">Đổi file khác</button>
+      </div>
+      <div class="sheet-tags" id="sheetTags"></div>
+    </div>
+  </div>
+
+  <div class="panel file-summary" id="optionsPanel">
+
+    <div class="analysis" id="analysisBox">
+      <div class="analysis-title">Phát hiện trong file gốc</div>
+      <ul id="analysisList"></ul>
+    </div>
+
+    <div id="hiddenSheetsPanel" style="display:none; margin-bottom:24px;">
+      <h2 class="section-title">Sheet ẩn</h2>
+      <div class="hidden-sheets-box" id="hiddenSheetsBox"></div>
+    </div>
+
+    <h2 class="section-title">Định dạng đầu ra</h2>
+    <div class="format-row" id="formatRow">
+      <div class="format-chip" data-fmt="xlsx">XLSX</div>
+      <div class="format-chip" data-fmt="xls">XLS</div>
+      <div class="format-chip" data-fmt="csv">CSV</div>
+      <div class="format-chip" data-fmt="ods">ODS</div>
+      <div class="format-chip" data-fmt="html">HTML</div>
+    </div>
+    <select class="sheet-picker" id="sheetPicker" style="display:none;"></select>
+    <div class="hint" id="csvHint">File có nhiều sheet — CSV chỉ xuất được 1 sheet mỗi lần, hãy chọn sheet ở trên.</div>
+
+    <div style="height:22px;"></div>
+
+    <h2 class="section-title">Tối ưu / giảm dung lượng</h2>
+    <div class="options">
+      <label class="opt">
+        <input type="checkbox" id="optStripStyle" checked>
+        <div>
+          <div class="opt-title">Xóa định dạng ô thừa</div>
+          <div class="opt-desc">Bỏ màu nền, font chữ, viền, style thừa được lưu trong file — thường là nguyên nhân lớn nhất khiến file phình to.</div>
+        </div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="optFormulaToValue" checked>
+        <div>
+          <div class="opt-title">Chuyển công thức thành giá trị cố định</div>
+          <div class="opt-desc">Giữ lại kết quả tính toán hiện tại thay vì lưu cả công thức và cache tính toán.</div>
+        </div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="optTrim" checked>
+        <div>
+          <div class="opt-title">Cắt vùng trống thừa</div>
+          <div class="opt-desc">Loại bỏ các hàng/cột trống nằm ngoài vùng dữ liệu thực tế (thường do định dạng "lố" ra ngoài dữ liệu).</div>
+        </div>
+      </label>
+      <label class="opt">
+        <input type="checkbox" id="optCompress" checked>
+        <div>
+          <div class="opt-title">Nén tối đa khi ghi file</div>
+          <div class="opt-desc">Bật nén DEFLATE tối đa cho file đầu ra (áp dụng cho XLSX/XLSM/ODS).</div>
+        </div>
+      </label>
+    </div>
+
+    <div style="height:24px;"></div>
+    <button class="run-btn" id="runBtn">Xử lý file</button>
+    <div class="error" id="errorBox"></div>
+  </div>
+
+  <div class="panel result" id="resultPanel">
+    <h2 class="section-title">Kết quả</h2>
+    <div class="cells">
+      <div class="cell before">
+        <span class="cell-ref">DUNG LƯỢNG GỐC</span>
+        <span class="cell-val" id="sizeBefore">—</span>
+      </div>
+      <div class="cell after">
+        <span class="cell-ref">DUNG LƯỢNG MỚI</span>
+        <span class="cell-val" id="sizeAfter">—</span>
+      </div>
+    </div>
+    <div class="savings-badge" id="savingsBadge">—</div>
+    <a class="download-btn" id="downloadBtn" href="#" download>Tải file đã xử lý</a>
+  </div>
+
+  <footer>KHÔNG UPLOAD · XỬ LÝ 100% TRONG TRÌNH DUYỆT</footer>
+</div>
+
+<script>
+(function(){
+  const dropZone = document.getElementById('dropZone');
+  const fileInput = document.getElementById('fileInput');
+  const fileSummary = document.getElementById('fileSummary');
+  const optionsPanel = document.getElementById('optionsPanel');
+  const fName = document.getElementById('fName');
+  const fMeta = document.getElementById('fMeta');
+  const sheetTags = document.getElementById('sheetTags');
+  const changeBtn = document.getElementById('changeBtn');
+  const formatRow = document.getElementById('formatRow');
+  const sheetPicker = document.getElementById('sheetPicker');
+  const csvHint = document.getElementById('csvHint');
+  const runBtn = document.getElementById('runBtn');
+  const errorBox = document.getElementById('errorBox');
+  const resultPanel = document.getElementById('resultPanel');
+  const sizeBefore = document.getElementById('sizeBefore');
+  const sizeAfter = document.getElementById('sizeAfter');
+  const savingsBadge = document.getElementById('savingsBadge');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const analysisBox = document.getElementById('analysisBox');
+  const analysisList = document.getElementById('analysisList');
+  const hiddenSheetsPanel = document.getElementById('hiddenSheetsPanel');
+  const hiddenSheetsBox = document.getElementById('hiddenSheetsBox');
+
+  let currentFile = null;
+  let currentWorkbook = null;
+  let outputFormat = 'xlsx';
+  let hiddenSheetNames = [];       // sheets flagged hidden/very-hidden in the source
+  let sheetsToDrop = new Set();    // sheet names the user chose to remove
+
+  function fmtBytes(bytes){
+    if(bytes < 1024) return bytes + ' B';
+    if(bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+    return (bytes/(1024*1024)).toFixed(2) + ' MB';
+  }
+
+  function extOf(name){
+    const m = name.match(/\.([a-z0-9]+)$/i);
+    return m ? m[1].toLowerCase() : '';
+  }
+
+  // format chip selection
+  formatRow.addEventListener('click', (e)=>{
+    const chip = e.target.closest('.format-chip');
+    if(!chip) return;
+    [...formatRow.children].forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    outputFormat = chip.dataset.fmt;
+    updateCsvHint();
+  });
+
+  function updateCsvHint(){
+    const activeSheetCount = currentWorkbook
+      ? currentWorkbook.SheetNames.filter(n=>!sheetsToDrop.has(n)).length
+      : 0;
+    if(outputFormat === 'csv' && activeSheetCount > 1){
+      csvHint.classList.add('show');
+      sheetPicker.style.display = 'inline-block';
+    } else {
+      csvHint.classList.remove('show');
+      sheetPicker.style.display = 'none';
+    }
+  }
+
+  // drag & drop
+  ['dragenter','dragover'].forEach(ev=>{
+    dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); dropZone.classList.add('dragover'); });
+  });
+  ['dragleave','drop'].forEach(ev=>{
+    dropZone.addEventListener(ev, (e)=>{ e.preventDefault(); dropZone.classList.remove('dragover'); });
+  });
+  dropZone.addEventListener('drop', (e)=>{
+    const f = e.dataTransfer.files[0];
+    if(f) handleFile(f);
+  });
+  dropZone.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', (e)=>{
+    if(e.target.files[0]) handleFile(e.target.files[0]);
+  });
+
+  changeBtn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    resetAll();
+  });
+
+  function resetAll(){
+    currentFile = null;
+    currentWorkbook = null;
+    hiddenSheetNames = [];
+    sheetsToDrop = new Set();
+    fileInput.value = '';
+    fileSummary.classList.remove('show');
+    optionsPanel.classList.remove('show');
+    resultPanel.classList.remove('show');
+    errorBox.classList.remove('show');
+    analysisBox.classList.remove('show');
+    hiddenSheetsPanel.style.display = 'none';
+  }
+
+  function showError(msg){
+    errorBox.textContent = msg;
+    errorBox.classList.add('show');
+  }
+
+  function handleFile(file){
+    errorBox.classList.remove('show');
+    resultPanel.classList.remove('show');
+    const ext = extOf(file.name);
+    const allowed = ['xlsx','xls','xlsm','csv','ods'];
+    if(!allowed.includes(ext)){
+      showError('Định dạng không được hỗ trợ. Vui lòng chọn file .xlsx, .xls, .xlsm, .csv hoặc .ods.');
+      return;
+    }
+    currentFile = file;
+    const reader = new FileReader();
+    reader.onload = function(e){
+      try{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type:'array', cellFormula:true, cellStyles:true});
+        currentWorkbook = wb;
+        sheetsToDrop = new Set();
+        renderFileInfo(file, wb);
+        // zip-level analysis (images / charts / conditional formatting / hidden sheets)
+        // runs after the basic UI is already up, since it's best-effort and async
+        analyzeZip(data, wb).catch(()=>{ /* analysis is informational only — ignore failures */ });
+      }catch(err){
+        showError('Không đọc được file. File có thể bị hỏng hoặc không đúng định dạng bảng tính.');
+      }
+    };
+    reader.onerror = function(){
+      showError('Có lỗi khi đọc file từ máy của bạn.');
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function renderFileInfo(file, wb){
+    fName.textContent = file.name;
+    fMeta.textContent = fmtBytes(file.size) + ' · ' + wb.SheetNames.length + ' sheet';
+
+    // hidden sheet detection (from the workbook's sheet metadata)
+    hiddenSheetNames = [];
+    if(wb.Workbook && Array.isArray(wb.Workbook.Sheets)){
+      wb.Workbook.Sheets.forEach((meta, i)=>{
+        if(meta && meta.Hidden && meta.Hidden >= 1){
+          hiddenSheetNames.push(wb.SheetNames[i]);
+        }
+      });
+    }
+
+    sheetTags.innerHTML = '';
+    wb.SheetNames.forEach(name=>{
+      const tag = document.createElement('span');
+      tag.className = 'sheet-tag' + (hiddenSheetNames.includes(name) ? ' hidden-tag' : '');
+      tag.textContent = name + (hiddenSheetNames.includes(name) ? ' · ẩn' : '');
+      sheetTags.appendChild(tag);
+    });
+    fileSummary.classList.add('show');
+    optionsPanel.classList.add('show');
+
+    // hidden sheets panel — let the user choose to drop them
+    if(hiddenSheetNames.length){
+      hiddenSheetsPanel.style.display = 'block';
+      hiddenSheetsBox.innerHTML = '';
+      hiddenSheetNames.forEach(name=>{
+        const row = document.createElement('div');
+        row.className = 'hs-row';
+        row.innerHTML =
+          '<label><input type="checkbox" class="hs-check" data-sheet="' + name.replace(/"/g,'&quot;') + '" checked>' +
+          '<span>' + name + '</span><span class="hs-badge">ẩn</span></label>';
+        hiddenSheetsBox.appendChild(row);
+      });
+      hiddenSheetsBox.querySelectorAll('.hs-check').forEach(cb=>{
+        sheetsToDrop.add(cb.dataset.sheet); // default: checked = remove
+        cb.addEventListener('change', ()=>{
+          if(cb.checked) sheetsToDrop.add(cb.dataset.sheet);
+          else sheetsToDrop.delete(cb.dataset.sheet);
+          updateCsvHint();
+        });
+      });
+    } else {
+      hiddenSheetsPanel.style.display = 'none';
+    }
+
+    // populate sheet picker (only visible/kept sheets, refreshed on run too)
+    refreshSheetPicker(wb);
+
+    // default output format based on input ext, but keep xlsx as safe default
+    const inExt = extOf(file.name);
+    const defaultFmt = (inExt === 'xlsx' || inExt === 'xlsm') ? 'xlsx' : (['xls','csv','ods'].includes(inExt) ? inExt : 'xlsx');
+    [...formatRow.children].forEach(c=>c.classList.remove('active'));
+    const match = [...formatRow.children].find(c=>c.dataset.fmt===defaultFmt) || formatRow.children[0];
+    match.classList.add('active');
+    outputFormat = match.dataset.fmt;
+    updateCsvHint();
+  }
+
+  function refreshSheetPicker(wb){
+    sheetPicker.innerHTML = '';
+    wb.SheetNames.filter(n=>!sheetsToDrop.has(n)).forEach(name=>{
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      sheetPicker.appendChild(opt);
+    });
+  }
+
+  // best-effort zip inspection: images, charts, conditional formatting
+  async function analyzeZip(data, wb){
+    if(typeof JSZip === 'undefined') return;
+    const isZipBased = /^(xlsx|xlsm|ods)$/i.test(extOf(currentFile.name));
+    if(!isZipBased) return;
+
+    const zip = await JSZip.loadAsync(data);
+    const findings = [];
+
+    // images
+    const mediaFiles = Object.keys(zip.files).filter(p => /^xl\/media\//i.test(p) && !zip.files[p].dir);
+    if(mediaFiles.length){
+      let totalBytes = 0;
+      for(const p of mediaFiles){
+        try{
+          const bytes = await zip.file(p).async('uint8array');
+          totalBytes += bytes.length;
+        }catch(e){ /* skip unreadable entries */ }
+      }
+      findings.push('<b>' + mediaFiles.length + ' ảnh nhúng</b> (~' + fmtBytes(totalBytes) + ') — thư viện xử lý phía trình duyệt không đọc/ghi lại được ảnh, nên các ảnh này sẽ <b>tự động bị loại bỏ</b> khỏi file đầu ra bất kể bạn chọn tuỳ chọn nào.');
+    }
+
+    // charts
+    const chartFiles = Object.keys(zip.files).filter(p => /^xl\/charts\//i.test(p) && p.endsWith('.xml') && !zip.files[p].dir);
+    if(chartFiles.length){
+      findings.push('<b>' + chartFiles.length + ' biểu đồ (chart)</b> — cũng sẽ bị loại bỏ vì cùng lý do trên.');
+    }
+
+    // conditional formatting — scan each worksheet xml for the tag
+    const sheetFiles = Object.keys(zip.files).filter(p => /^xl\/worksheets\/sheet\d+\.xml$/i.test(p));
+    let condfmtSheets = 0, condfmtRules = 0;
+    for(const p of sheetFiles){
+      try{
+        const xml = await zip.file(p).async('text');
+        const matches = xml.match(/<conditionalFormatting/g);
+        if(matches && matches.length){
+          condfmtSheets++;
+          condfmtRules += matches.length;
+        }
+      }catch(e){ /* skip */ }
+    }
+    if(condfmtRules){
+      findings.push('<b>Định dạng có điều kiện</b> trên ' + condfmtSheets + ' sheet (~' + condfmtRules + ' vùng quy tắc) — cũng không được hỗ trợ và sẽ mất khi lưu file mới.');
+    }
+
+    // cell styles — community-tier write support is limited regardless of the checkbox
+    findings.push('Màu nền, viền và font chữ tuỳ chỉnh nhìn chung sẽ không được giữ lại chính xác trong file đầu ra, do giới hạn của thư viện xử lý bảng tính chạy trong trình duyệt (không phải do tuỳ chọn "Xóa định dạng ô thừa").');
+
+    if(findings.length){
+      analysisList.innerHTML = findings.map(f=>'<li>' + f + '</li>').join('');
+      analysisBox.classList.add('show');
+    }
+  }
+
+  function trimSheetRange(ws){
+    // recompute !ref to the tightest bounding box of non-empty cells
+    let minR=Infinity, minC=Infinity, maxR=-Infinity, maxC=-Infinity;
+    Object.keys(ws).forEach(addr=>{
+      if(addr[0] === '!') return;
+      const cell = ws[addr];
+      if(cell.v === undefined || cell.v === null || cell.v === '') return;
+      const dec = XLSX.utils.decode_cell(addr);
+      if(dec.r < minR) minR = dec.r;
+      if(dec.r > maxR) maxR = dec.r;
+      if(dec.c < minC) minC = dec.c;
+      if(dec.c > maxC) maxC = dec.c;
+    });
+    if(maxR === -Infinity){ return ws; }
+    ws['!ref'] = XLSX.utils.encode_range({s:{r:minR,c:minC}, e:{r:maxR,c:maxC}});
+    return ws;
+  }
+
+  function optimizeWorkbook(wb, opts, dropSet){
+    const newWb = XLSX.utils.book_new();
+    wb.SheetNames.forEach(sheetName=>{
+      if(dropSet.has(sheetName)) return; // skip sheets the user chose to remove
+      let ws = wb.Sheets[sheetName];
+      if(opts.stripStyle || opts.formulaToValue){
+        // rebuild via array-of-arrays -> drops styles automatically,
+        // and if raw values are used (not formula strings), formulas become static
+        const aoa = XLSX.utils.sheet_to_json(ws, {header:1, raw:true, defval:''});
+        const rebuilt = XLSX.utils.aoa_to_sheet(aoa);
+        // preserve merges if not stripping style-only structural info
+        if(ws['!merges']) rebuilt['!merges'] = ws['!merges'];
+        ws = rebuilt;
+      } else {
+        // clone
+        ws = JSON.parse(JSON.stringify(ws));
+      }
+      if(opts.trim) trimSheetRange(ws);
+      XLSX.utils.book_append_sheet(newWb, ws, sheetName);
+    });
+    if(!newWb.SheetNames.length){
+      throw new Error('Tất cả các sheet đều đã bị bỏ qua — không còn dữ liệu để xuất.');
+    }
+    return newWb;
+  }
+
+  runBtn.addEventListener('click', ()=>{
+    if(!currentWorkbook){ showError('Vui lòng chọn file trước.'); return; }
+    errorBox.classList.remove('show');
+    runBtn.disabled = true;
+    runBtn.textContent = 'Đang xử lý…';
+
+    setTimeout(()=>{
+      try{
+        const opts = {
+          stripStyle: document.getElementById('optStripStyle').checked,
+          formulaToValue: document.getElementById('optFormulaToValue').checked,
+          trim: document.getElementById('optTrim').checked,
+          compress: document.getElementById('optCompress').checked
+        };
+
+        let wbToWrite = optimizeWorkbook(currentWorkbook, opts, sheetsToDrop);
+        refreshSheetPicker(wbToWrite);
+
+        let bookType = outputFormat;
+        let outBlob;
+
+        if(outputFormat === 'csv'){
+          const sheetName = wbToWrite.SheetNames.length > 1 ? sheetPicker.value : wbToWrite.SheetNames[0];
+          const csv = XLSX.utils.sheet_to_csv(wbToWrite.Sheets[sheetName]);
+          outBlob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        } else if(outputFormat === 'html'){
+          const sheetName = wbToWrite.SheetNames[0];
+          const html = XLSX.utils.sheet_to_html(wbToWrite.Sheets[sheetName]);
+          outBlob = new Blob([html], {type:'text/html;charset=utf-8;'});
+        } else {
+          const writeOpts = {
+            bookType: bookType,
+            type: 'array',
+            compression: !!opts.compress
+          };
+          const arr = XLSX.write(wbToWrite, writeOpts);
+          const mimeMap = {
+            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            xls: 'application/vnd.ms-excel',
+            ods: 'application/vnd.oasis.opendocument.spreadsheet'
+          };
+          outBlob = new Blob([arr], {type: mimeMap[bookType] || 'application/octet-stream'});
+        }
+
+        const url = URL.createObjectURL(outBlob);
+        const baseName = currentFile.name.replace(/\.[^.]+$/, '');
+        const outName = baseName + '_optimized.' + outputFormat;
+
+        downloadBtn.href = url;
+        downloadBtn.download = outName;
+        downloadBtn.textContent = 'Tải xuống ' + outName;
+
+        sizeBefore.textContent = fmtBytes(currentFile.size);
+        sizeAfter.textContent = fmtBytes(outBlob.size);
+
+        const diff = currentFile.size - outBlob.size;
+        const pct = currentFile.size > 0 ? (diff / currentFile.size * 100) : 0;
+        if(diff > 0){
+          savingsBadge.textContent = '↓ Giảm ' + pct.toFixed(1) + '% (' + fmtBytes(diff) + ')';
+          savingsBadge.style.color = '#0F766E';
+          savingsBadge.style.background = '#E4F1EE';
+        } else if(diff < 0){
+          savingsBadge.textContent = '↑ Tăng ' + Math.abs(pct).toFixed(1) + '% — định dạng đích có thể nặng hơn định dạng gốc';
+          savingsBadge.style.color = '#B3452F';
+          savingsBadge.style.background = '#FBEAE6';
+        } else {
+          savingsBadge.textContent = 'Không thay đổi dung lượng';
+        }
+
+        resultPanel.classList.add('show');
+        resultPanel.scrollIntoView({behavior:'smooth', block:'nearest'});
+      }catch(err){
+        console.error(err);
+        showError('Có lỗi khi xử lý file: ' + (err && err.message ? err.message : 'không xác định') + '. Thử bỏ bớt vài tuỳ chọn hoặc kiểm tra lại file.');
+      }finally{
+        runBtn.disabled = false;
+        runBtn.textContent = 'Xử lý file';
+      }
+    }, 30);
+  });
+})();
+</script>
+</body>
+</html>

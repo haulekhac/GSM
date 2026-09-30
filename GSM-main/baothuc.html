@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Checklist Báo cáo & Nhắc việc — Green Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --teal-1:#0E9E86; --teal-2:#0B7F8F; --ink:#1B2A2F; --muted:#66787A; --muted-2:#93A3A4;
+  --line:#E4EAE9; --line-soft:#EEF3F2; --panel:#FFFFFF; --bg:#F3F6F5;
+  --green:#0E8F5C; --green-bg:#E7F5EE; --amber:#B4700F; --amber-bg:#FBEEDA;
+  --red:#B23B3B; --red-bg:#FBE9E8; --grey:#7B8B85; --grey-bg:#EEF1EF; --accent-2:#F2C438;
+  --radius:12px; --shadow:0 1px 2px rgba(20,40,38,.05), 0 6px 20px rgba(20,40,38,.06);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --ink:#EAF2EF; --muted:#9BB0AC; --muted-2:#728482; --line:#2A3A38; --line-soft:#24322F;
+    --panel:#1B2624; --bg:#141C1B;
+    --green-bg:#12332A; --amber-bg:#3A2A12; --red-bg:#3A1E1D; --grey-bg:#24322F;
+  }
+}
+:root[data-theme="dark"]{
+  --ink:#EAF2EF; --muted:#9BB0AC; --muted-2:#728482; --line:#2A3A38; --line-soft:#24322F;
+  --panel:#1B2624; --bg:#141C1B;
+  --green-bg:#12332A; --amber-bg:#3A2A12; --red-bg:#3A1E1D; --grey-bg:#24322F;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;height:100%;}
+html{ scroll-padding-top: env(safe-area-inset-top,0px); }
+body{
+  background:var(--bg); color:var(--ink); font-family:'Inter',system-ui,sans-serif; font-size:14px; line-height:1.45;
+  padding-top: env(safe-area-inset-top,0px); padding-bottom: env(safe-area-inset-bottom,0px);
+}
+.mono{ font-family:'IBM Plex Mono',ui-monospace,monospace; font-variant-numeric:tabular-nums; }
+
+.topbar{
+  background: linear-gradient(100deg, var(--teal-1) 0%, var(--teal-2) 100%);
+  padding: 14px 26px; display:flex; align-items:center; justify-content:space-between; gap:16px;
+  padding-top: calc(14px + env(safe-area-inset-top,0px));
+}
+.topbar-left{ display:flex; align-items:center; gap:12px; }
+.logo-badge{
+  width:38px; height:38px; border-radius:9px; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.35);
+  display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:14px; flex-shrink:0;
+}
+.topbar-title h1{ color:#fff; font-size:16.5px; margin:0; font-weight:700; letter-spacing:0.2px; }
+.topbar-title p{ color:rgba(255,255,255,0.85); margin:1px 0 0; font-size:11.5px; letter-spacing:0.3px; }
+.topbar-right{ display:flex; align-items:center; gap:10px; color:#fff; font-size:13px; }
+.pill{ background:rgba(255,255,255,0.16); border:1px solid rgba(255,255,255,0.3); border-radius:8px; padding:6px 12px; font-size:12.5px; font-weight:600; }
+.crumbs{ padding: 14px 26px 0; color:var(--muted); font-size:12.5px; }
+.crumbs b{ color:var(--ink); }
+
+.app{ max-width:1180px; margin:0 auto; padding: 16px 26px 60px; }
+
+.card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:20px 22px; margin-bottom:16px; }
+.card-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; gap:10px; flex-wrap:wrap; }
+.card-head h2{ margin:0; font-size:15.5px; font-weight:700; }
+.card-head .sub{ color:var(--muted); font-size:12px; margin-top:2px; }
+
+.form-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap:12px; margin-bottom:12px; }
+.field label{ display:block; font-size:12px; font-weight:600; color:var(--ink); margin-bottom:5px; }
+.field input, .field select, .field textarea{
+  width:100%; padding:9px 11px; border-radius:8px; border:1px solid var(--line); background:var(--line-soft);
+  font-family:inherit; font-size:13.3px; color:var(--ink);
+}
+.field input:focus, .field select:focus, .field textarea:focus{ outline:2px solid var(--teal-1); outline-offset:1px; background:var(--panel); }
+.field textarea{ resize:vertical; min-height:38px; }
+.field.wide{ grid-column: span 2; }
+
+.btn{ border-radius:9px; border:1px solid transparent; cursor:pointer; font-family:inherit; font-size:13.3px; font-weight:700; padding:10px 18px; display:inline-flex; align-items:center; gap:7px; transition: all .12s ease; }
+.btn:disabled{ opacity:.45; cursor:not-allowed; }
+.btn-primary{ background: var(--teal-1); color:#fff; }
+.btn-primary:not(:disabled):hover{ background:#0C8C77; }
+.btn-secondary{ background:transparent; color:var(--teal-2); border-color:var(--line); }
+.btn-secondary:not(:disabled):hover{ border-color:var(--teal-1); }
+.btn-ghost{ background:transparent; color:var(--muted); border-color:transparent; padding:7px 10px; font-size:12.3px; }
+.btn-ghost:hover{ background:var(--line-soft); color:var(--ink); }
+.btn-danger{ background:transparent; color:var(--red); border-color:var(--red-bg); }
+.btn-danger:hover{ background:var(--red-bg); }
+.btn-success{ background:var(--green); color:#fff; }
+.btn-success:hover{ background:#0C7A4E; }
+.btn-sm{ padding:7px 12px; font-size:12.2px; }
+
+.stats{ display:grid; grid-template-columns: repeat(4,1fr); gap:12px; margin-bottom:16px; }
+.stat{ background:var(--panel); border-radius:var(--radius); padding:14px 16px; box-shadow:var(--shadow); position:relative; overflow:hidden; }
+.stat .bar{ position:absolute; left:0; top:0; bottom:0; width:4px; background: var(--stat-color, var(--teal-1)); }
+.stat-label{ color:var(--muted); font-size:11.2px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; margin-bottom:6px; }
+.stat-value{ font-size:26px; font-weight:800; line-height:1; }
+
+.toolbar{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px 14px; margin-bottom:14px; display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.search-box{ flex:1 1 220px; position:relative; min-width:180px; }
+.search-box input{ width:100%; padding:9px 12px 9px 32px; border-radius:8px; border:1px solid var(--line); font-family:inherit; font-size:13.3px; background:var(--line-soft); color:var(--ink); }
+.search-box svg{ position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--muted-2); }
+select{ padding:9px 10px; border-radius:8px; border:1px solid var(--line); background:var(--line-soft); font-family:inherit; font-size:12.8px; color:var(--ink); cursor:pointer; }
+
+.badge{ display:inline-flex; align-items:center; gap:5px; padding:3px 9px; border-radius:99px; font-size:11px; font-weight:700; }
+.badge::before{ content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.badge-red{ background:var(--red-bg); color:var(--red); }
+.badge-amber{ background:var(--amber-bg); color:var(--amber); }
+.badge-green{ background:var(--green-bg); color:var(--green); }
+.badge-grey{ background:var(--grey-bg); color:var(--grey); }
+
+.task-list{ display:flex; flex-direction:column; gap:10px; }
+.task-card{ background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); padding:14px 16px; border-left:4px solid var(--stat-color, var(--line)); transition: opacity .25s ease, transform .25s ease; }
+.task-card.removing{ opacity:0; transform: translateX(12px); }
+.task-card.ringing{ animation: pulseAlert 1s ease-in-out infinite; }
+@keyframes pulseAlert{ 0%,100%{ box-shadow:var(--shadow); } 50%{ box-shadow:0 0 0 3px var(--red-bg), var(--shadow); } }
+.task-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+.task-title-row{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.task-title{ font-weight:700; font-size:14.5px; }
+.task-meta{ color:var(--muted); font-size:12px; margin-top:3px; display:flex; gap:12px; flex-wrap:wrap; }
+.task-actions{ display:flex; gap:6px; flex-wrap:wrap; }
+.task-link{ display:inline-flex; align-items:center; gap:5px; margin-top:8px; padding:5px 10px; border-radius:7px; background:var(--line-soft); color:var(--teal-2); font-size:12.3px; font-weight:600; text-decoration:none; word-break:break-all; }
+.task-link:hover{ background:var(--green-bg); }
+.lock-icon{ color:var(--muted-2); font-size:11px; }
+.task-note{ color:var(--muted); font-size:12.5px; margin-top:7px; }
+.link-editor{ display:flex; gap:6px; margin-top:8px; }
+.link-editor input{ flex:1; padding:7px 9px; border-radius:7px; border:1px solid var(--line); background:var(--line-soft); font-size:12.5px; font-family:inherit; }
+.empty-state{ padding:50px 20px; text-align:center; color:var(--muted); background:var(--panel); border-radius:var(--radius); box-shadow:var(--shadow); }
+
+.alarm-list{ display:flex; flex-direction:column; gap:8px; }
+.alarm-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:9px; background:var(--line-soft); flex-wrap:wrap; }
+.alarm-time{ font-size:18px; font-weight:800; font-family:'IBM Plex Mono',monospace; min-width:70px; }
+.alarm-label{ flex:1; min-width:120px; font-size:13px; color:var(--ink); }
+.day-toggle{ display:flex; gap:3px; }
+.day-btn{ width:24px; height:24px; border-radius:50%; border:1px solid var(--line); background:var(--panel); font-size:10.5px; color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+.day-btn.on{ background:var(--teal-1); color:#fff; border-color:var(--teal-1); }
+.switch{ position:relative; width:38px; height:21px; flex-shrink:0; }
+.switch input{ opacity:0; width:0; height:0; }
+.slider-el{ position:absolute; inset:0; background:var(--line); border-radius:99px; cursor:pointer; transition:.15s; }
+.slider-el::before{ content:''; position:absolute; width:15px; height:15px; left:3px; top:3px; background:#fff; border-radius:50%; transition:.15s; }
+.switch input:checked + .slider-el{ background:var(--teal-1); }
+.switch input:checked + .slider-el::before{ transform:translateX(17px); }
+
+.ring-overlay{ position:fixed; inset:0; background:rgba(15,30,28,.55); display:none; align-items:center; justify-content:center; z-index:80; padding:20px; }
+.ring-overlay.open{ display:flex; }
+.ring-box{ background:var(--panel); border-radius:16px; padding:30px 28px; max-width:360px; text-align:center; box-shadow:0 30px 60px rgba(0,0,0,.35); }
+.ring-icon{ font-size:40px; margin-bottom:10px; }
+.ring-box h3{ margin:0 0 6px; font-size:18px; }
+.ring-box p{ margin:0 0 18px; color:var(--muted); font-size:13px; }
+.ring-btns{ display:flex; gap:8px; justify-content:center; }
+
+footer{ text-align:center; color:var(--muted-2); font-size:11.2px; margin-top:22px; }
+.hint{ font-size:12px; color:var(--muted-2); }
+.err{ color:var(--red); font-size:12px; margin-top:4px; display:none; }
+
+@media (max-width:900px){ .stats{ grid-template-columns:repeat(2,1fr);} .field.wide{ grid-column:span 1; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo-badge">GC</div>
+    <div class="topbar-title">
+      <h1>CHECKLIST BÁO CÁO &amp; NHẮC VIỆC</h1>
+      <p>QUẢN LÝ TASK · LINK FILE · GIỜ NHẮC · BÁO THỨC</p>
+    </div>
+  </div>
+  <div class="topbar-right"><span class="pill" id="clockPill">--:--:--</span></div>
+</div>
+<div class="crumbs">Green Portal / <b>Checklist báo cáo &amp; nhắc việc</b></div>
+
+<div class="app">
+
+  <div class="card">
+    <div class="card-head">
+      <div><h2>Thêm công việc mới</h2><div class="sub">Ví dụ: giải trình gian lận, báo cáo định kỳ… — có thể đính kèm link file và khóa lại sau khi lưu.</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field wide">
+        <label>Tên công việc *</label>
+        <input type="text" id="fTitle" placeholder="VD: Giải trình gian lận đơn hàng #4521">
+        <div class="err" id="errTitle">Nhập tên công việc trước đã.</div>
+      </div>
+      <div class="field">
+        <label>Loại việc</label>
+        <select id="fType">
+          <option>Giải trình gian lận</option>
+          <option>Báo cáo định kỳ</option>
+          <option>Đối soát ODO/Bảo dưỡng</option>
+          <option>Việc khác</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Hạn hoàn thành</label>
+        <input type="datetime-local" id="fDeadline">
+      </div>
+      <div class="field">
+        <label>Nhắc trước hạn</label>
+        <select id="fRemind">
+          <option value="0">Không nhắc trước</option>
+          <option value="15">15 phút</option>
+          <option value="30" selected>30 phút</option>
+          <option value="60">1 giờ</option>
+          <option value="1440">1 ngày</option>
+        </select>
+      </div>
+      <div class="field wide">
+        <label>Link file (tuỳ chọn)</label>
+        <input type="url" id="fLink" placeholder="https://drive.google.com/...">
+      </div>
+      <div class="field wide">
+        <label>Ghi chú</label>
+        <textarea id="fNote" placeholder="Ghi chú thêm…"></textarea>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="btnAdd"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Thêm việc</button>
+      <label class="hint" style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+        <input type="checkbox" id="fLockNow" style="accent-color:var(--teal-1); width:14px; height:14px;">
+        Khóa link ngay khi thêm (không cho sửa nữa)
+      </label>
+    </div>
+  </div>
+
+  <div class="stats" id="statStrip"></div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.5-3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="searchInput" placeholder="Tìm công việc…">
+    </div>
+    <select id="filterStatus">
+      <option value="">Tất cả trạng thái</option>
+      <option value="Quá hạn">Quá hạn</option>
+      <option value="Sắp đến hạn">Sắp đến hạn</option>
+      <option value="Còn thời gian">Còn thời gian</option>
+      <option value="Không hạn">Không hạn</option>
+    </select>
+    <select id="filterType"><option value="">Tất cả loại việc</option></select>
+  </div>
+
+  <div id="taskListWrap"></div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-head">
+      <div><h2><svg width="15" height="15" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg> Báo thức canh giờ làm</h2><div class="sub">Đặt giờ để được nhắc bắt đầu làm việc — có thể lặp lại theo ngày trong tuần.</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="field">
+        <label>Giờ báo thức</label>
+        <input type="time" id="aTime">
+      </div>
+      <div class="field wide">
+        <label>Nhãn</label>
+        <input type="text" id="aLabel" placeholder="VD: Bắt đầu giải trình gian lận">
+      </div>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label class="hint" style="display:block; margin-bottom:6px;">Lặp lại vào các ngày (bỏ trống = báo 1 lần rồi tự tắt)</label>
+      <div class="day-toggle" id="dayToggle"></div>
+    </div>
+    <button class="btn btn-primary" id="btnAddAlarm"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg> Thêm báo thức</button>
+    <div class="alarm-list" id="alarmList" style="margin-top:14px;"></div>
+  </div>
+
+  <footer>Toàn bộ dữ liệu được lưu ngay trên trình duyệt của bạn (không gửi lên máy chủ nào).</footer>
+</div>
+
+<div class="ring-overlay" id="ringOverlay">
+  <div class="ring-box">
+    <div class="ring-icon" id="ringIcon"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" style="color:var(--teal-2)"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/><path d="M12 7v5l3.3 1.9" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></div>
+    <h3 id="ringTitle">Đến giờ rồi!</h3>
+    <p id="ringSub">—</p>
+    <div class="ring-btns">
+      <button class="btn btn-secondary btn-sm" id="btnSnooze">Báo lại sau 5 phút</button>
+      <button class="btn btn-primary btn-sm" id="btnDismiss">Đã biết, tắt</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORE_KEY = 'checklist_bao_cao_v1';
+const DAY_LABELS = ['CN','T2','T3','T4','T5','T6','T7'];
+
+const ICONS = {
+  plus: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`,
+  check: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  trash: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M4 7h16M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2m-9 0 1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  folder: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>`,
+  clock: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.7"/><path d="M12 7v5l3.3 1.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  bell: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M6 8a6 6 0 0 1 12 0c0 4 1.4 5.4 2 6H4c.6-.6 2-2 2-6Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  link: s => `<svg width="${s||13}" height="${s||13}" viewBox="0 0 24 24" fill="none" style="vertical-align:-2px"><path d="M9.5 14.5l5-5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M11 6.5l.7-.7a3.8 3.8 0 0 1 5.5 5.5l-.7.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M13 17.5l-.7.7a3.8 3.8 0 0 1-5.5-5.5l.7-.7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+  lock: s => `<svg width="${s||12}" height="${s||12}" viewBox="0 0 24 24" fill="none" style="vertical-align:-1px"><rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`,
+};
+let state = loadState();
+let ringingSource = null;
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw){ const p = JSON.parse(raw); return Object.assign({ tasks:[], alarms:[] }, p); }
+  }catch(e){}
+  return { tasks: [], alarms: [] };
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s===null||s===undefined) ? '' : String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function beep(freq, dur){
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = 'sine'; osc.frequency.value = freq || 880;
+    gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.25, ctx.currentTime+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime+(dur||0.35));
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime+(dur||0.35)+0.05);
+  }catch(e){}
+}
+function alarmChime(){ beep(880,0.28); setTimeout(()=>beep(1175,0.28),260); setTimeout(()=>beep(1400,0.4),520); }
+function reminderChime(){ beep(660,0.22); setTimeout(()=>beep(880,0.3),200); }
+
+function taskStatus(t){
+  if(!t.deadline) return 'Không hạn';
+  const now = Date.now(); const dl = new Date(t.deadline).getTime();
+  if(isNaN(dl)) return 'Không hạn';
+  const diff = dl - now;
+  if(diff < 0) return 'Quá hạn';
+  if(diff <= 2*3600*1000) return 'Sắp đến hạn';
+  return 'Còn thời gian';
+}
+const STATUS_META = {
+  'Quá hạn': {cls:'red', color:'var(--red)'},
+  'Sắp đến hạn': {cls:'amber', color:'var(--amber)'},
+  'Còn thời gian': {cls:'green', color:'var(--green)'},
+  'Không hạn': {cls:'grey', color:'var(--grey)'},
+};
+function statusBadge(s){ const m = STATUS_META[s]||STATUS_META['Không hạn']; return `<span class="badge badge-${m.cls}">${s}</span>`; }
+function fmtDl(iso){
+  if(!iso) return null;
+  const d = new Date(iso); if(isNaN(d.getTime())) return null;
+  const p2=n=>String(n).padStart(2,'0');
+  return `${p2(d.getDate())}/${p2(d.getMonth()+1)}/${d.getFullYear()} ${p2(d.getHours())}:${p2(d.getMinutes())}`;
+}
+
+function refreshTypeFilter(){
+  const sel = document.getElementById('filterType');
+  const keep = sel.value;
+  const types = [...new Set(state.tasks.map(t=>t.type).filter(Boolean))];
+  sel.innerHTML = '<option value="">Tất cả loại việc</option>' + types.map(t=>`<option value="${esc(t)}">${esc(t)}</option>`).join('');
+  sel.value = keep && types.includes(keep) ? keep : '';
+}
+
+function getFilteredTasks(){
+  const q = (document.getElementById('searchInput').value||'').trim().toLowerCase();
+  const fs = document.getElementById('filterStatus').value;
+  const ft = document.getElementById('filterType').value;
+  return state.tasks.filter(t=>{
+    if(ft && t.type!==ft) return false;
+    if(fs && taskStatus(t)!==fs) return false;
+    if(q){
+      const hay = [t.title,t.note,t.type,t.link].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  }).sort((a,b)=>{
+    const order = {'Quá hạn':0,'Sắp đến hạn':1,'Còn thời gian':2,'Không hạn':3};
+    return order[taskStatus(a)] - order[taskStatus(b)];
+  });
+}
+
+function renderStats(){
+  const counts = {'Quá hạn':0,'Sắp đến hạn':0,'Còn thời gian':0,'Không hạn':0};
+  state.tasks.forEach(t=>counts[taskStatus(t)]++);
+  const cards = [
+    {label:'Tổng việc chưa xong', value: state.tasks.length, color:'var(--teal-2)'},
+    {label:'Quá hạn', value: counts['Quá hạn'], color:'var(--red)'},
+    {label:'Sắp đến hạn', value: counts['Sắp đến hạn'], color:'var(--amber)'},
+    {label:'Còn thời gian', value: counts['Còn thời gian']+counts['Không hạn'], color:'var(--green)'},
+  ];
+  document.getElementById('statStrip').innerHTML = cards.map(c=>`
+    <div class="stat" style="--stat-color:${c.color}"><div class="bar"></div>
+      <div class="stat-label">${c.label}</div><div class="stat-value">${c.value}</div>
+    </div>`).join('');
+}
+
+function renderTasks(){
+  const rows = getFilteredTasks();
+  const wrap = document.getElementById('taskListWrap');
+  if(rows.length===0){
+    wrap.innerHTML = `<div class="empty-state">Chưa có công việc nào. Thêm việc ở trên để bắt đầu theo dõi.</div>`;
+    return;
+  }
+  wrap.innerHTML = `<div class="task-list">${rows.map(t=>{
+    const st = taskStatus(t);
+    const meta = STATUS_META[st];
+    const dl = fmtDl(t.deadline);
+    let linkHtml = '';
+    if(t.locked && t.link){
+      linkHtml = `<a class="task-link" href="${esc(t.link)}" target="_blank" rel="noopener">${ICONS.link()} ${esc(t.link)} <span class="lock-icon">${ICONS.lock()} đã khóa</span></a>`;
+    } else if(t.link){
+      linkHtml = `<div class="link-editor"><input type="url" value="${esc(t.link)}" data-id="${t.id}" class="linkInput" placeholder="Dán link file…"><button class="btn btn-secondary btn-sm lockBtn" data-id="${t.id}">${ICONS.lock()} Khóa &amp; lưu</button></div>`;
+    } else {
+      linkHtml = `<div class="link-editor"><input type="url" data-id="${t.id}" class="linkInput" placeholder="Dán link file…"><button class="btn btn-secondary btn-sm lockBtn" data-id="${t.id}">${ICONS.lock()} Khóa &amp; lưu</button></div>`;
+    }
+    return `<div class="task-card${t._ringing?' ringing':''}" style="--stat-color:${meta.color}" data-id="${t.id}">
+      <div class="task-top">
+        <div>
+          <div class="task-title-row"><span class="task-title">${esc(t.title)}</span>${statusBadge(st)}</div>
+          <div class="task-meta">
+            <span>${ICONS.folder()} ${esc(t.type||'Việc khác')}</span>
+            ${dl?`<span>${ICONS.clock()} Hạn: <span class="mono">${dl}</span></span>`:''}
+            ${t.remindMin>0 && t.deadline ? `<span>${ICONS.bell()} nhắc trước ${t.remindMin>=1440? (t.remindMin/1440)+' ngày' : t.remindMin+' phút'}</span>`:''}
+          </div>
+          ${t.note?`<div class="task-note">${esc(t.note)}</div>`:''}
+          ${linkHtml}
+        </div>
+        <div class="task-actions">
+          <button class="btn btn-success btn-sm doneBtn" data-id="${t.id}">${ICONS.check()} Thành công</button>
+          <button class="btn btn-danger btn-sm delBtn" data-id="${t.id}">${ICONS.trash()} Xóa</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+
+  wrap.querySelectorAll('.lockBtn').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.id;
+    const input = wrap.querySelector(`.linkInput[data-id="${id}"]`);
+    const val = (input.value||'').trim();
+    if(!val){ input.focus(); return; }
+    const t = state.tasks.find(x=>x.id===id);
+    if(t){ t.link = val; t.locked = true; saveState(); renderAll(); }
+  }));
+  wrap.querySelectorAll('.doneBtn').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.id;
+    const card = wrap.querySelector(`.task-card[data-id="${id}"]`);
+    if(card) card.classList.add('removing');
+    setTimeout(()=>{
+      state.tasks = state.tasks.filter(x=>x.id!==id);
+      saveState(); renderAll();
+    }, 220);
+  }));
+  wrap.querySelectorAll('.delBtn').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.id;
+    if(!confirm('Xóa công việc này khỏi checklist?')) return;
+    state.tasks = state.tasks.filter(x=>x.id!==id);
+    saveState(); renderAll();
+  }));
+}
+
+document.getElementById('btnAdd').addEventListener('click', ()=>{
+  const title = document.getElementById('fTitle').value.trim();
+  const errEl = document.getElementById('errTitle');
+  if(!title){ errEl.style.display='block'; document.getElementById('fTitle').focus(); return; }
+  errEl.style.display='none';
+  const type = document.getElementById('fType').value;
+  const deadlineRaw = document.getElementById('fDeadline').value;
+  const remindMin = parseInt(document.getElementById('fRemind').value,10)||0;
+  const link = document.getElementById('fLink').value.trim();
+  const note = document.getElementById('fNote').value.trim();
+  const lockNow = document.getElementById('fLockNow').checked;
+  state.tasks.push({
+    id: uid(), title, type, deadline: deadlineRaw ? new Date(deadlineRaw).toISOString() : null,
+    remindMin, link: link||null, locked: !!(lockNow && link), note,
+    createdAt: Date.now(), lastReminderAt: 0, lastOverdueAt: 0,
+  });
+  saveState();
+  document.getElementById('fTitle').value='';
+  document.getElementById('fLink').value='';
+  document.getElementById('fNote').value='';
+  document.getElementById('fDeadline').value='';
+  document.getElementById('fLockNow').checked=false;
+  refreshTypeFilter();
+  renderAll();
+});
+document.getElementById('fTitle').addEventListener('input', ()=>{ document.getElementById('errTitle').style.display='none'; });
+
+// ================= Alarms =================
+function buildDayToggle(){
+  const el = document.getElementById('dayToggle');
+  el.innerHTML = DAY_LABELS.map((d,i)=>`<button type="button" class="day-btn" data-day="${i}">${d}</button>`).join('');
+  el.querySelectorAll('.day-btn').forEach(b=>b.addEventListener('click', ()=>b.classList.toggle('on')));
+}
+buildDayToggle();
+
+document.getElementById('btnAddAlarm').addEventListener('click', ()=>{
+  const time = document.getElementById('aTime').value;
+  if(!time) { document.getElementById('aTime').focus(); return; }
+  const label = document.getElementById('aLabel').value.trim() || 'Đến giờ làm việc';
+  const days = [...document.querySelectorAll('#dayToggle .day-btn.on')].map(b=>+b.dataset.day);
+  state.alarms.push({ id: uid(), time, label, days, enabled:true, once: days.length===0, lastFiredKey:null });
+  saveState();
+  document.getElementById('aTime').value=''; document.getElementById('aLabel').value='';
+  document.querySelectorAll('#dayToggle .day-btn').forEach(b=>b.classList.remove('on'));
+  renderAlarms();
+});
+
+function renderAlarms(){
+  const wrap = document.getElementById('alarmList');
+  if(state.alarms.length===0){ wrap.innerHTML = `<div class="hint">Chưa có báo thức nào.</div>`; return; }
+  wrap.innerHTML = state.alarms.map(a=>`
+    <div class="alarm-row" data-id="${a.id}">
+      <span class="alarm-time mono">${esc(a.time)}</span>
+      <span class="alarm-label">${esc(a.label)}${a.days && a.days.length ? ' · '+a.days.map(d=>DAY_LABELS[d]).join(', ') : ' · 1 lần'}</span>
+      <label class="switch"><input type="checkbox" class="alarmToggle" data-id="${a.id}" ${a.enabled?'checked':''}><span class="slider-el"></span></label>
+      <button class="btn btn-ghost delAlarmBtn" data-id="${a.id}">${ICONS.trash()}</button>
+    </div>`).join('');
+  wrap.querySelectorAll('.alarmToggle').forEach(cb=>cb.addEventListener('change', ()=>{
+    const a = state.alarms.find(x=>x.id===cb.dataset.id);
+    if(a){ a.enabled = cb.checked; saveState(); }
+  }));
+  wrap.querySelectorAll('.delAlarmBtn').forEach(b=>b.addEventListener('click', ()=>{
+    state.alarms = state.alarms.filter(x=>x.id!==b.dataset.id);
+    saveState(); renderAlarms();
+  }));
+}
+
+// ================= Ring overlay =================
+function openRing(kind, title, sub, source){
+  ringingSource = source;
+  document.getElementById('ringIcon').innerHTML = kind==='alarm' ? ICONS.clock(34) : ICONS.bell(34);
+  document.getElementById('ringTitle').textContent = title;
+  document.getElementById('ringSub').textContent = sub;
+  document.getElementById('ringOverlay').classList.add('open');
+}
+document.getElementById('btnDismiss').addEventListener('click', ()=>{
+  document.getElementById('ringOverlay').classList.remove('open');
+  if(ringingSource && ringingSource.type==='task'){
+    const t = state.tasks.find(x=>x.id===ringingSource.id);
+    if(t) t._ringing = false;
+    renderTasks();
+  }
+  ringingSource = null;
+});
+document.getElementById('btnSnooze').addEventListener('click', ()=>{
+  document.getElementById('ringOverlay').classList.remove('open');
+  if(ringingSource && ringingSource.type==='alarm'){
+    const a = state.alarms.find(x=>x.id===ringingSource.id);
+    if(a){
+      const [h,m] = a.time.split(':').map(Number);
+      const snoozeDate = new Date(Date.now()+5*60000);
+      a.time = String(snoozeDate.getHours()).padStart(2,'0')+':'+String(snoozeDate.getMinutes()).padStart(2,'0');
+      a.lastFiredKey = null; a.enabled = true;
+      saveState(); renderAlarms();
+    }
+  } else if(ringingSource && ringingSource.type==='task'){
+    const t = state.tasks.find(x=>x.id===ringingSource.id);
+    if(t){ t.lastReminderAt = Date.now()-9*60000; t._ringing=false; }
+    renderTasks();
+  }
+  ringingSource = null;
+});
+
+// ================= Clock + periodic checks =================
+function tickClock(){
+  const now = new Date();
+  const p2=n=>String(n).padStart(2,'0');
+  document.getElementById('clockPill').textContent = `${p2(now.getHours())}:${p2(now.getMinutes())}:${p2(now.getSeconds())}`;
+}
+
+function checkAlarms(){
+  if(document.getElementById('ringOverlay').classList.contains('open')) return;
+  const now = new Date();
+  const hh = String(now.getHours()).padStart(2,'0'), mm = String(now.getMinutes()).padStart(2,'0');
+  const curTime = `${hh}:${mm}`;
+  const dayIdx = now.getDay();
+  const dateKey = now.toISOString().slice(0,10)+'_'+curTime;
+  let changed = false;
+  for(const a of state.alarms){
+    if(!a.enabled) continue;
+    if(a.time !== curTime) continue;
+    if(a.lastFiredKey === dateKey) continue;
+    if(a.days && a.days.length>0 && !a.days.includes(dayIdx)) continue;
+    a.lastFiredKey = dateKey;
+    if(a.once) a.enabled = false;
+    changed = true;
+    alarmChime();
+    openRing('alarm', a.label, 'Báo thức lúc '+a.time, {type:'alarm', id:a.id});
+    break;
+  }
+  if(changed){ saveState(); renderAlarms(); }
+}
+
+function checkTaskReminders(){
+  if(document.getElementById('ringOverlay').classList.contains('open')) return;
+  const now = Date.now();
+  for(const t of state.tasks){
+    if(!t.deadline) continue;
+    const dl = new Date(t.deadline).getTime();
+    if(isNaN(dl)) continue;
+    const remindAt = dl - (t.remindMin||0)*60000;
+    if(now >= remindAt && now < dl){
+      if(now - (t.lastReminderAt||0) >= 9*60000){
+        t.lastReminderAt = now; t._ringing = true;
+        saveState(); renderTasks();
+        reminderChime();
+        openRing('reminder', 'Sắp đến hạn: '+t.title, 'Hạn lúc '+fmtDl(t.deadline), {type:'task', id:t.id});
+        return;
+      }
+    } else if(now >= dl){
+      if(now - (t.lastOverdueAt||0) >= 14*60000){
+        t.lastOverdueAt = now; t._ringing = true;
+        saveState(); renderTasks();
+        reminderChime();
+        openRing('reminder', 'Quá hạn: '+t.title, 'Hạn đã qua lúc '+fmtDl(t.deadline), {type:'task', id:t.id});
+        return;
+      }
+    }
+  }
+}
+
+// ================= Events =================
+document.getElementById('searchInput').addEventListener('input', renderTasks);
+document.getElementById('filterStatus').addEventListener('change', renderTasks);
+document.getElementById('filterType').addEventListener('change', renderTasks);
+
+function renderAll(){ renderStats(); renderTasks(); refreshTypeFilter(); }
+
+// ================= Init =================
+refreshTypeFilter();
+renderAll();
+renderAlarms();
+tickClock();
+setInterval(tickClock, 1000);
+setInterval(()=>{ checkAlarms(); checkTaskReminders(); renderStats(); renderTasks(); }, 15000);
+</script>
+</body>
+</html>
