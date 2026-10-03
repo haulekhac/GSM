@@ -1,0 +1,101 @@
+<!-- DÁN NGUYÊN KHỐI NÀY NGAY TRƯỚC </body>, SAU KHỐI <script id="gsm-merge-fix"> -->
+<script id="gsm-accept-rate">
+PERF_RULES.acceptPct={label:'% nhận cuốc',t:[80,90,95],unit:'%'};
+(function(){
+ const html=`<section id="accept" class="section">
+ <div class="note"><b>TỶ LỆ NHẬN CUỐC THEO KHU VỰC:</b> khu vực/phường-xã nhận diện từ <code>Pick Up Address</code>, giờ theo <code>Create Time</code>, theo bộ lọc chung. Tỷ lệ nhận = Order được nhận / Tổng Order tạo. Cách tính "được nhận" chọn ở ô bên dưới (file Order không có cột "đã chào cuốc" nên đây là số xấp xỉ).</div>
+ <div class="xdv-filters no-snap" style="grid-template-columns:repeat(3,minmax(160px,1fr)) auto">
+  <div class="field"><label>Cách tính "được nhận"</label><select id="acMode"><option value="driver">Đơn có tài xế / biển số gán</option><option value="nosys">Đơn không bị hệ thống hủy</option></select></div>
+  <div class="field"><label>Khu vực</label><select id="acRegion"><option value="">Tất cả</option></select></div>
+  <div class="field"><label>Tìm phường / xã</label><input id="acSearch" type="text"></div>
+  <button class="btn primary" type="button" onclick="exportAcceptXlsx()">Xuất Excel</button>
+ </div>
+ <div class="kpis" id="acKpis"></div>
+ <div class="card" style="margin-bottom:13px"><h3>Tỷ lệ nhận cuốc theo khu vực</h3><div class="pf-legend" data-rules="acceptPct"></div><div class="chartbox tall"><canvas id="acChart"></canvas></div></div>
+ <div class="card" style="margin-bottom:13px"><h3>Khu vực × khung giờ</h3><p class="small">Mỗi ô: % nhận • được nhận / tổng order.</p><div class="table-wrap"><table class="table heat-table" id="acMatrix"></table></div></div>
+ <div class="card"><h3>Chi tiết phường / xã <span class="small" id="acWardMeta"></span></h3><div class="table-wrap" style="max-height:620px"><table class="table" id="acWard"></table></div></div>
+</section>`;
+ document.querySelector('main.main').insertAdjacentHTML('beforeend',html);
+ const b=document.createElement('button');b.dataset.tab='accept';
+ b.innerHTML='<i class="ic" data-ic="pin"></i>Tỷ lệ nhận cuốc theo khu vực';
+ const z=document.querySelector('.nav button[data-tab="zone"]')||document.querySelector('.nav button:last-child');
+ z.insertAdjacentElement('afterend',b);
+ b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');$('accept').classList.add('active');
+  $('pageTitle').textContent='Tỷ lệ nhận cuốc theo khu vực';renderAccept(currentRows)};
+ $('acRegion').insertAdjacentHTML('beforeend',BD_REGIONS.map(r=>`<option>${r[0]}</option>`).join('')+'<option>Chưa xác định</option>');
+ ['acMode','acRegion'].forEach(id=>$(id).addEventListener('change',()=>renderAccept(currentRows)));
+ let t;$('acSearch').addEventListener('input',()=>{clearTimeout(t);t=setTimeout(()=>renderAccept(currentRows),250)});
+ hydrateIcons();renderPerfLegends();
+})();
+
+function acIsAccepted(r,mode){
+ if(mode==='nosys')return !(isCancel(r)&&cancelSource(r)==='system');
+ return !!(String(r.__plate||'').trim()||r.__sap);
+}
+function acAgg(l){
+ const a={n:l.length,acc:0,done:0,cd:0,cs:0,cc:0};
+ l.forEach(x=>{a.acc+=x.acc;a.done+=x.done;a.cd+=x.cd;a.cs+=x.cs;a.cc+=x.cc});
+ a.rate=a.n?a.acc/a.n*100:NaN;a.miss=a.n-a.acc;return a;
+}
+function acRecords(rows){
+ const mode=$('acMode').value,out=[];
+ (rows||[]).forEach(r=>{
+  const h=createHour(r);if(h===null)return;
+  const loc=r.__bdLoc||(r.__bdLoc=bdLocate(key(r,'Pick Up Address','Pickup Address','Địa chỉ đón')));
+  const cs=isCancel(r)?cancelSource(r):'';
+  out.push({h,kh:khungOf(h),region:loc.region,ward:loc.ward,acc:acIsAccepted(r,mode)?1:0,
+   done:String(key(r,'Status')).toUpperCase().includes('COMPLET')?1:0,
+   cd:cs==='driver'?1:0,cs:cs==='system'?1:0,cc:cs==='customer'?1:0});
+ });
+ return out;
+}
+let __acLast=null;
+function renderAccept(rows){
+ if(!$('acKpis'))return;
+ const regSel=$('acRegion').value,q=bdNorm($('acSearch').value);
+ const recs=acRecords(rows),inReg=recs.filter(x=>!regSel||x.region===regSel);
+ const T=acAgg(inReg);
+ $('acKpis').innerHTML=[
+  ['Tổng order tạo',fmt(T.n),'trong phạm vi lọc',''],
+  ['Order được nhận',fmt(T.acc),'theo cách tính đã chọn',''],
+  ['Tỷ lệ nhận cuốc',Number.isFinite(T.rate)?perfPill('acceptPct',T.rate,pct1(T.rate)):'—','được nhận / tổng order',''],
+  ['Order không được nhận',fmt(T.miss),'cần kéo supply',T.miss?'k-warn':''],
+  ['Hệ thống hủy',fmt(T.cs),pct1(T.n?T.cs/T.n*100:NaN)+' tổng order',T.cs?'k-warn':''],
+  ['Tài xế hủy',fmt(T.cd),pct1(T.n?T.cd/T.n*100:NaN)+' tổng order',T.cd?'k-warn':'']
+ ].map(x=>`<div class="kpi ${x[3]}"><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="sub">${x[2]}</div></div>`).join('');
+ const regs=[...BD_REGIONS.map(r=>r[0]),'Chưa xác định'].filter(r=>!regSel||r===regSel);
+ const byReg=regs.map(r=>({r,...acAgg(recs.filter(x=>x.region===r))}));
+ destroyChart('acChart');
+ charts.acChart=new Chart($('acChart'),{type:'bar',data:{labels:byReg.map(x=>x.r),datasets:[{label:'% nhận cuốc',data:byReg.map(x=>Number.isFinite(x.rate)?+x.rate.toFixed(1):0),backgroundColor:byReg.map(x=>perfColor('acceptPct',x.rate)),borderRadius:6}]},
+  plugins:[valueLabelPlugin],options:{responsive:true,maintainAspectRatio:false,animation:false,layout:{padding:{top:22}},
+  scales:{x:{grid:{display:false}},y:{display:false,beginAtZero:true,max:100}},
+  plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>{const x=byReg[c.dataIndex];return `${pct1(x.rate)} • ${fmt(x.acc)}/${fmt(x.n)} order`}}}}}});
+ const cell=a=>{if(!a.n)return '<td class="heat small">—</td>';const l=perfLevel('acceptPct',a.rate);
+  return `<td class="heat" style="background:${HEAT_BG[l]||'transparent'}"><span class="pf pf-${l}">${pct1(a.rate)}</span><div class="small">${fmt(a.acc)} / ${fmt(a.n)}</div></td>`};
+ $('acMatrix').innerHTML='<thead><tr><th>Khu vực</th>'+KHUNG.map(k=>`<th>${k.label}</th>`).join('')+'<th>Cả ngày</th></tr></thead><tbody>'+
+  regs.map(r=>{const l=recs.filter(x=>x.region===r);return `<tr><td><b>${r}</b></td>${KHUNG.map((_,i)=>cell(acAgg(l.filter(x=>x.kh===i)))).join('')}${cell(acAgg(l))}</tr>`}).join('')+
+  `<tr class="total-row"><td><b>TỔNG</b></td>${KHUNG.map((_,i)=>cell(acAgg(inReg.filter(x=>x.kh===i)))).join('')}${cell(T)}</tr></tbody>`;
+ const W=new Map();inReg.forEach(x=>{const k=x.region+'||'+x.ward;if(!W.has(k))W.set(k,[]);W.get(k).push(x)});
+ const wards=[...W.entries()].map(([k,l])=>{const [region,ward]=k.split('||');return {region,ward,...acAgg(l)}})
+  .filter(w=>!q||bdNorm(w.ward).includes(q)).sort((a,b)=>natCmp(a.region,b.region)||b.miss-a.miss);
+ $('acWardMeta').textContent=`| ${fmt(wards.length)} phường/xã • sắp theo order không được nhận`;
+ $('acWard').innerHTML='<thead><tr><th>Khu vực</th><th>Phường / Xã</th><th>Order tạo</th><th>Được nhận</th><th>% nhận</th><th>Không nhận</th><th>Hoàn thành</th><th>HT hủy</th><th>TX hủy</th><th>Khách hủy</th></tr></thead><tbody>'+
+  wards.map(w=>`<tr><td>${esc(w.region)}</td><td><b>${esc(w.ward)}</b></td><td>${fmt(w.n)}</td><td>${fmt(w.acc)}</td><td>${perfPill('acceptPct',w.rate,pct1(w.rate))}</td><td><b>${fmt(w.miss)}</b></td><td>${fmt(w.done)}</td><td>${fmt(w.cs)}</td><td>${fmt(w.cd)}</td><td>${fmt(w.cc)}</td></tr>`).join('')+
+  (wards.length?'':'<tr><td colspan="10">Không có dữ liệu.</td></tr>')+'</tbody>';
+ __acLast={byReg,wards};
+}
+async function exportAcceptXlsx(){
+ if(!__acLast){alert('Chưa có dữ liệu.');return}
+ const r1=v=>Number.isFinite(v)?+v.toFixed(1):'';
+ await writeSheetsXlsx('TyLeNhanCuoc_'+todayISO()+'.xlsx',[
+  {name:'Khu_vuc',title:'TỶ LỆ NHẬN CUỐC THEO KHU VỰC',sub:`Kỳ ${isoToVN($('dateFrom').value)} – ${isoToVN($('dateTo').value)}`,
+   headers:['Khu vực','Order tạo','Được nhận','% nhận','Không nhận','Hoàn thành','HT hủy','TX hủy','Khách hủy'],widths:[22,12,12,10,12,12,10,10,10],
+   rows:__acLast.byReg.map(x=>[x.r,x.n,x.acc,r1(x.rate),x.miss,x.done,x.cs,x.cd,x.cc])},
+  {name:'Phuong_xa',title:'TỶ LỆ NHẬN CUỐC THEO PHƯỜNG / XÃ',sub:'',
+   headers:['Khu vực','Phường / Xã','Order tạo','Được nhận','% nhận','Không nhận','Hoàn thành','HT hủy','TX hủy','Khách hủy'],widths:[22,26,12,12,10,12,12,10,10,10],
+   rows:__acLast.wards.map(w=>[w.region,w.ward,w.n,w.acc,r1(w.rate),w.miss,w.done,w.cs,w.cd,w.cc])}]);
+}
+(function(){const p=render;render=function(){p();try{renderAccept(currentRows)}catch(e){console.error(e)}}})();
+</script>
