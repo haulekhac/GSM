@@ -158,9 +158,10 @@ function maps(){
 
 /* ---------- mốc bảo dưỡng ---------- */
 function milestones(dx){const a=[];if(/limogreen/i.test(dx))a.push(6000);for(let m=15000;m<=600000;m+=15000)a.push(m);return a}
-function smartMax(list){const v=list.filter(x=>x>0).sort((a,b)=>a-b);if(!v.length)return 0;if(v.length===1)return v[0];
- if(v.length>=3){const med=v[v.length>>1],f=v.filter(x=>Math.abs(x-med)<=3000);if(f.length)return Math.max(...f)}
- const mx=v[v.length-1],s2=v[v.length-2];return mx-s2>4000?s2:mx}
+/* Giống công thức Excel: =IFERROR(LET(v;FILTER(F:I;(F:I>0)*(F:I<300000));MAX(FILTER(v;v<=MEDIAN(v)+5000)));"") */
+function smartMax(list){const v=list.filter(x=>x>0&&x<300000).sort((a,b)=>a-b);if(!v.length)return 0;
+ const h=v.length>>1,med=v.length%2?v[h]:(v[h-1]+v[h])/2;
+ return Math.max(...v.filter(x=>x<=med+5000))}
 
 function merge(){
  LOG=[];if(!raw.pool||!raw.pool.length)return toast('Vui lòng nạp File Pool xe trước'),go('load');
