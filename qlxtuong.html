@@ -69,11 +69,20 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 </section>
 
 <section class="sec" id="s-load">
-<div class="card"><h2>Bộ dữ liệu bảo dưỡng</h2><div class="sub">Chọn hoặc kéo thả file .xlsx / .xls / .csv. Chỉ File Pool xe là bắt buộc.</div><div class="up" id="up"></div>
+<div class="card"><h2>Bộ dữ liệu bảo dưỡng</h2><div class="sub">Chọn hoặc kéo thả file .xlsx / .xls / .csv. Chỉ File Pool xe là bắt buộc.</div><div class="row" style="margin:0 0 12px"><label class="btn p" style="cursor:pointer"><span data-ic="b"></span>Tải nhiều file từ máy<input id="multi" type="file" multiple accept=".xlsx,.xls,.csv" style="display:none"></label><span class="sub" style="margin:0">Chọn cùng lúc nhiều file, hệ thống tự nhận dạng từng file theo tên file và tiêu đề cột. Hoặc tải riêng từng file ở các ô bên dưới.</span></div><div class="up" id="up"></div>
 <div class="row"><div class="fd"><label>Cảnh báo khi còn ≤ (km)</label><input id="warn" type="number" value="1500" min="0"></div>
 <div class="fd"><label>Vừa quá mốc trong (km)</label><input id="over" type="number" value="1500" min="0"></div>
 <div class="fd"><label>Lệch ODO giữa nguồn &gt; (km)</label><input id="gap" type="number" value="3000" min="0"></div>
 <button class="btn p" id="bm"><span data-ic="zap"></span>Ghép dữ liệu &amp; tính mốc BD</button><button class="btn" id="br"><span data-ic="rs"></span>Reset</button></div></div>
+
+<div class="card"><h2>Đặt lịch nhanh</h2><div class="sub">Dán danh sách số khung (hoặc biển số), cách nhau bằng dấu phẩy, khoảng trắng hoặc xuống dòng, rồi chọn ngày. Các xe trong danh sách sẽ có ngày ở cột "Ngày đặt lịch". Dữ liệu được lưu trên trình duyệt.</div>
+<div class="fd"><label>Danh sách số khung / biển số</label><textarea id="bkList" rows="4" placeholder="RLLV4HDGXSH706824,RLNV5JSE7SH776018,..." style="width:100%;border:1px solid var(--ln);border-radius:9px;padding:8px 10px;background:#f7fbfa;font:11px 'JetBrains Mono',ui-monospace,Consolas,monospace"></textarea></div>
+<div class="row"><div class="fd"><label>Ngày đặt lịch</label><input id="bkDate" type="date"></div>
+<button class="btn p" id="bkApply"><span data-ic="cal"></span>Áp dụng ngày đặt lịch</button><button class="btn" id="bkClear"><span data-ic="rs"></span>Xóa ngày đã nhập</button></div></div>
+
+<div class="card"><h2>File đã tải lên</h2><div class="sub">Các file đã tải được lưu trong trình duyệt, tự nạp lại khi mở trang. Có thể nạp lại thủ công bằng nút bên dưới.</div>
+<div class="qc" id="saved"><p class="sub">Chưa có file nào được lưu.</p></div>
+<div class="row"><button class="btn p" id="bdb"><span data-ic="rs"></span>Nạp lại file đã lưu</button><button class="btn" id="bdc">Xóa file đã lưu</button></div></div>
 </section>
 
 <section class="sec" id="s-q">
@@ -118,11 +127,47 @@ $('up').innerHTML=FILES.map(f=>`<label class="fz" id="z-${f[0]}"><b>${svg('file'
 function load(k,file){if(!file)return;const r=new FileReader();r.onerror=()=>toast('Không đọc được file');
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
   raw[k]=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true});meta[k]=file.name;
-  const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${(raw[k].length).toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${raw[k].length} dòng`)}catch(x){toast('Lỗi đọc file: '+x.message)}};r.readAsArrayBuffer(file)}
+  const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${(raw[k].length).toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${raw[k].length} dòng`);dbSave(k,file.name,raw[k])}catch(x){toast('Lỗi đọc file: '+x.message)}};r.readAsArrayBuffer(file)}
+/* tải nhiều file từ máy, tự nhận dạng loại file */
+function detect(name,rows){const n=nt(name);
+ if(/pool/.test(n))return 'pool';if(/van ?doanh|\bvd\b/.test(n))return 'vd';if(/dat ?lich|booking/.test(n))return 'bk';if(/dinh ?vi|gps/.test(n))return 'dv';
+ if(/an ?toan|\bat\b/.test(n))return 'at';if(/gc ?tt|truc ?tiep|giao ca/.test(n))return 'gc';if(/tai ?xe|driver/.test(n))return 'tx';
+ let hi=0;for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].filter(c=>String(c).trim()!=='').length>=2){hi=i;break}}
+ const h=(rows[hi]||[]).map(nt).join('|');
+ if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
+function loadAuto(file){const r=new FileReader();r.onerror=()=>log(`Không đọc được file ${file.name}`);
+ r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}),k=detect(file.name,rows);
+  if(!k){log(`Không nhận dạng được file: ${file.name} - hãy tải vào đúng ô bên dưới`);toast(`Không nhận dạng được ${file.name}`);return}
+  raw[k]=rows;meta[k]=file.name;const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${rows.length.toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${rows.length} dòng (tự nhận dạng)`);dbSave(k,file.name,rows)}catch(x){log(`Lỗi đọc file ${file.name}: ${x.message}`)}};r.readAsArrayBuffer(file)}
+$('multi').onchange=e=>{[...e.target.files].forEach(loadAuto);e.target.value=''};
 document.querySelectorAll('.fz').forEach(z=>{const k=z.querySelector('input').dataset.k;
  z.querySelector('input').onchange=e=>load(k,e.target.files[0]);
  z.ondragover=e=>{e.preventDefault();z.classList.add('dr')};z.ondragleave=()=>z.classList.remove('dr');
  z.ondrop=e=>{e.preventDefault();z.classList.remove('dr');load(k,e.dataTransfer.files[0])}});
+
+/* ---------- lưu & nạp lại file đã tải (IndexedDB) ---------- */
+function dbo(){return new Promise((res,rej)=>{const q=indexedDB.open('gp_files',1);q.onupgradeneeded=()=>q.result.createObjectStore('f');q.onsuccess=()=>res(q.result);q.onerror=()=>rej(q.error)})}
+async function dbSave(k,name,rows){try{const d=await dbo();d.transaction('f','readwrite').objectStore('f').put({name,rows,at:Date.now()},k);setTimeout(listSaved,300)}catch(e){}}
+async function dbAll(){try{const d=await dbo();return await new Promise(res=>{const o={},q=d.transaction('f').objectStore('f').openCursor();q.onsuccess=()=>{const c=q.result;if(c){o[c.key]=c.value;c.continue()}else res(o)};q.onerror=()=>res({})})}catch(e){return{}}}
+async function dbClear(){try{const d=await dbo();d.transaction('f','readwrite').objectStore('f').clear()}catch(e){}}
+async function dbRestore(silent){const all=await dbAll();let n=0;
+ for(const [k,v] of Object.entries(all)){if(!v||!v.rows||!$('z-'+k))continue;raw[k]=v.rows;meta[k]=v.name;const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${v.name} • ${v.rows.length.toLocaleString('vi-VN')} dòng (đã lưu)`;n++}
+ listSaved();
+ if(n){log(`Đã nạp lại ${n} file từ bộ nhớ trình duyệt`);if(!silent)toast(`Đã nạp lại ${n} file đã tải`)}else if(!silent)toast('Chưa có file nào được lưu');return n}
+async function listSaved(){const all=await dbAll(),ks=Object.keys(all);$('saved').innerHTML=ks.length?ks.map(k=>{const f=FILES.find(x=>x[0]===k);return `<div class="q"><b>${esc(f?f[1]:k)}</b><p>${esc(all[k].name)} • ${new Date(all[k].at).toLocaleString('vi-VN')}</p></div>`}).join(''):'<p class="sub">Chưa có file nào được lưu.</p>'}
+
+/* ---------- ngày đặt lịch nhập tay ---------- */
+let BKD={};try{BKD=JSON.parse(localStorage.getItem('gp_bkd')||'{}')}catch(e){}
+const saveBkd=()=>{try{localStorage.setItem('gp_bkd',JSON.stringify(BKD))}catch(e){}};
+const fmtD=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:''};
+const toISO=ms=>{if(!ms)return '';const d=new Date(ms);return isNaN(d)?'':`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+const setBkd=()=>data.forEach(r=>{r.bkd=BKD[ck(r.vin)]||BKD[ck(r.bs)]||r.bkf||''});
+function applyBkList(){const ids=[...new Set($('bkList').value.split(/[\s,;]+/).map(ck).filter(Boolean))],d=$('bkDate').value;
+ if(!ids.length)return toast('Chưa nhập số khung / biển số');if(!d)return toast('Chưa chọn ngày đặt lịch');
+ ids.forEach(k=>BKD[k]=d);saveBkd();let msg=`Đặt lịch ${fmtD(d)}: ${ids.length} mã đã nhập`;
+ if(data.length){const have=new Set(data.flatMap(r=>[ck(r.vin),ck(r.bs)])),miss=ids.filter(k=>!have.has(k));setBkd();apply();msg+=`, khớp ${ids.length-miss.length} xe trong Pool`+(miss.length?`, không thấy ${miss.length}: ${miss.join(', ')}`:'');toast(`Đã gắn ngày ${fmtD(d)} cho ${ids.length-miss.length}/${ids.length} xe`)}
+ else toast('Đã lưu ngày đặt lịch, sẽ hiển thị sau khi ghép dữ liệu');
+ log(msg)}
 
 /* ---------- đọc bảng ---------- */
 /* FIX: tìm cột theo từng từ khóa (đúng thứ tự ưu tiên): khớp nguyên ô -> khớp nguyên từ -> chứa chuỗi.
@@ -151,7 +196,7 @@ function maps(){
  if(t){let tk=col(t.h,['tong km']),lk=col(t.h,['km odo cuoi cung','odo cuoi','cuoi cung','last km']);if(tk<0)tk=5;if(lk<0)lk=6;
   dv=build('dv',r=>{const a=num(r[tk]),b=num(r[lk]);return{o:a||b}})}
  const vd=build('vd',(r,h)=>{const g=ks=>cell(r,col(h,ks));return{o:num(g(ODO)),ten:String(g(['ten tai xe','ho ten','ho va ten','tai xe','driver'])).trim(),ma:String(g(['ma tai xe','ma tx','ma nv'])).trim(),sdt:String(g(['sdt','dien thoai','phone'])).trim(),pos:String(g(['vi tri do','vi tri','parking'])).trim()}});
- const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo','booking']))),t:String(cell(r,col(h,['tinh trang','trang thai']))).trim()}));
+ const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo','booking']))),t:String(cell(r,col(h,['tinh trang','trang thai']))).trim(),dd:toISO(dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen','ngay']))))}));
  const tx=new Map(),tt=prep('tx');if(tt){let ci=col(tt.h,['ma tai xe','ma tx','ma nv','ma','code']);if(ci<0)ci=0;const ni=col(tt.h,['ho ten','ten','name']),pi=col(tt.h,['sdt','dien thoai','phone']);
   tt.body.forEach(r=>{const o={ten:String(cell(r,ni)).trim(),ma:String(cell(r,ci)).trim(),sdt:String(cell(r,pi)).trim()};[ck(o.ma),ck(o.ten)].forEach(k=>{if(k)tx.set(k,o)})})}
  return{dv,at:latest('at'),gc:latest('gc'),vd,bk,tx}}
@@ -178,9 +223,9 @@ function merge(){
   const dx=String(r[ix.dx]||'').trim(),ms=milestones(dx),next=ms.find(m=>m>=max)||ms[ms.length-1],prev=[...ms].reverse().find(m=>m<max)||0,rem=max?next-max:null;
   let st='Bình thường';if(!max)st='Thiếu ODO';else if(rem<=warn)st='Sắp đến mốc';else if(prev>0&&max-prev<=over)st='Vừa quá mốc';
   const ma=vd&&vd.ma||'',ten=vd&&vd.ten||'',txi=M.tx.get(ck(ma))||M.tx.get(ck(ten));if(txi)hit.tx++;
-  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,next,rem,bko:bk?bk.o:0,bkt:bk?bk.t:'',st,
+  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,next,rem,bko:bk?bk.o:0,bkt:bk?bk.t:'',bkf:bk?bk.dd:'',bkd:'',st,
    tx:ten||(txi&&txi.ten)||'',mtx:ma||(txi&&txi.ma)||'',sdt:(vd&&vd.sdt)||(txi&&txi.sdt)||'',pos:vd&&vd.pos||''})});
- log(`Ghép xong ${data.length} xe từ Pool.`);
+ setBkd();log(`Ghép xong ${data.length} xe từ Pool.`);
  const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['tx','Data tài xế']].map(([k,l])=>{
   const loaded=!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
  fillSel('fDoi','Đội',data.map(x=>x.doi));fillSel('fTo','Tổ',data.map(x=>x.to));fillSel('fDx','Dòng xe',data.map(x=>x.dx));
@@ -189,7 +234,7 @@ function fillSel(id,l,a){const u=[...new Set(a.filter(Boolean))].sort((x,y)=>x.l
 
 /* ---------- hiển thị ---------- */
 const BC={'Bình thường':'b0','Sắp đến mốc':'b1','Vừa quá mốc':'b2','Thiếu ODO':'b3'};
-const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['st','Cảnh báo'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
+const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['bkd','Ngày đặt lịch'],['st','Cảnh báo'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
 function kpis(){const c=s=>data.filter(x=>x.st===s).length,has=data.filter(x=>x.max>0).length,lech=data.filter(x=>x.lech).length;
  const KI=['car','clock','wr','ok','al','sw'];$('kp').innerHTML=[['Tổng số xe',data.length,'trong Pool',''],['Sắp đến mốc BD',c('Sắp đến mốc'),'cần đặt lịch','w'],['Vừa quá mốc',c('Vừa quá mốc'),'kiểm tra đã bảo dưỡng chưa','e'],['Có ODO',has,data.length?(has/data.length*100).toFixed(1)+'% Pool':'—',''],['Thiếu ODO',c('Thiếu ODO'),'không tìm thấy ở file nào','g'],['ODO lệch nguồn',lech,'cần đối soát','w']].map((k,i)=>`<div class="k ${k[3]}"><span class="ki">${svg(KI[i])}</span><i>${k[0]}</i><b>${Number(k[1]).toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('')}
 function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$('fDx').value,s=$('fSt').value;
@@ -200,6 +245,7 @@ function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(pag
  $('tb').innerHTML='<thead><tr>'+COLS.map(c=>`<th data-k="${c[0]}" class="${c[2]?'r':''}">${c[1]}${sort.k===c[0]?svg(sort.d>0?'up':'dn'):''}</th>`).join('')+'</tr></thead><tbody>'+
  (rows.map(r=>'<tr>'+COLS.map(([k,,n])=>{let v=r[k];
   if(k==='st')v=`<span class="bd ${BC[v]}">${v}</span>`;else if(k==='rem')v=v===null?'—':fmt(v)==='—'?'0':fmt(v);else if(n)v=fmt(v);else if(k==='vin'||k==='mtx')v=`<span class="mono">${esc(v)}</span>`;else v=esc(v);
+  if(k==='bkd')v=esc(fmtD(r.bkd));
   if(k==='max')v=`<b>${fmt(r.max)}</b>`;if(k==='src'&&r.lech)v+=' <span class="bd b1">lệch</span>';
   return `<td class="${n?'r':''}">${v}</td>`}).join('')+'</tr>').join('')||`<tr><td colspan="${COLS.length}" style="text-align:center;padding:36px;color:var(--mu)">${data.length?'Không có xe phù hợp bộ lọc.':'Chưa có dữ liệu. Vào mục Nạp dữ liệu để bắt đầu.'}</td></tr>`)+'</tbody>';
  $('pi').textContent=`${view.length.toLocaleString('vi-VN')} xe • Trang ${page}/${tp}`;$('pp').disabled=page<=1;$('pn').disabled=page>=tp}
@@ -210,9 +256,15 @@ $('bm').onclick=merge;
 $('br').onclick=()=>{raw={};meta={};data=[];view=[];LOG=[];document.querySelectorAll('.fz').forEach((z,i)=>{z.classList.remove('ok');z.querySelector('input').value='';z.querySelector('span').textContent='Chọn hoặc kéo thả file'});
  $('qc').innerHTML='<p class="sub">Chưa ghép dữ liệu.</p>';$('lg').textContent='Chưa có nhật ký.';apply();toast('Đã reset')};
 $('bx').onclick=()=>{if(!view.length)return toast('Không có dữ liệu để xuất');
- const rows=a=>a.map(r=>Object.fromEntries(COLS.map(c=>[c[1],r[c[0]]===null?'':r[c[0]]]))),wb=XLSX.utils.book_new();
+ const rows=a=>a.map(r=>Object.fromEntries(COLS.map(c=>[c[1],c[0]==='bkd'?fmtD(r.bkd):(r[c[0]]===null?'':r[c[0]])]))),wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(view)),'TongHop');
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(view.filter(r=>r.st==='Sắp đến mốc'||r.st==='Vừa quá mốc'))),'CanhBao');
  XLSX.writeFile(wb,'Tong_Hop_Bao_Duong_'+new Date().toISOString().slice(0,10)+'.xlsx')};
+$('bkDate').value=toISO(Date.now());
+$('bkApply').onclick=applyBkList;
+$('bkClear').onclick=()=>{BKD={};saveBkd();setBkd();apply();toast('Đã xóa ngày đặt lịch nhập tay')};
+$('bdb').onclick=()=>dbRestore(false);
+$('bdc').onclick=async()=>{await dbClear();listSaved();toast('Đã xóa file đã lưu')};
+dbRestore(true);
 apply();
 </script></body></html>
