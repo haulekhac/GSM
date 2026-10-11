@@ -46,7 +46,7 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 .bar{height:7px;background:#e8f0ef;border-radius:9px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--t)}
 .qc{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.q{border:1px solid var(--ln);border-radius:11px;padding:12px}
 .q b{font-size:12px}.q p{margin:6px 0 0;font-size:11px;color:var(--mu)}
-.lg2{max-height:200px;overflow:auto;background:#b3b3b3;color:#990000;border-radius:10px;padding:10px;font:11px "JetBrains Mono",ui-monospace,Consolas,monospace;line-height:1.7}
+.lg2{max-height:200px;overflow:auto;background:#10201f;color:#7ee0d4;border-radius:10px;padding:10px;font:11px "JetBrains Mono",ui-monospace,Consolas,monospace;line-height:1.7}
 .sec{display:none}.sec.on{display:block}
 #toast{position:fixed;right:20px;bottom:20px;background:#10201f;color:#fff;padding:11px 16px;border-radius:10px;font-size:12px;opacity:0;transform:translateY(8px);transition:.25s;z-index:99;pointer-events:none}#toast.s{opacity:1;transform:none}
 @media(max-width:800px){aside{display:none}main{padding:12px}}
@@ -125,23 +125,34 @@ document.querySelectorAll('.fz').forEach(z=>{const k=z.querySelector('input').da
  z.ondrop=e=>{e.preventDefault();z.classList.remove('dr');load(k,e.dataTransfer.files[0])}});
 
 /* ---------- đọc bảng ---------- */
-function col(h,kws){const n=h.map(nt);for(const k of kws){const i=n.indexOf(k);if(i>=0)return i}for(const k of kws){if(k.length<4)continue;const i=n.findIndex(c=>c.includes(k));if(i>=0)return i}return -1}
+/* FIX: tìm cột theo từng từ khóa (đúng thứ tự ưu tiên): khớp nguyên ô -> khớp nguyên từ -> chứa chuỗi.
+   Bản cũ bỏ qua bước "chứa chuỗi" với từ khóa ngắn (odo, km, vin, ten, sdt, doi...) nên không tìm thấy
+   cột như "ODO lúc booking", "Số ODO", "Tên tài xế" -> ODO = 0 hoặc lấy nhầm cột cuối. */
+const NOSUB=['to','ma'];
+const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+function col(h,kws){const n=h.map(nt);
+ for(const k of kws){let i=n.indexOf(k);if(i>=0)return i;
+  const re=new RegExp('(^|[^a-z0-9])'+reEsc(k)+'($|[^a-z0-9])');i=n.findIndex(c=>re.test(c));if(i>=0)return i;
+  if(NOSUB.includes(k))continue;i=n.findIndex(c=>c.includes(k));if(i>=0)return i}
+ return -1}
+const HDR=/so khung|vin|bien so|tong km|dong xe|ma tai xe|ho ten/;
 function prep(k){const rows=raw[k];if(!rows||!rows.length)return null;let hi=0;
- for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].some(c=>/so khung|^vin$|bien so|tong km|dong xe|ma tai xe|ho ten/.test(nt(c)))){hi=i;break}}
- const h=rows[hi];let kv=col(h,['so khung','vin']),kb=col(h,['bien so','bsx','bks']);if(kv<0&&kb<0)kv=0;
+ for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].filter(c=>String(c).trim()!=='').length>=2&&rows[i].some(c=>HDR.test(nt(c)))){hi=i;break}}
+ const h=rows[hi];let kv=col(h,['so khung','vin']),kb=col(h,['bien so','bsx','bks','bks xe']);if(kv<0&&kb<0)kv=0;
  return{h,body:rows.slice(hi+1).filter(r=>r&&r.some(c=>String(c).trim()!=='')),kv,kb}}
 function build(k,pick){const t=prep(k),m=new Map();if(!t)return m;
  t.body.forEach(r=>{const o=pick(r,t.h);[t.kv,t.kb].forEach(c=>{if(c<0)return;const key=ck(r[c]);if(!key)return;const old=m.get(key);if(!old||(o.d||0)>=(old.d||0))m.set(key,o)})});return m}
 const cell=(r,i)=>i>=0?r[i]:'';
 function maps(){
- const odoCol=(h,d)=>{const i=col(h,['odo','so km','km']);return i>=0?i:h.length-1};
+ const ODO=['odo','km','so km'];
+ const odoCol=h=>{const i=col(h,ODO);return i>=0?i:h.length-1};
  const latest=k=>{const t=prep(k);if(!t)return build(k,()=>({}));const oi=odoCol(t.h),di=col(t.h,['ngay','date','thoi gian']);return build(k,r=>({o:num(r[oi]),d:di>=0?dt(r[di]):0}))};
  const t=prep('dv');let dv=new Map();
  if(t){let tk=col(t.h,['tong km']),lk=col(t.h,['km odo cuoi cung','odo cuoi','cuoi cung','last km']);if(tk<0)tk=5;if(lk<0)lk=6;
   dv=build('dv',r=>{const a=num(r[tk]),b=num(r[lk]);return{o:a||b}})}
- const vd=build('vd',(r,h)=>{const g=ks=>cell(r,col(h,ks));return{o:num(g(['odo','so km','km'])),ten:String(g(['ten tai xe','tai xe','driver','ho va ten'])).trim(),ma:String(g(['ma tai xe','ma tx','ma nv'])).trim(),sdt:String(g(['sdt','dien thoai','phone'])).trim(),pos:String(g(['vi tri do','vi tri','parking'])).trim()}});
- const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo']))),t:String(cell(r,col(h,['tinh trang','trang thai']))).trim()}));
- const tx=new Map(),tt=prep('tx');if(tt){const ci=col(tt.h,['ma tai xe','ma','code','ma nv']),ni=col(tt.h,['ho ten','ten','name']),pi=col(tt.h,['sdt','dien thoai','phone']);
+ const vd=build('vd',(r,h)=>{const g=ks=>cell(r,col(h,ks));return{o:num(g(ODO)),ten:String(g(['ten tai xe','ho ten','ho va ten','tai xe','driver'])).trim(),ma:String(g(['ma tai xe','ma tx','ma nv'])).trim(),sdt:String(g(['sdt','dien thoai','phone'])).trim(),pos:String(g(['vi tri do','vi tri','parking'])).trim()}});
+ const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo','booking']))),t:String(cell(r,col(h,['tinh trang','trang thai']))).trim()}));
+ const tx=new Map(),tt=prep('tx');if(tt){let ci=col(tt.h,['ma tai xe','ma tx','ma nv','ma','code']);if(ci<0)ci=0;const ni=col(tt.h,['ho ten','ten','name']),pi=col(tt.h,['sdt','dien thoai','phone']);
   tt.body.forEach(r=>{const o={ten:String(cell(r,ni)).trim(),ma:String(cell(r,ci)).trim(),sdt:String(cell(r,pi)).trim()};[ck(o.ma),ck(o.ten)].forEach(k=>{if(k)tx.set(k,o)})})}
  return{dv,at:latest('at'),gc:latest('gc'),vd,bk,tx}}
 
@@ -187,7 +198,7 @@ function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$
 function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(page,tp);const rows=view.slice((page-1)*PS,page*PS);
  $('tb').innerHTML='<thead><tr>'+COLS.map(c=>`<th data-k="${c[0]}" class="${c[2]?'r':''}">${c[1]}${sort.k===c[0]?svg(sort.d>0?'up':'dn'):''}</th>`).join('')+'</tr></thead><tbody>'+
  (rows.map(r=>'<tr>'+COLS.map(([k,,n])=>{let v=r[k];
-  if(k==='st')v=`<span class="bd ${BC[v]}">${v}</span>`;else if(k==='rem')v=v===null?'—':fmt(v)==='—'?'0':fmt(v);else if(n)v=fmt(v);else if(k==='vin'||k==='mtx')v=`<span class="mono">${esc(v)}</span>`;else if(k==='max')v=esc(v);else v=esc(v);
+  if(k==='st')v=`<span class="bd ${BC[v]}">${v}</span>`;else if(k==='rem')v=v===null?'—':fmt(v)==='—'?'0':fmt(v);else if(n)v=fmt(v);else if(k==='vin'||k==='mtx')v=`<span class="mono">${esc(v)}</span>`;else v=esc(v);
   if(k==='max')v=`<b>${fmt(r.max)}</b>`;if(k==='src'&&r.lech)v+=' <span class="bd b1">lệch</span>';
   return `<td class="${n?'r':''}">${v}</td>`}).join('')+'</tr>').join('')||`<tr><td colspan="${COLS.length}" style="text-align:center;padding:36px;color:var(--mu)">${data.length?'Không có xe phù hợp bộ lọc.':'Chưa có dữ liệu. Vào mục Nạp dữ liệu để bắt đầu.'}</td></tr>`)+'</tbody>';
  $('pi').textContent=`${view.length.toLocaleString('vi-VN')} xe • Trang ${page}/${tp}`;$('pp').disabled=page<=1;$('pn').disabled=page>=tp}
