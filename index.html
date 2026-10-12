@@ -63,17 +63,18 @@
   .topbar .user{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;}
   .user .av{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
 
-  .sidebar{background:#fff;border-right:1px solid var(--line);padding:18px 12px;}
-  .side-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border-radius:9px;font-size:13.5px;font-weight:600;color:var(--dim);margin-bottom:2px;}
-  .side-item .ic{width:18px;text-align:center;display:flex;}
+  .sidebar{background:#fff;border-right:1px solid var(--line);padding:16px 11px;}
+  .side-item{display:flex;align-items:center;gap:9px;padding:9px 11px;border-radius:8px;font-size:13px;font-weight:600;color:var(--dim);margin-bottom:2px;line-height:1.35;}
+  .side-item .ic{width:17px;text-align:center;display:flex;flex-shrink:0;}
+  .side-item .ic svg{width:15.5px;height:15.5px;}
   .side-item.nav-item{cursor:pointer;transition:background .12s;}
   .side-item.nav-item:hover{background:#f4faf9;}
   .side-item.active{background:var(--ok-bg);color:var(--teal-2);}
-  .side-item.sub{padding-left:34px;font-weight:500;font-size:13px;cursor:default;}
+  .side-item.sub{padding-left:32px;font-weight:500;font-size:12px;cursor:default;padding-top:4px;padding-bottom:4px;opacity:.82;}
   .side-item.external-link{cursor:pointer;transition:background .12s;text-decoration:none;}
   .side-item.external-link:hover{background:#f4faf9;}
-  .side-divider{height:1px;background:var(--line);margin:12px 4px;}
-  .side-note{padding:12px;font-size:11px;color:var(--dim);line-height:1.6;}
+  .side-divider{height:1px;background:var(--line);margin:10px 4px;}
+  .side-note{padding:10px 8px;font-size:10.8px;color:var(--dim);line-height:1.55;}
 
   .main{padding:22px 26px 60px;min-width:0;}
   .breadcrumb{font-size:11.5px;color:var(--dim);margin-bottom:14px;font-family:var(--mono);}
@@ -394,7 +395,7 @@ body.dark .sidebar-toggle{background:#16211e;border-color:var(--line);}
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></span><span class="label">Quản lý tài xế</span>
     </div>
 
-    <a class="side-item external-link" href="bao_cao_doi_6.html" target="_blank" rel="noopener" title="Mở trang Đổ báo cáo Đội (file riêng)">
+    <a class="side-item external-link" href="hcm01.html" target="_blank" rel="noopener" title="Mở trang Đổ báo cáo Đội (file riêng)">
       <span class="ic"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14 21 3"/></svg></span><span class="label">Đổ báo cáo Đội</span>
     </a>
 

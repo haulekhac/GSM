@@ -504,6 +504,14 @@ button{outline:none}
   .kpis{grid-template-columns:1fr}
   .filters{grid-template-columns:1fr}
 }
+
+/* professional inline icons replacing emoji */
+.ico{display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;vertical-align:-2px;margin-right:6px;color:var(--emerald-700);flex-shrink:0}
+.ico svg{width:15px;height:15px}
+.nav .ico{color:inherit;margin-right:7px}
+.card h3 .ico{color:var(--emerald-700)}
+.btn .ico{margin-right:5px}
+
 </style>
 
 <style>.order-date,.date-display{white-space:nowrap;font-variant-numeric:tabular-nums}</style>
@@ -733,21 +741,21 @@ tr.ds-suggest td{background:#fff9e8}
 <aside class="sidebar">
   <div class="brand"><div class="brand-text">GREEN SM<small>OPERATIONS ANALYTICS • V7.2</small></div><div class="brand-mini">GS</div><button id="sbToggle" class="sb-toggle" type="button" onclick="toggleSidebar()" title="Thu gọn menu (Ctrl+B)">«</button></div>
   <div class="nav">
-    <button class="active" data-tab="controltower">🚦 Control Tower</button>
-    <button data-tab="trend">📈 Xu hướng & WoW</button>
+    <button class="active" data-tab="controltower"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="7" r="3"/><circle cx="12" cy="17" r="3"/><path d="M12 10v4"/></svg></span> Control Tower</button>
+    <button data-tab="trend"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span> Xu hướng & WoW</button>
     <button data-tab="orders">◈ Phân tích Order</button>
     <button data-tab="teams">◫ Đội / Tổ</button>
-    <button data-tab="drivers">♙ Tài xế</button>
-      <button data-tab="lowgmv">💸 Tài xế GMV &lt; 300K</button>
-    <button data-tab="nocuoc">🚫 Tài xế 0 đồng</button>
-    <button data-tab="zerostreak">⛔ 0 đồng liên tiếp</button>
-    <button data-tab="cancel">❌ Hủy cuốc</button>
-    <button data-tab="xdv">🛠 XDV / Xưởng dịch vụ</button>
-    <button data-tab="depotpool">🏢 Pool xe Depot</button>
-    <button data-tab="heatmap">🕒 Khung giờ × Tổ</button>
-    <button data-tab="bd2">🗺 Bình Dương D/S/CR</button>
-    <button data-tab="zone">📍 Kiểm soát xe trong vùng</button>
-    <button data-tab="daystore">🗄 Kho dữ liệu ngày</button>
+    <button data-tab="drivers"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M8 14c0 2.5 1.8 4 4 4s4-1.5 4-4"/><path d="M6 18h12"/></svg></span> Tài xế</button>
+      <button data-tab="lowgmv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/></svg></span> Tài xế GMV &lt; 300K</button>
+    <button data-tab="nocuoc"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M4.5 4.5l15 15"/></svg></span> Tài xế 0 đồng</button>
+    <button data-tab="zerostreak"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></span> 0 đồng liên tiếp</button>
+    <button data-tab="cancel"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span> Hủy cuốc</button>
+    <button data-tab="xdv"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l2.5-2.5a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0z"/><path d="M4 20l6-6"/></svg></span> XDV / Xưởng dịch vụ</button>
+    <button data-tab="depotpool"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="1"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></span> Pool xe Depot</button>
+    <button data-tab="heatmap"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span> Khung giờ × Tổ</button>
+    <button data-tab="bd2"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6l7-3 8 3 7-3v14l-7 3-8-3-7 3z"/><path d="M8 3v14M16 6v14"/></svg></span> Bình Dương D/S/CR</button>
+    <button data-tab="zone"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5-6-10a6 6 0 0 1 12 0c0 5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg></span> Kiểm soát xe trong vùng</button>
+    <button data-tab="daystore"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/></svg></span> Kho dữ liệu ngày</button>
     <button data-tab="history">◷ Lịch sử dữ liệu</button>
     <button data-tab="dataload">⬆ Nạp dữ liệu</button>
     <button data-tab="datanotes">▤ Chú thích & công thức</button>
@@ -758,7 +766,7 @@ tr.ds-suggest td{background:#fff9e8}
 <div class="snap-toolbar" data-html2canvas-ignore="true">
   <span class="snap-hint">Chế độ Snapshot • Esc để thoát</span>
   <select id="snapWidth" onchange="setSnapWidth(this.value)" title="Khổ ảnh"><option value="auto">Khổ: tự động</option><option value="1280">Khổ: 1280px</option><option value="1600">Khổ: 1600px</option><option value="1920">Khổ: 1920px</option></select>
-  <button class="btn primary" type="button" onclick="exportPNG()">📸 Xuất PNG</button>
+  <button class="btn primary" type="button" onclick="exportPNG()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3"/></svg></span> Xuất PNG</button>
   <button class="btn" type="button" onclick="setSnapshotMode(false)">✕ Thoát</button>
 </div>
 <div class="snap-header" id="snapHeader">
@@ -767,7 +775,7 @@ tr.ds-suggest td{background:#fff9e8}
 </div>
 <div class="top">
   <div class="title"><h1 id="pageTitle">Tổng quan vận hành</h1><p id="subtitle">Nạp 1 file Order (Taxi + RTO + PLF) + Xe + Tài xế. Có thanh tiến độ đọc file; khuyến nghị mỗi file ≤50–100MB để vận hành ổn định trên trình duyệt.</p></div>
-  <div class="actions"><button class="btn" onclick="resetFilters()">Đặt lại lọc</button><button class="btn" onclick="setSnapshotMode(true)">🖼 Chế độ Snapshot</button><button class="btn primary" onclick="exportPNG()">📸 Xuất ảnh</button></div>
+  <div class="actions"><button class="btn" onclick="resetFilters()">Đặt lại lọc</button><button class="btn" onclick="setSnapshotMode(true)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L3 21"/></svg></span> Chế độ Snapshot</button><button class="btn primary" onclick="exportPNG()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3"/></svg></span> Xuất ảnh</button></div>
 </div>
 
 
@@ -782,10 +790,10 @@ tr.ds-suggest td{background:#fff9e8}
  <div class="field"><label>Nguồn Order</label><select id="fSource"><option value="">Tất cả</option><option value="TAXI">TAXI</option><option value="RTO">RTO</option><option value="PLF">PLF</option></select></div>
 </div>
 <section id="dataload" class="section"><div class="note"><b>NẠP DỮ LIỆU:</b> Tập trung toàn bộ thao tác nạp file, lưu snapshot và xuất dữ liệu trong một module riêng.</div><div class="upload">
-  <label data-upload-label="orderFile">🚕 Nạp file ORDER (Taxi + RTO + PLF) <input id="orderFile" type="file" accept=".xlsx,.xls,.csv"></label>
-  <label data-upload-label="vehicleFile">🚕 Nạp file XE <input id="vehicleFile" type="file" accept=".xlsx,.xls,.csv"></label>
-  <label data-upload-label="driverFile">👤 Nạp file TÀI XẾ <input id="driverFile" type="file" accept=".xlsx,.xls,.csv"></label>
-  <button class="btn" onclick="saveSnapshot()">💾 Lưu snapshot</button>
+  <label data-upload-label="orderFile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> Nạp file ORDER (Taxi + RTO + PLF) <input id="orderFile" type="file" accept=".xlsx,.xls,.csv"></label>
+  <label data-upload-label="vehicleFile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> Nạp file XE <input id="vehicleFile" type="file" accept=".xlsx,.xls,.csv"></label>
+  <label data-upload-label="driverFile"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg></span> Nạp file TÀI XẾ <input id="driverFile" type="file" accept=".xlsx,.xls,.csv"></label>
+  <button class="btn" onclick="saveSnapshot()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8"/><path d="M7 3v5h8"/></svg></span> Lưu snapshot</button>
   <button class="btn" onclick="exportCSV()">⬇ Xuất bảng CSV</button>
   <div class="status" id="loadStatus">Chưa nạp dữ liệu.</div>
   <div class="load-progress" id="loadProgressBox" hidden>
@@ -793,26 +801,26 @@ tr.ds-suggest td{background:#fff9e8}
     <div class="load-progress-track"><div id="loadProgressBar"></div></div>
   </div>
 </div>
-<div class="card"><h3>🧭 Kiểm soát phân loại nguồn Order</h3>
+<div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M16 8l-4 8-4-8z" fill="currentColor" stroke="none" opacity=".15"/><path d="M16 8l-2 6-6 2z"/></svg></span> Kiểm soát phân loại nguồn Order</h3>
  <p class="small">Chỉ giữ Order có Depot = 1102 hoặc 1107. Depot 1107 → PLF. Depot 1102 → ghép biển số với file Xe: Tổ kết thúc 01.05 / 01.06 → RTO, còn lại → TAXI. Dòng Depot trống / mã khác bị bỏ qua, không tính vào bất kỳ tổng nào.</p>
  <div id="sourceControl"><div class="empty">Chưa nạp file Order.</div></div>
 </div></section>
-<section id="datanotes" class="section"><div class="note"><b>CHÚ THÍCH DỮ LIỆU & CÔNG THỨC:</b> Giải thích nguồn dữ liệu, điều kiện lọc và cách tính chỉ số.</div><div class="card"><h3>Quy ước và công thức</h3><ul><li><b>File Order:</b> 1 file gộp. Chỉ giữ dòng có <code>Depot</code> = 1102 hoặc 1107; Depot trống / mã khác bị bỏ qua, không tính vào tổng.</li><li><b>Nguồn Order:</b> Depot 1107 = <b>PLF</b>. Depot 1102 = ghép biển số với file Xe; Tổ kết thúc <code>01.05</code> / <code>01.06</code> = <b>RTO</b>, còn lại (kể cả biển số không có trong file Xe) = <b>TAXI</b>.</li><li><b>Order trend:</b> dùng <code>Create Time</code>.</li><li><b>GMV:</b> chỉ Status chứa <code>COMPLET</code>; công thức = Applicable Fee hoặc Base Fee + Surcharge Fee − Discount + Tip Amount.</li><li><b>Xe vận doanh:</b> chỉ <code>Trạng thái cấp 2 = Xe vận doanh</code>.</li><li><b>Tỷ lệ hoàn thành:</b> Order hoàn thành / Tổng Order × 100%.</li><li><b>Tỷ lệ hủy:</b> Order hủy / Tổng Order × 100%.</li><li><b>GMV/Order hoàn thành:</b> GMV / Số Order hoàn thành.</li><li><b>Tỷ lệ đạt định biên:</b> Xe thực tế / Xe định biên × 100%.</li></ul></div><div class="card"><h3>Diễn giải các bảng</h3><ul><li><b>Đội/Tổ:</b> so sánh nguồn lực, Order, GMV và hiệu quả.</li><li><b>Hiệu suất xe:</b> phân tích theo biển số sau khi ghép dữ liệu.</li><li><b>Tài xế chưa có cuốc:</b> tài xế được gán xe nhưng không có Order hợp lệ; Order CANCELLED không được tính là đã có đơn.</li><li><b>Hủy cuốc:</b> phân tích địa chỉ đón, tài xế và tỷ lệ hủy.</li><li><b>XDV:</b> hiện trạng xe nằm xưởng; số ngày tồn = hôm nay − Từ ngày; nhóm tồn 0–7 / 8–14 / 15–30 / &gt;30 ngày (4 bậc màu); GMV mất ước tính = xe XDV × KPI GMV/xe/ngày.</li><li><b>Pool xe Depot:</b> đối chiếu xe thực tế với định biên, thiếu/thừa và tỷ lệ đạt.</li></ul></div><div class="card"><h3>🗄 Kho dữ liệu ngày & so sánh tuần</h3><ul><li><b>Kho ngày:</b> mỗi ngày đã khóa lưu tổng hợp Order/GMV/hủy theo giờ, nguồn, Tổ và danh sách tài xế được gán xe vận doanh (kể cả tài xế 0 đồng) theo file Xe tại thời điểm khóa. Không khóa ngày hôm nay.</li><li><b>WoW / Wo2W:</b> kỳ chọn so với cùng kỳ lùi 7 / 14 ngày. Đủ ngày trong kho → so tổng; thiếu ngày → so bình quân/ngày; tỷ lệ so theo điểm %.</li><li><b>0 đồng liên tiếp:</b> số ngày liền nhau (tính lùi từ ngày chọn) tài xế được gán xe và GMV = 0; ngắt khi có GMV, không còn gán xe, hoặc ngày chưa có trong kho. Mặc định ngưỡng 2 ngày, Khẩn từ ngưỡng + 3.</li><li><b>Kiểm soát xe trong vùng:</b> xe Trạng thái cấp 3 = Xe vận doanh (không PLF, RTO, xe ngoài file Xe). Có mặt = định vị trong vùng ≥ 30 phút/khung (bỏ lượt &lt; 5 phút) hoặc có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn theo địa chỉ đón; đơn hủy là nhóm riêng, CR = hợp lệ / (hợp lệ + hủy); đơn được ghép với lượt vào vùng theo Create Time ± 10 phút (A khớp / B không định vị / C vùng khác / D không ghép được xe / E chưa có file vùng); Tuân thủ = có mặt + có định vị + có tài xế; % đáp ứng = có mặt / TX cần (số xe khác nhau cần có mặt trong khung).</li><li><b>Bình Dương:</b> Demand = Completed + Driver Cancel; CR = Completed / Demand; Supply = số xe có Order; Trip thiếu = Demand × CR mục tiêu − Completed.</li></ul></div><div class="card"><h3>🎨 Thang màu hiệu suất 4 bậc & ngưỡng</h3><p class="small">Thấp → đỏ, cao → xanh lá. Chỉ số có dấu ↓ là "càng thấp càng tốt" nên thang màu đảo chiều. Ngưỡng cấu hình tại hằng số <code>PERF_RULES</code> ở cuối file.</p><div class="table-wrap"><table class="table" id="perfRulesTable"></table></div></div><div class="card"><p class="small">Số liệu phụ thuộc vào bộ lọc, trường dữ liệu và khả năng ghép biển số. Dòng Order Depot trống/mã khác bị loại ngay khi nạp; các dòng hợp lệ nhưng thiếu thông tin khác được giữ lại để kiểm soát chất lượng dữ liệu.</p></div></section>
+<section id="datanotes" class="section"><div class="note"><b>CHÚ THÍCH DỮ LIỆU & CÔNG THỨC:</b> Giải thích nguồn dữ liệu, điều kiện lọc và cách tính chỉ số.</div><div class="card"><h3>Quy ước và công thức</h3><ul><li><b>File Order:</b> 1 file gộp. Chỉ giữ dòng có <code>Depot</code> = 1102 hoặc 1107; Depot trống / mã khác bị bỏ qua, không tính vào tổng.</li><li><b>Nguồn Order:</b> Depot 1107 = <b>PLF</b>. Depot 1102 = ghép biển số với file Xe; Tổ kết thúc <code>01.05</code> / <code>01.06</code> = <b>RTO</b>, còn lại (kể cả biển số không có trong file Xe) = <b>TAXI</b>.</li><li><b>Order trend:</b> dùng <code>Create Time</code>.</li><li><b>GMV:</b> chỉ Status chứa <code>COMPLET</code>; công thức = Applicable Fee hoặc Base Fee + Surcharge Fee − Discount + Tip Amount.</li><li><b>Xe vận doanh:</b> chỉ <code>Trạng thái cấp 2 = Xe vận doanh</code>.</li><li><b>Tỷ lệ hoàn thành:</b> Order hoàn thành / Tổng Order × 100%.</li><li><b>Tỷ lệ hủy:</b> Order hủy / Tổng Order × 100%.</li><li><b>GMV/Order hoàn thành:</b> GMV / Số Order hoàn thành.</li><li><b>Tỷ lệ đạt định biên:</b> Xe thực tế / Xe định biên × 100%.</li></ul></div><div class="card"><h3>Diễn giải các bảng</h3><ul><li><b>Đội/Tổ:</b> so sánh nguồn lực, Order, GMV và hiệu quả.</li><li><b>Hiệu suất xe:</b> phân tích theo biển số sau khi ghép dữ liệu.</li><li><b>Tài xế chưa có cuốc:</b> tài xế được gán xe nhưng không có Order hợp lệ; Order CANCELLED không được tính là đã có đơn.</li><li><b>Hủy cuốc:</b> phân tích địa chỉ đón, tài xế và tỷ lệ hủy.</li><li><b>XDV:</b> hiện trạng xe nằm xưởng; số ngày tồn = hôm nay − Từ ngày; nhóm tồn 0–7 / 8–14 / 15–30 / &gt;30 ngày (4 bậc màu); GMV mất ước tính = xe XDV × KPI GMV/xe/ngày.</li><li><b>Pool xe Depot:</b> đối chiếu xe thực tế với định biên, thiếu/thừa và tỷ lệ đạt.</li></ul></div><div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/></svg></span> Kho dữ liệu ngày & so sánh tuần</h3><ul><li><b>Kho ngày:</b> mỗi ngày đã khóa lưu tổng hợp Order/GMV/hủy theo giờ, nguồn, Tổ và danh sách tài xế được gán xe vận doanh (kể cả tài xế 0 đồng) theo file Xe tại thời điểm khóa. Không khóa ngày hôm nay.</li><li><b>WoW / Wo2W:</b> kỳ chọn so với cùng kỳ lùi 7 / 14 ngày. Đủ ngày trong kho → so tổng; thiếu ngày → so bình quân/ngày; tỷ lệ so theo điểm %.</li><li><b>0 đồng liên tiếp:</b> số ngày liền nhau (tính lùi từ ngày chọn) tài xế được gán xe và GMV = 0; ngắt khi có GMV, không còn gán xe, hoặc ngày chưa có trong kho. Mặc định ngưỡng 2 ngày, Khẩn từ ngưỡng + 3.</li><li><b>Kiểm soát xe trong vùng:</b> xe Trạng thái cấp 3 = Xe vận doanh (không PLF, RTO, xe ngoài file Xe). Có mặt = định vị trong vùng ≥ 30 phút/khung (bỏ lượt &lt; 5 phút) hoặc có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn theo địa chỉ đón; đơn hủy là nhóm riêng, CR = hợp lệ / (hợp lệ + hủy); đơn được ghép với lượt vào vùng theo Create Time ± 10 phút (A khớp / B không định vị / C vùng khác / D không ghép được xe / E chưa có file vùng); Tuân thủ = có mặt + có định vị + có tài xế; % đáp ứng = có mặt / TX cần (số xe khác nhau cần có mặt trong khung).</li><li><b>Bình Dương:</b> Demand = Completed + Driver Cancel; CR = Completed / Demand; Supply = số xe có Order; Trip thiếu = Demand × CR mục tiêu − Completed.</li></ul></div><div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2a10 10 0 0 1 9 14 5 5 0 0 0-5-2h-2a3 3 0 0 1-3-3V2z"/></svg></span> Thang màu hiệu suất 4 bậc & ngưỡng</h3><p class="small">Thấp → đỏ, cao → xanh lá. Chỉ số có dấu ↓ là "càng thấp càng tốt" nên thang màu đảo chiều. Ngưỡng cấu hình tại hằng số <code>PERF_RULES</code> ở cuối file.</p><div class="table-wrap"><table class="table" id="perfRulesTable"></table></div></div><div class="card"><p class="small">Số liệu phụ thuộc vào bộ lọc, trường dữ liệu và khả năng ghép biển số. Dòng Order Depot trống/mã khác bị loại ngay khi nạp; các dòng hợp lệ nhưng thiếu thông tin khác được giữ lại để kiểm soát chất lượng dữ liệu.</p></div></section>
 
 
 <section id="controltower" class="section active">
  <div class="note"><b>CONTROL TOWER:</b> màn hình điều hành ưu tiên các điểm cần xử lý: pool xe, xe XDV, xe chưa có Order, tài xế GMV thấp và hủy cuốc. Chọn Depot / Đội / Tổ để khoanh vùng.</div>
  <div class="kpis" id="towerKpis"></div>
- <div class="card" style="margin-bottom:13px"><h3>🚕 Order & GMV theo nguồn</h3><div class="source-cards" id="towerSource"></div></div>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> Order & GMV theo nguồn</h3><div class="source-cards" id="towerSource"></div></div>
  <div class="grid">
-  <div class="card"><h3>🚨 Ưu tiên xử lý</h3><div id="priorityBox"></div></div>
-  <div class="card"><h3>📊 Cơ cấu Pool xe</h3><div class="chartbox"><canvas id="towerPoolChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/><circle cx="12" cy="17" r="0.5" fill="currentColor"/></svg></span> Ưu tiên xử lý</h3><div id="priorityBox"></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span> Cơ cấu Pool xe</h3><div class="chartbox"><canvas id="towerPoolChart"></canvas></div></div>
  </div>
  <div class="grid">
-  <div class="card"><h3>🛠 XDV theo Đội</h3><div class="chartbox"><canvas id="towerXdvChart"></canvas></div></div>
-  <div class="card"><h3>❌ Tỷ lệ hủy theo Đội</h3><div class="pf-legend" data-rules="cancelPct"></div><div class="chartbox"><canvas id="towerCancelChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l2.5-2.5a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0z"/><path d="M4 20l6-6"/></svg></span> XDV theo Đội</h3><div class="chartbox"><canvas id="towerXdvChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg></span> Tỷ lệ hủy theo Đội</h3><div class="pf-legend" data-rules="cancelPct"></div><div class="chartbox"><canvas id="towerCancelChart"></canvas></div></div>
  </div>
- <div class="card"><h3>🎯 Đội / Tổ cần chú ý</h3><div class="pf-legend" data-rules="xdvPct"></div><div class="table-wrap"><table class="table" id="towerOrgTable"></table></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></span> Đội / Tổ cần chú ý</h3><div class="pf-legend" data-rules="xdvPct"></div><div class="table-wrap"><table class="table" id="towerOrgTable"></table></div></div>
 </section>
 
 <section id="orders" class="section">
@@ -876,16 +884,16 @@ tr.ds-suggest td{background:#fff9e8}
   <div class="field" style="justify-content:flex-end"><label>&nbsp;</label><button class="btn primary" onclick="exportNoCuocXlsx()">⬇ Xuất Excel</button></div>
  </div>
  <div class="kpis" id="nocuocKpis"></div>
- <div class="card"><h3>📊 Tài xế 0 đồng theo Đội / Tổ</h3><p class="small">(a) Chưa có Order hợp lệ • (b) Có Order hợp lệ nhưng GMV = 0. Bấm tiêu đề cột để sắp xếp trong từng Đội; dòng tổng luôn nằm cuối nhóm.</p><div class="pf-legend"><span class="pf-leg-group"><b>Màu so sánh giữa các Tổ TAXI trong phạm vi lọc:</b><span class="pf pf-1">25% thấp nhất</span><span class="pf pf-2">25–50%</span><span class="pf pf-3">50–75%</span><span class="pf pf-4">25% cao nhất</span></span><span>Cột có ↓ đảo chiều (càng thấp càng xanh). Tổ RTO và dòng tổng không tô màu.</span></div><div id="noCuocCheck"></div><div class="table-wrap"><table class="table" id="noCuocSummaryTable"></table></div></div>
- <div class="card"><h3>🚕 Danh sách tài xế 0 đồng <span class="small" id="zeroListMeta"></span></h3>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span> Tài xế 0 đồng theo Đội / Tổ</h3><p class="small">(a) Chưa có Order hợp lệ • (b) Có Order hợp lệ nhưng GMV = 0. Bấm tiêu đề cột để sắp xếp trong từng Đội; dòng tổng luôn nằm cuối nhóm.</p><div class="pf-legend"><span class="pf-leg-group"><b>Màu so sánh giữa các Tổ TAXI trong phạm vi lọc:</b><span class="pf pf-1">25% thấp nhất</span><span class="pf pf-2">25–50%</span><span class="pf pf-3">50–75%</span><span class="pf pf-4">25% cao nhất</span></span><span>Cột có ↓ đảo chiều (càng thấp càng xanh). Tổ RTO và dòng tổng không tô màu.</span></div><div id="noCuocCheck"></div><div class="table-wrap"><table class="table" id="noCuocSummaryTable"></table></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> Danh sách tài xế 0 đồng <span class="small" id="zeroListMeta"></span></h3>
   <p class="small">Tài xế đang gán trên xe vận doanh, GMV COMPLETED = 0 trong kỳ lọc. Sắp xếp: Đội → Tổ → nhóm (a) trước (b) → tên. Order gắn theo <b>Sap Profile Id</b>; tài xế không tách được mã SAP thì gắn theo biển số.</p>
   <div class="table-wrap"><table class="table" id="assignedZeroRevenueTable"></table></div>
  </div>
- <div class="card" style="margin-top:12px"><h3>🔓 Tài xế còn làm việc (Unlock) nhưng chưa gán xe</h3>
+ <div class="card" style="margin-top:12px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 1 1 8 0"/></svg></span> Tài xế còn làm việc (Unlock) nhưng chưa gán xe</h3>
   <p class="small">Tài xế trong file Tài xế có trạng thái Unlock/đang làm việc nhưng không được gán trên xe nào trong file Xe (đối chiếu theo mã SAP, dự phòng theo tên).</p>
   <div class="table-wrap"><table class="table" id="unlockNoVehicleTable"></table></div>
  </div>
- <div class="card" style="margin-top:12px"><h3>📋 Nhóm (a) — Tài xế đã gán xe nhưng chưa có Order hợp lệ</h3>
+ <div class="card" style="margin-top:12px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="4" rx="1"/><rect x="5" y="8" width="14" height="13" rx="2"/></svg></span> Nhóm (a) — Tài xế đã gán xe nhưng chưa có Order hợp lệ</h3>
   <div class="table-wrap"><table class="table" id="noOrderDriverTable"></table></div>
  </div>
 </section>
@@ -895,15 +903,15 @@ tr.ds-suggest td{background:#fff9e8}
  <div class="card"><h3>Danh sách hủy cuốc bởi tài xế</h3><div class="table-wrap"><table class="table" id="driverCancelTable"></table></div></div>
 
 <div class="grid" style="margin-top:12px">
- <div class="card"><h3>📍 TOP 10 ĐỊA CHỈ CÓ TÀI XẾ HỦY NHIỀU NHẤT</h3><div class="chartbox"><canvas id="cancelAddressChart"></canvas></div></div>
- <div class="card"><h3>👤 TOP 20 TÀI XẾ HỦY NHIỀU NHẤT</h3><div class="table-wrap"><table class="table" id="top20CancelTable"></table></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5-6-10a6 6 0 0 1 12 0c0 5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg></span> TOP 10 ĐỊA CHỈ CÓ TÀI XẾ HỦY NHIỀU NHẤT</h3><div class="chartbox"><canvas id="cancelAddressChart"></canvas></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg></span> TOP 20 TÀI XẾ HỦY NHIỀU NHẤT</h3><div class="table-wrap"><table class="table" id="top20CancelTable"></table></div></div>
 </div>
 <div class="card" style="margin-top:12px">
- <h3>🏆 TOP 3 ĐỘI — TOP 10 TÀI XẾ HỦY CUỐC NHIỀU NHẤT</h3>
+ <h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v4a6 6 0 0 1-6 6 6 6 0 0 1-6-6V4z"/><path d="M6 6H4a2 2 0 0 0 2 4"/><path d="M18 6h2a2 2 0 0 1-2 4"/><path d="M12 14v4"/><path d="M8 18h8"/></svg></span> TOP 3 ĐỘI — TOP 10 TÀI XẾ HỦY CUỐC NHIỀU NHẤT</h3>
  <p class="small">Mỗi bảng hiển thị 10 tài xế có số lượng hủy bởi tài xế cao nhất trong từng Đội thuộc phạm vi lọc.</p>
  <div id="teamCancelTop3" class="grid cancel-team-grid"></div>
 </div>
-<div class="card" style="margin-top:12px"><h3>🎯 TOP 10 TÀI XẾ CÓ DOANH THU NHƯNG TỶ LỆ HỦY CAO</h3>
+<div class="card" style="margin-top:12px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><circle cx="12" cy="12" r="0.8" fill="currentColor"/></svg></span> TOP 10 TÀI XẾ CÓ DOANH THU NHƯNG TỶ LỆ HỦY CAO</h3>
  <div class="note">Chỉ xét tài xế có Order hoàn tất tạo doanh thu và tối thiểu 3 Order trong kỳ để tránh tỷ lệ cao do mẫu quá nhỏ.</div>
  <div class="pf-legend" data-rules="cancelPct"></div><div class="table-wrap"><table class="table" id="highCancelRevenueTable"></table></div>
 </div></section>
@@ -920,28 +928,28 @@ tr.ds-suggest td{background:#fff9e8}
  </div>
  <div class="kpis xdv-kpis" id="xdvKpis"></div>
  <div class="grid">
-  <div class="card"><h3>⚠️ Cảnh báo cần xử lý</h3><div id="xdvAlerts"></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Cảnh báo cần xử lý</h3><div id="xdvAlerts"></div></div>
   <div class="card"><h3>⏳ Phân bổ thời gian tồn xưởng</h3><div class="pf-legend" data-rules="xdvDays"></div><div class="chartbox"><canvas id="xdvAgingChart"></canvas></div></div>
  </div>
  <div class="grid">
-  <div class="card"><h3>🏭 Xưởng dịch vụ × thời gian tồn <span class="small">(top 12 xưởng)</span></h3><div class="xdv-legend" id="xdvShopLegend"></div><div class="chartbox tall"><canvas id="xdvShopChart"></canvas></div></div>
-  <div class="card"><h3>🔧 Nhóm lỗi — số xe & tồn bình quân <span class="small">(màu theo tồn TB)</span></h3><div class="chartbox tall"><canvas id="xdvErrorChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V11l6-6v2l3-3 4 4v13H3z"/><path d="M7 21v-6h4v6"/></svg></span> Xưởng dịch vụ × thời gian tồn <span class="small">(top 12 xưởng)</span></h3><div class="xdv-legend" id="xdvShopLegend"></div><div class="chartbox tall"><canvas id="xdvShopChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l2.5-2.5a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0z"/><path d="M5 21l5-5"/></svg></span> Nhóm lỗi — số xe & tồn bình quân <span class="small">(màu theo tồn TB)</span></h3><div class="chartbox tall"><canvas id="xdvErrorChart"></canvas></div></div>
  </div>
- <div class="card" style="margin-bottom:13px"><h3>🧮 Ma trận Xưởng × thời gian tồn</h3><div class="table-wrap"><table class="table" id="xdvShopMatrix"></table></div></div>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h6M12 12v4"/></svg></span> Ma trận Xưởng × thời gian tồn</h3><div class="table-wrap"><table class="table" id="xdvShopMatrix"></table></div></div>
  <div class="grid">
-  <div class="card"><h3>🔧 Tổng hợp theo Nhóm lỗi</h3><div class="table-wrap"><table class="table" id="xdvErrorTable"></table></div></div>
-  <div class="card"><h3>👥 Đội / Tổ bị ảnh hưởng</h3><div class="pf-legend" data-rules="xdvPct"></div><div class="table-wrap"><table class="table" id="xdvOrgTable"></table></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l2.5-2.5a1 1 0 0 0 0-1.4l-1.6-1.6a1 1 0 0 0-1.4 0z"/><path d="M5 21l5-5"/></svg></span> Tổng hợp theo Nhóm lỗi</h3><div class="table-wrap"><table class="table" id="xdvErrorTable"></table></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Đội / Tổ bị ảnh hưởng</h3><div class="pf-legend" data-rules="xdvPct"></div><div class="table-wrap"><table class="table" id="xdvOrgTable"></table></div></div>
  </div>
  <div class="grid">
   <div class="card"><h3>Xe XDV theo Đội</h3><div class="chartbox"><canvas id="xdvTeamChart"></canvas></div></div>
   <div class="card"><h3>Xe XDV theo Tổ</h3><div class="chartbox"><canvas id="xdvGroupChart"></canvas></div></div>
  </div>
- <div class="card"><h3>📋 Danh sách chi tiết xe đang nằm XDV <span class="small" id="xdvDetailMeta"></span></h3>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="4" rx="1"/><rect x="5" y="8" width="14" height="13" rx="2"/></svg></span> Danh sách chi tiết xe đang nằm XDV <span class="small" id="xdvDetailMeta"></span></h3>
   <p class="small">Nhấn tiêu đề cột để sắp xếp. Dòng nền đỏ nhạt = tồn trên 30 ngày.</p>
   <div class="table-wrap xdv-detail-wrap"><table class="table" id="xdvTable"></table></div>
  </div>
 
-<div class="card" style="margin-top:12px"><h3>🚘 PHÂN LOẠI XE NẰM DEPOT / THAY MÁY / KHÁC</h3>
+<div class="card" style="margin-top:12px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> PHÂN LOẠI XE NẰM DEPOT / THAY MÁY / KHÁC</h3>
  <div class="chartbox"><canvas id="xdvDepotStatusChart"></canvas></div>
  <div class="table-wrap" style="margin-top:10px"><table class="table" id="xdvDepotStatusTable"></table></div>
 </div></section>
@@ -955,7 +963,7 @@ tr.ds-suggest td{background:#fff9e8}
  </div>
  <div class="card"><h3>Chi tiết Depot / Đội / Tổ</h3><div class="pf-legend" data-rules="xdvPct"></div><div class="table-wrap"><table class="table" id="depotPoolTable"></table></div></div>
 
-<div class="card" style="margin-top:12px"><h3>📐 ĐỊNH BIÊN TỔ CHUẨN 170 XE — ĐỘI 1 / ĐỘI 2 / ĐỘI 6</h3>
+<div class="card" style="margin-top:12px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18-18"/><path d="M3 8v13h13"/></svg></span> ĐỊNH BIÊN TỔ CHUẨN 170 XE — ĐỘI 1 / ĐỘI 2 / ĐỘI 6</h3>
  <div class="note">Định biên chuẩn: <b>170 xe / Tổ</b>. Chỉ tính Đội 1, Đội 2 và Đội 6. Thiếu hụt = 170 − Pool xe thực tế, nếu Pool thấp hơn 170.</div>
  <div class="pf-legend" data-rules="staffPct"></div><div class="table-wrap"><table class="table" id="staffing170Table"></table></div>
 </div></section>
@@ -976,11 +984,11 @@ tr.ds-suggest td{background:#fff9e8}
  <div id="trCoverage"></div>
  <div class="kpis" id="trKpis"></div>
  <div class="grid">
-  <div class="card"><h3>📈 GMV theo ngày — kỳ chọn so với tuần trước</h3><div class="chartbox tall"><canvas id="trGmvChart"></canvas></div></div>
-  <div class="card"><h3>👥 TX active & TX 0 đồng theo ngày</h3><div class="chartbox tall"><canvas id="trDrvChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span> GMV theo ngày — kỳ chọn so với tuần trước</h3><div class="chartbox tall"><canvas id="trGmvChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> TX active & TX 0 đồng theo ngày</h3><div class="chartbox tall"><canvas id="trDrvChart"></canvas></div></div>
  </div>
- <div class="card" style="margin-bottom:13px"><h3>📅 Chi tiết theo ngày</h3><div class="table-wrap"><table class="table" id="trDayTable"></table></div></div>
- <div class="card"><h3>👥 GMV theo Đội / Tổ so với tuần trước</h3><div class="pf-legend" data-rules="deltaPct"></div><p class="small">Tổ RTO và dòng tổng không tô màu. Sắp xếp Đội → Tổ.</p><div class="table-wrap"><table class="table" id="trOrgTable"></table></div></div>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> Chi tiết theo ngày</h3><div class="table-wrap"><table class="table" id="trDayTable"></table></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> GMV theo Đội / Tổ so với tuần trước</h3><div class="pf-legend" data-rules="deltaPct"></div><p class="small">Tổ RTO và dòng tổng không tô màu. Sắp xếp Đội → Tổ.</p><div class="table-wrap"><table class="table" id="trOrgTable"></table></div></div>
 </section>
 
 <section id="zerostreak" class="section">
@@ -994,10 +1002,10 @@ tr.ds-suggest td{background:#fff9e8}
   <button class="btn primary" onclick="exportZeroStreakXlsx()">⬇ Xuất Excel (mỗi Đội 1 sheet)</button>
  </div>
  <div class="kpis" id="zsKpis"></div>
- <div class="card" style="margin-bottom:13px"><h3>📊 Tổng hợp theo Đội / Tổ</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg></span> Tổng hợp theo Đội / Tổ</h3>
   <div class="pf-legend"><span class="pf-leg-group"><b>Màu so sánh giữa các Tổ TAXI:</b><span class="pf pf-4">25% thấp nhất</span><span class="pf pf-3">25–50%</span><span class="pf pf-2">50–75%</span><span class="pf pf-1">25% cao nhất</span></span><span>(càng ít TX 0 đồng liên tiếp càng xanh). Tổ RTO và dòng tổng không tô màu.</span></div>
   <div class="table-wrap"><table class="table" id="zsSummary"></table></div></div>
- <div class="card"><h3>⛔ Danh sách tài xế 0 đồng liên tiếp <span class="small" id="zsMeta"></span></h3>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12h8"/></svg></span> Danh sách tài xế 0 đồng liên tiếp <span class="small" id="zsMeta"></span></h3>
   <p class="small">Dải 7 ngày: <span class="zs-dot g"></span> có GMV <span class="zs-dot z"></span> 0 đồng <span class="zs-dot n"></span> không được gán xe <span class="zs-dot m"></span> chưa có dữ liệu. Mức: <span class="badge warn">Cảnh báo</span> đạt ngưỡng • <span class="badge bad">Khẩn</span> từ ngưỡng + 3 ngày.</p>
   <div class="table-wrap" style="max-height:640px"><table class="table" id="zsTable"></table></div></div>
 </section>
@@ -1009,7 +1017,7 @@ tr.ds-suggest td{background:#fff9e8}
   <div class="field"><label>Chia cột</label><select id="hmBucket"><option value="khung">6 khung giờ vận hành</option><option value="hour">24 giờ</option></select></div>
   <div class="field"><label>Hiển thị</label><select id="hmMode"><option value="value">Giá trị</option><option value="share">Tỷ trọng trong Tổ (%)</option></select></div>
  </div>
- <div class="card"><h3>🕒 Heatmap khung giờ × Tổ <span class="small" id="hmMeta"></span></h3><div class="table-wrap" style="max-height:none"><table class="table heat-table" id="hmTable"></table></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span> Heatmap khung giờ × Tổ <span class="small" id="hmMeta"></span></h3><div class="table-wrap" style="max-height:none"><table class="table heat-table" id="hmTable"></table></div>
   <div id="hmInsight" class="small" style="margin-top:10px"></div></div>
 </section>
 
@@ -1023,25 +1031,25 @@ tr.ds-suggest td{background:#fff9e8}
  </div>
  <div class="kpis" id="bd2Kpis"></div>
  <div class="card" style="margin-bottom:13px"><h3>⏱ Demand / Completed / CR theo giờ</h3><div class="chartbox tall"><canvas id="bd2HourChart"></canvas></div><div id="bd2Insight" class="small" style="margin-top:8px"></div></div>
- <div class="card" style="margin-bottom:13px"><h3>🗺 CR theo Khu vực × Khung giờ</h3><div class="pf-legend" id="bd2Legend"></div><div class="table-wrap"><table class="table heat-table" id="bd2Matrix"></table></div></div>
- <div class="card"><h3>📍 Chi tiết theo phường / xã <span class="small" id="bd2WardMeta"></span></h3><div class="table-wrap" style="max-height:620px"><table class="table" id="bd2WardTable"></table></div></div>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6l7-3 8 3 7-3v14l-7 3-8-3-7 3z"/><path d="M8 3v14M16 6v14"/></svg></span> CR theo Khu vực × Khung giờ</h3><div class="pf-legend" id="bd2Legend"></div><div class="table-wrap"><table class="table heat-table" id="bd2Matrix"></table></div></div>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6-5-6-10a6 6 0 0 1 12 0c0 5-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg></span> Chi tiết theo phường / xã <span class="small" id="bd2WardMeta"></span></h3><div class="table-wrap" style="max-height:620px"><table class="table" id="bd2WardTable"></table></div></div>
 </section>
 
 <section id="daystore" class="section">
  <div class="note"><b>KHO DỮ LIỆU NGÀY:</b> nạp file Order (1 hoặc nhiều ngày) + file Xe → chọn ngày → <b>Khóa & lưu</b>. Kho lưu số liệu tổng hợp theo tài xế (kể cả tài xế được gán xe nhưng 0 đồng), theo Tổ, theo giờ và theo nguồn, kèm phân công xe – tài xế tại thời điểm khóa. Ngày đã khóa không bị ghi đè khi nạp file sau. Ngày hôm nay chưa đủ dữ liệu nên không khóa được. <b>Dữ liệu lưu trên trình duyệt này</b> — hãy Xuất kho định kỳ để sao lưu.</div>
- <div class="card" style="margin-bottom:13px"><h3>📥 Ngày có trong file đang nạp</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2"/></svg></span> Ngày có trong file đang nạp</h3>
   <div class="actions no-snap" style="margin-bottom:10px;flex-wrap:wrap">
    <button class="btn" onclick="dsSelectNew()">Chọn các ngày mới</button>
-   <button class="btn primary" onclick="dsLockSelected(false)">🔒 Khóa & lưu ngày đã chọn</button>
-   <button class="btn" onclick="dsLockSelected(true)">♻ Mở khóa & thay thế</button>
+   <button class="btn primary" onclick="dsLockSelected(false)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span> Khóa & lưu ngày đã chọn</button>
+   <button class="btn" onclick="dsLockSelected(true)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14l-3-3 3-3"/><path d="M4 11h7a4 4 0 0 1 4 4"/><path d="M17 10l3 3-3 3"/><path d="M20 13H13a4 4 0 0 1-4-4"/></svg></span> Mở khóa & thay thế</button>
   </div>
   <div id="dsLoadedInfo"></div>
   <div class="table-wrap"><table class="table" id="dsLoadedTable"></table></div></div>
- <div class="card"><h3>🗄 Các ngày đã khóa trong kho <span class="small" id="dsStoreMeta"></span></h3>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/></svg></span> Các ngày đã khóa trong kho <span class="small" id="dsStoreMeta"></span></h3>
   <div class="actions no-snap" style="margin-bottom:10px;flex-wrap:wrap">
    <button class="btn" onclick="dsExport()">⬇ Xuất kho (sao lưu)</button>
    <label class="btn" style="cursor:pointer">⬆ Nhập kho<input id="dsImportFile" type="file" accept=".json" hidden></label>
-   <button class="btn" onclick="dsDeleteSelected()">🗑 Xóa ngày đã chọn khỏi kho</button>
+   <button class="btn" onclick="dsDeleteSelected()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></span> Xóa ngày đã chọn khỏi kho</button>
   </div>
   <div class="table-wrap" style="max-height:520px"><table class="table" id="dsStoreTable"></table></div></div>
 </section>
@@ -1050,7 +1058,7 @@ tr.ds-suggest td{background:#fff9e8}
  <div class="note"><b>KIỂM SOÁT XE TRONG VÙNG:</b> nạp file <b>Báo cáo ra vào vùng</b> (mỗi file 1 địa bàn) + Order + Xe của cùng ngày. Phạm vi: xe <b>Trạng thái cấp 3 = Xe vận doanh</b>, không gồm PLF, RTO và xe ngoài file Xe.
   <b>Có mặt</b> = có định vị trong vùng ≥ ngưỡng phút trong khung <i>hoặc</i> có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn (theo địa chỉ đón) • Đơn được ghép với lượt vào vùng theo <b>Create Time ± dung sai</b> • <b>Tuân thủ</b> = có mặt + có định vị ≥ ngưỡng + xe đã gán tài xế • <b>TX cần</b> = số xe khác nhau cần có mặt trong khung.</div>
 
- <div class="card" style="margin-bottom:13px"><h3>📂 File ra vào vùng & chỉ tiêu</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg></span> File ra vào vùng & chỉ tiêu</h3>
   <div class="zone-setup">
    <div>
     <div class="actions no-snap" style="flex-wrap:wrap;margin-bottom:8px">
@@ -1084,26 +1092,26 @@ tr.ds-suggest td{background:#fff9e8}
  <div class="kpis" id="zoneKpis"></div>
 
  <div class="grid">
-  <div class="card"><h3>🚖 Có mặt vs TX cần theo khung giờ</h3><div class="chartbox tall"><canvas id="zoneKhungChart"></canvas></div></div>
-  <div class="card"><h3>📈 % đáp ứng theo ngày (kho)</h3><div class="chartbox tall"><canvas id="zoneTrendChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M5 9l2-4h10l2 4"/><circle cx="7.5" cy="14" r="1.2"/><circle cx="16.5" cy="14" r="1.2"/></svg></span> Có mặt vs TX cần theo khung giờ</h3><div class="chartbox tall"><canvas id="zoneKhungChart"></canvas></div></div>
+  <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></span> % đáp ứng theo ngày (kho)</h3><div class="chartbox tall"><canvas id="zoneTrendChart"></canvas></div></div>
  </div>
 
- <div class="card" style="margin-bottom:13px"><h3>🗺 Địa bàn × Khung giờ</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6l7-3 8 3 7-3v14l-7 3-8-3-7 3z"/><path d="M8 3v14M16 6v14"/></svg></span> Địa bàn × Khung giờ</h3>
   <div class="pf-legend" data-rules="zoneMeet"></div>
-  <p class="small">Mỗi ô: <b>có mặt / cần</b> • % đáp ứng • xe có đơn / không đơn • ⚠ xe có đơn loại B • CR = đơn hợp lệ / (hợp lệ + hủy).</p>
+  <p class="small">Mỗi ô: <b>có mặt / cần</b> • % đáp ứng • xe có đơn / không đơn • <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> xe có đơn loại B • CR = đơn hợp lệ / (hợp lệ + hủy).</p>
   <div class="table-wrap"><table class="table heat-table" id="zoneMatrix"></table></div></div>
 
- <div class="card" style="margin-bottom:13px"><h3>👥 Theo Đội / Tổ</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Theo Đội / Tổ</h3>
   <div class="pf-legend"><span class="pf-leg-group"><b>Màu so sánh giữa các Tổ:</b><span class="pf pf-1">25% thấp nhất</span><span class="pf pf-2">25–50%</span><span class="pf pf-3">50–75%</span><span class="pf pf-4">25% cao nhất</span></span><span>Dòng tổng không tô màu.</span></div>
   <div class="table-wrap"><table class="table" id="zoneOrgTable"></table></div></div>
 
- <div class="card" style="margin-bottom:13px"><h3>🧾 Đơn hàng × định vị & CR (theo Create Time)</h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 8h8M8 12h8M8 16h5"/></svg></span> Đơn hàng × định vị & CR (theo Create Time)</h3>
   <div class="pf-legend" data-rules="zoneMatch,zoneCR"></div>
   <div id="zoneOrdSummary"></div>
-  <h3 style="margin-top:12px">👤 Tài xế có mặt & có đơn tại địa bàn <span class="small" id="zoneDrvMeta"></span></h3>
+  <h3 style="margin-top:12px"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.5-6 8-6s8 2 8 6"/></svg></span> Tài xế có mặt & có đơn tại địa bàn <span class="small" id="zoneDrvMeta"></span></h3>
   <p class="small">Tài xế theo <b>Sap Profile Id trên đơn</b> (người thực chạy). % khớp = đơn A / (A + B + C).</p>
   <div class="table-wrap" style="max-height:480px"><table class="table" id="zoneDrvTable"></table></div>
-  <h3 style="margin-top:12px">📄 Danh sách đơn <span class="small" id="zoneOrdMeta"></span></h3>
+  <h3 style="margin-top:12px"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span> Danh sách đơn <span class="small" id="zoneOrdMeta"></span></h3>
   <div class="xdv-filters no-snap" style="grid-template-columns:repeat(3,minmax(160px,1fr));box-shadow:none;margin-bottom:8px">
    <div class="field"><label>Nhóm đơn</label><select id="zoneGrpF"><option value="">Tất cả</option><option value="V">Hợp lệ (ASSIGNED / IN PROCESS / COMPLETED)</option><option value="X">Hủy (CANCELLED)</option></select></div>
    <div class="field"><label>Phân loại</label><select id="zoneClsF"><option value="">Tất cả</option><option value="A">A. Khớp định vị</option><option value="B">B. Đón tại địa bàn – không định vị</option><option value="C">C. Xe đang ở vùng khác</option><option value="D">D. Không ghép được xe</option><option value="E">E. Địa bàn đón chưa có file vùng</option></select></div>
@@ -1111,7 +1119,7 @@ tr.ds-suggest td{background:#fff9e8}
   </div>
   <div class="table-wrap" style="max-height:560px"><table class="table" id="zoneOrdTable"></table></div></div>
 
- <div class="card" style="margin-bottom:13px"><h3>📋 Chi tiết xe có mặt <span class="small" id="zoneDetailMeta"></span></h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="4" width="8" height="4" rx="1"/><rect x="5" y="8" width="14" height="13" rx="2"/></svg></span> Chi tiết xe có mặt <span class="small" id="zoneDetailMeta"></span></h3>
   <div class="xdv-filters no-snap" style="grid-template-columns:repeat(3,minmax(160px,1fr));box-shadow:none;margin-bottom:8px">
    <div class="field"><label>Trạng thái</label><select id="zoneStatusF"><option value="">Tất cả</option><option value="ok_order">Tuân thủ – có đơn</option><option value="ok_noorder">Tuân thủ – không đơn</option><option value="no_gps">Có đơn – không định vị</option><option value="no_driver">Có định vị – chưa gán TX</option></select></div>
    <div class="field"><label>Đội</label><select id="zoneTeamF"><option value="">Tất cả</option></select></div>
@@ -1119,16 +1127,16 @@ tr.ds-suggest td{background:#fff9e8}
   </div>
   <div class="table-wrap" style="max-height:560px"><table class="table" id="zoneDetailTable"></table></div></div>
 
- <div class="card" style="margin-bottom:13px"><h3>🚫 Xe vận doanh không có mặt ở địa bàn nào <span class="small" id="zoneAbsentMeta"></span></h3>
+ <div class="card" style="margin-bottom:13px"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M4.5 4.5l15 15"/></svg></span> Xe vận doanh không có mặt ở địa bàn nào <span class="small" id="zoneAbsentMeta"></span></h3>
   <p class="small">Theo bộ lọc địa bàn / khung giờ đang chọn. Gồm xe có định vị nhưng chưa đủ ngưỡng phút.</p>
   <div class="table-wrap" style="max-height:420px"><table class="table" id="zoneAbsentTable"></table></div></div>
 
- <div class="card"><h3>🗄 Khóa dữ liệu vùng vào kho theo ngày <span class="small" id="zoneStoreMeta"></span></h3>
+ <div class="card"><h3><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="7" ry="3"/><path d="M5 5v7c0 1.7 3.1 3 7 3s7-1.3 7-3V5"/><path d="M5 12v7c0 1.7 3.1 3 7 3s7-1.3 7-3v-7"/></svg></span> Khóa dữ liệu vùng vào kho theo ngày <span class="small" id="zoneStoreMeta"></span></h3>
   <p class="small">Khóa ngày để lưu kết quả (theo xe × địa bàn × khung) phục vụ so sánh D-1, WoW, Wo2W. Ngày đã khóa không bị ghi đè trừ khi chọn "Mở khóa & thay thế". Ngày hôm nay chưa đủ dữ liệu nên không khóa được. Sao lưu bằng nút <b>Xuất kho</b> ở tab Kho dữ liệu ngày (đã gồm dữ liệu vùng).</p>
   <div class="actions no-snap" style="margin-bottom:8px;flex-wrap:wrap">
-   <button class="btn primary" onclick="zoneLock(false)">🔒 Khóa ngày đã chọn</button>
-   <button class="btn" onclick="zoneLock(true)">♻ Mở khóa & thay thế</button>
-   <button class="btn" onclick="zoneDeleteStored()">🗑 Xóa ngày đã chọn khỏi kho</button>
+   <button class="btn primary" onclick="zoneLock(false)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="1"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span> Khóa ngày đã chọn</button>
+   <button class="btn" onclick="zoneLock(true)"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 14l-3-3 3-3"/><path d="M4 11h7a4 4 0 0 1 4 4"/><path d="M17 10l3 3-3 3"/><path d="M20 13H13a4 4 0 0 1-4-4"/></svg></span> Mở khóa & thay thế</button>
+   <button class="btn" onclick="zoneDeleteStored()"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/></svg></span> Xóa ngày đã chọn khỏi kho</button>
   </div>
   <div class="table-wrap" style="max-height:360px"><table class="table" id="zoneStoreTable"></table></div></div>
 </section>
@@ -1292,7 +1300,7 @@ $('nocuocGroupFilter')?.addEventListener('change',()=>renderNoCuocModule());
 function sourceCounts(rows){const c={TAXI:0,RTO:0,PLF:0};rows.forEach(r=>{if(c[r.__orderSource]!==undefined)c[r.__orderSource]++});return c}
 function updateLoadStatus(){
  const c=sourceCounts(joined),skip=orderLoadInfo.skippedEmpty+orderLoadInfo.skippedOther;
- $('loadStatus').textContent=`TAXI: ${fmt(c.TAXI)} | RTO: ${fmt(c.RTO)} | PLF: ${fmt(c.PLF)} | Tổng hợp lệ: ${fmt(orders.length)} | Bỏ qua (Depot trống/khác): ${fmt(skip)} | Xe: ${fmt(vehicles.length)} | Tài xế: ${fmt(drivers.length)}`+(orders.length&&!vehicles.length?' ⚠ Chưa nạp file Xe – chưa tách được RTO':'');
+ $('loadStatus').textContent=`TAXI: ${fmt(c.TAXI)} | RTO: ${fmt(c.RTO)} | PLF: ${fmt(c.PLF)} | Tổng hợp lệ: ${fmt(orders.length)} | Bỏ qua (Depot trống/khác): ${fmt(skip)} | Xe: ${fmt(vehicles.length)} | Tài xế: ${fmt(drivers.length)}`+(orders.length&&!vehicles.length?' <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Chưa nạp file Xe – chưa tách được RTO':'');
 }
 function rebuild(){
  if(orders.length||vehicles.length||drivers.length){buildJoin();populateFilters();initNoCuocFilters();setDefaultDates();render();}
@@ -1399,7 +1407,7 @@ function groupCount(rows,fn){const m=new Map();rows.forEach(r=>{const k=fn(r)||'
 
 // Global ranking helpers: used by multiple rendering modules.
 function rankIcon(n){
-  return n===1?'🥇':n===2?'🥈':n===3?'🥉':n>=4&&n<=10?'🏅':'';
+  return n===1?'1':n===2?'2':n===3?'<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="9" fill="currentColor" stroke="none">#</text></svg></span>':n>=4&&n<=10?'<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor" stroke="none">•</text></svg></span>':'';
 }
 function rankHtml(n){
   const rank=Number(n)||0;
@@ -2253,7 +2261,7 @@ function bdAgg(rows){let m=new Map;for(const x of rows){let k=x.region+'|'+x.war
 function renderBD(){let date=document.getElementById('bdDate')?.value,rows=bdRows();if(date){let [y,m,d]=date.split('-').map(Number);rows=rows.filter(x=>x.d.getFullYear()===y&&x.d.getMonth()+1===m&&x.d.getDate()===d)}let a=bdAgg(rows),t=a.reduce((q,z)=>({c:q.c+z.c,x:q.x+z.x}),{c:0,x:0}),dem=t.c+t.x,cr=dem?100*t.c/dem:0;document.getElementById('bdKPIs').innerHTML=[['Demand',dem],['Supply',t.c],['Completed',t.c],['CR',cr.toFixed(1)+'%']].map(x=>`<div class="bd-kpi"><div class="k">${x[0]}</div><div class="v">${typeof x[1]==='number'?x[1].toLocaleString('vi-VN'):x[1]}</div><div class="s">${x[0]==='CR'?'Completed / (Completed + Driver Cancel)':'Theo Order dataset'}</div></div>`).join('');
 let h=Array.from({length:24},(_,i)=>({hour:i,d:0,s:0,cr:0,c:0,x:0}));rows.forEach(x=>{let q=h[x.d.getHours()];q.c+=x.c;q.x+=x.x});h.forEach(q=>{q.d=q.c+q.x;q.s=q.c;q.cr=q.d?100*q.c/q.d:0});let p=[...h].sort((a,b)=>b.d-a.d)[0],w=[...h].filter(q=>q.d).sort((a,b)=>a.cr-b.cr)[0];document.getElementById('bdInsight').innerHTML=rows.length?`<b>Nhận định:</b> Peak Demand <b>${p.d.toLocaleString('vi-VN')}</b> tại <b>${String(p.hour).padStart(2,'0')}h</b>; CR thấp nhất có phát sinh <b>${String(w.hour).padStart(2,'0')}h (${w.cr.toFixed(1)}%)</b>.`:'Không có dữ liệu phù hợp.';
 let c=document.getElementById('bdHourlyChart');if(c&&typeof Chart!=='undefined'){if(bdChart)bdChart.destroy();bdChart=new Chart(c,{type:'line',data:{labels:h.map(q=>String(q.hour).padStart(2,'0')+'h'),datasets:[{label:'Demand',data:h.map(q=>q.d),tension:.25,borderWidth:2},{label:'Supply',data:h.map(q=>q.s),tension:.25,borderWidth:2},{label:'CR %',data:h.map(q=>q.cr),tension:.25,borderWidth:2,yAxisID:'y1'}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},scales:{y:{beginAtZero:true},y1:{position:'right',min:0,max:100,grid:{drawOnChartArea:false}}}}})}
-let search=bdNorm(document.getElementById('bdSearch')?.value),regs=bdRegion==='all'?['Thủ Dầu Một','Thuận An','Dĩ An','Tân Uyên']:[bdRegion],holder=document.getElementById('bdTables');holder.innerHTML=regs.map(r=>{let list=a.filter(z=>z.region===r&&(!search||bdNorm(z.ward).includes(search)));return `<div class="card bd-region-card" id="bd-${bdNorm(r).replace(/[^a-z0-9]+/g,'-')}"><div class="bd-region-head"><div><div class="bd-region-title">${r}</div><div class="bd-region-meta">Demand / Supply / Completed / Driver Cancel / CR</div></div><button class="btn" onclick="bdExportOnePNG('${bdNorm(r).replace(/[^a-z0-9]+/g,'-')}')">📷 PNG</button></div><div class="bd-table-scroll"><table class="bd-detail"><thead><tr><th>Phường/Xã</th><th>Demand</th><th>Supply</th><th>Completed</th><th>Driver Cancel</th><th>CR %</th></tr></thead><tbody>${list.sort((u,v)=>v.d-u.d).map(z=>`<tr><td>${z.ward}</td><td>${z.d.toLocaleString('vi-VN')}</td><td>${z.s.toLocaleString('vi-VN')}</td><td>${z.c.toLocaleString('vi-VN')}</td><td>${z.x.toLocaleString('vi-VN')}</td><td><b>${z.cr.toFixed(1)}%</b></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px">Không có dữ liệu</td></tr>'}</tbody></table></div></div>`}).join('')}
+let search=bdNorm(document.getElementById('bdSearch')?.value),regs=bdRegion==='all'?['Thủ Dầu Một','Thuận An','Dĩ An','Tân Uyên']:[bdRegion],holder=document.getElementById('bdTables');holder.innerHTML=regs.map(r=>{let list=a.filter(z=>z.region===r&&(!search||bdNorm(z.ward).includes(search)));return `<div class="card bd-region-card" id="bd-${bdNorm(r).replace(/[^a-z0-9]+/g,'-')}"><div class="bd-region-head"><div><div class="bd-region-title">${r}</div><div class="bd-region-meta">Demand / Supply / Completed / Driver Cancel / CR</div></div><button class="btn" onclick="bdExportOnePNG('${bdNorm(r).replace(/[^a-z0-9]+/g,'-')}')"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l2-2h6l2 2h3a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z"/><circle cx="12" cy="13" r="3"/></svg></span> PNG</button></div><div class="bd-table-scroll"><table class="bd-detail"><thead><tr><th>Phường/Xã</th><th>Demand</th><th>Supply</th><th>Completed</th><th>Driver Cancel</th><th>CR %</th></tr></thead><tbody>${list.sort((u,v)=>v.d-u.d).map(z=>`<tr><td>${z.ward}</td><td>${z.d.toLocaleString('vi-VN')}</td><td>${z.s.toLocaleString('vi-VN')}</td><td>${z.c.toLocaleString('vi-VN')}</td><td>${z.x.toLocaleString('vi-VN')}</td><td><b>${z.cr.toFixed(1)}%</b></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px">Không có dữ liệu</td></tr>'}</tbody></table></div></div>`}).join('')}
 function bdExportOnePNG(id){let e=document.getElementById('bd-'+id);if(!e||typeof html2canvas==='undefined')return;html2canvas(e,{backgroundColor:'#fff',scale:2}).then(c=>{let a=document.createElement('a');a.download='BinhDuong_'+id+'.png';a.href=c.toDataURL();a.click()})}
 function bdExportAllPNG(){bdExportOnePNG('thudau-mot')}
 function bdExportCSV(){let out=[['Khu vực','Phường/Xã','Demand','Supply','Completed','Driver Cancel','CR %']];bdAgg(bdRows()).forEach(z=>out.push([z.region,z.ward,z.d,z.s,z.c,z.x,z.cr.toFixed(1)+'%']));let csv='\ufeff'+out.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'),a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='BinhDuong_Demand_Supply_CR.csv';a.click()}
@@ -2279,7 +2287,7 @@ function showSection(id,btn){
 
 // Generic table sorting for operational tables
 (function(){
-  const parseVal = v => { const t=String(v||'').replace(/<[^>]*>/g,'').trim(); let c=t.replace(/[%₫đ\s#🥇🥈🥉🏅]/g,'');
+  const parseVal = v => { const t=String(v||'').replace(/<[^>]*>/g,'').trim(); let c=t.replace(/[%₫đ\s#<span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="9" fill="currentColor" stroke="none">#</text></svg></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="9" fill="currentColor" stroke="none">#</text></svg></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="9" fill="currentColor" stroke="none">#</text></svg></span><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><text x="12" y="16" text-anchor="middle" font-size="10" fill="currentColor" stroke="none">•</text></svg></span>]/g,'');
     if(/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(c))c=c.replace(/\./g,'').replace(',','.'); else if(/^-?\d+,\d+$/.test(c))c=c.replace(',','.'); else c=c.replace(/,/g,'');
     const n=Number(c); return t!=='' && c!=='' && Number.isFinite(n) ? n : t.toLocaleLowerCase('vi'); };
   document.addEventListener('click', e=>{
@@ -2634,7 +2642,7 @@ function renderXdvDetail(){
     case 'sc':return r.sc?`<span class="badge bad">${esc(r.sc)}</span>`:'';
     case 'from':return r.from?dateVN(r.from):'<span class="small">—</span>';
     case 'days':return xdvAgePill(r);
-    case 'eta':return r.eta?`<span class="${r.overdue?'metric-bad':''}">${dateVN(r.eta)}${r.overdue?' ⚠':''}</span>`:'';
+    case 'eta':return r.eta?`<span class="${r.overdue?'metric-bad':''}">${dateVN(r.eta)}${r.overdue?' <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span>':''}</span>`:'';
     case 'cost':return r.cost?money(r.cost):'';
     case 'odo':return r.odo?fmt(r.odo):'';
     default:return esc(r[k]);}};
@@ -2707,7 +2715,7 @@ function renderSourceControl(){
   const um=[...unmatched.entries()].sort((a,b)=>b[1]-a[1]);
   const umOrders=um.reduce((s,x)=>s+x[1],0);
   const others=[...(info.otherDepots instanceof Map?info.otherDepots:new Map(info.otherDepots||[]))].sort((a,b)=>b[1]-a[1]).slice(0,10);
-  const warn=!vehicles.length?'<div class="note" style="background:#fff4d9;border-color:#f0d58c;color:#7a5a0e">⚠ Chưa nạp file Xe – toàn bộ Order Depot 1102 đang tạm tính TAXI, chưa tách được RTO.</div>':'';
+  const warn=!vehicles.length?'<div class="note" style="background:#fff4d9;border-color:#f0d58c;color:#7a5a0e"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Chưa nạp file Xe – toàn bộ Order Depot 1102 đang tạm tính TAXI, chưa tách được RTO.</div>':'';
   box.innerHTML=warn+`<div class="kpis" style="grid-template-columns:repeat(6,minmax(0,1fr))">
    <div class="kpi"><div class="label">Dòng trong file</div><div class="value">${fmt(info.raw||orders.length)}</div><div class="sub">${esc(info.fileName||'')}</div></div>
    <div class="kpi"><div class="label">Hợp lệ (1102 + 1107)</div><div class="value">${fmt(orders.length)}</div><div class="sub">được đưa vào tính toán</div></div>
@@ -2997,7 +3005,7 @@ function renderNoCuocModule(){
   if(T.zero!==T.a+T.b)errs.push('(a) + (b) ≠ TX 0 đồng');
   if(grand.total!==T.total||grand.zero!==T.zero)errs.push('Tổng các Tổ ≠ KPI tổng');
   const subTot=subtotalRows.reduce((t,x)=>t+x.total,0);if(groups.length&&subTot!==grand.total)errs.push('Tổng các dòng TỔNG ĐỘI ≠ TỔNG CỘNG');
-  $('noCuocCheck').innerHTML=errs.length?`<div class="note" style="background:#fdecee;border-color:#f3b8bf;color:#b42333"><b>⚠ Số liệu không khớp:</b> ${errs.join(' • ')}</div>`:'';
+  $('noCuocCheck').innerHTML=errs.length?`<div class="note" style="background:#fdecee;border-color:#f3b8bf;color:#b42333"><b><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Số liệu không khớp:</b> ${errs.join(' • ')}</div>`:'';
 
   /* Danh sách chi tiết TX 0 đồng */
   const zero=all.filter(x=>x.zero).sort((x,y)=>natCmp(x.team,y.team)||natCmp(x.group,y.group)||x.cls.localeCompare(y.cls)||natCmp(x.name,y.name));
@@ -3065,8 +3073,8 @@ renderSourceControl=function(){
   const orph=[...orphan.entries()].sort((a,b)=>b[1]-a[1]);
   const noSap=list.filter(x=>!x.sap);
   const hasSapCol=joined.some(r=>r.__sap);
-  box.insertAdjacentHTML('beforeend',`<h3 style="margin-top:14px">🪪 Ghép tài xế theo mã SAP</h3>
-   ${hasSapCol?'':'<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#b45309">⚠ File Order không có cột Sap Profile Id – toàn bộ tài xế đang ghép theo biển số.</div>'}
+  box.insertAdjacentHTML('beforeend',`<h3 style="margin-top:14px"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="12" r="3"/><path d="M13 10h6M13 14h6"/></svg></span> Ghép tài xế theo mã SAP</h3>
+   ${hasSapCol?'':'<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#b45309"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> File Order không có cột Sap Profile Id – toàn bộ tài xế đang ghép theo biển số.</div>'}
    <div class="kpis" style="grid-template-columns:repeat(4,minmax(0,1fr))">
     <div class="kpi"><div class="label">TX tách được mã SAP</div><div class="value">${fmt(bySap)}</div><div class="sub">Cột Tài xế dạng "Họ tên (mã SAP)"</div></div>
     <div class="kpi ${byPlate?'k-warn':''}"><div class="label">TX ghép theo biển số</div><div class="value">${fmt(byPlate)}</div><div class="sub">Không tách được mã SAP</div></div>
@@ -3142,7 +3150,7 @@ function renderDayStore(){
   const m=loadedDays();__dsLoadedCache=m;
   const days=[...m.keys()].sort();
   $('dsLoadedInfo').innerHTML=!orders.length?'<div class="empty">Chưa nạp file Order.</div>':
-    (!vehicles.length?'<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#b45309">⚠ Chưa nạp file Xe – cần file Xe để lưu danh sách tài xế được gán (kể cả tài xế 0 đồng).</div>':'');
+    (!vehicles.length?'<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#b45309"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Chưa nạp file Xe – cần file Xe để lưu danh sách tài xế được gán (kể cả tài xế 0 đồng).</div>':'');
   $('dsLoadedTable').innerHTML='<thead><tr><th><input type="checkbox" id="dsAllLoaded"></th><th>Ngày</th><th>Order</th><th>Completed</th><th>GMV</th><th>Trạng thái trong kho</th><th>Ghi chú</th></tr></thead><tbody>'+
     days.map(d=>{const rows=m.get(d),o=rows.length,c=rows.filter(r=>String(key(r,'Status')).toUpperCase().includes('COMPLET')).length,g=rows.reduce((s,r)=>s+gmv(r),0);
       const st=DS.get(d),sig=`${o}|${Math.round(g)}|${c}`,isToday=d>=today;
@@ -3264,7 +3272,7 @@ function renderTrend(){
   const cov=[`<b>Kỳ chọn:</b> ${days.length?dLabel(days[0])+' → '+dLabel(days[days.length-1]):''} (${cur.n||0}/${days.length} ngày có trong kho)`]
     .concat(prev.map(p=>`<b>${p.s===7?'WoW':'Wo2W'}:</b> ${dLabel(p.days[0])} → ${dLabel(p.days[p.days.length-1])} (${p.agg.n||0}/${p.days.length} ngày)`));
   const miss=cur.n<days.length||prev.some(p=>p.agg.n<p.days.length);
-  $('trCoverage').innerHTML=`<div class="note" style="${miss?'background:#fef1e4;border-color:#f5c89a;color:#8a4b0f':''}">${cov.join(' &nbsp;•&nbsp; ')}${miss?'<br>⚠ Có ngày chưa khóa trong kho → chỉ số tổng được so theo <b>bình quân/ngày</b>.':''}</div>`;
+  $('trCoverage').innerHTML=`<div class="note" style="${miss?'background:#fef1e4;border-color:#f5c89a;color:#8a4b0f':''}">${cov.join(' &nbsp;•&nbsp; ')}${miss?'<br><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> Có ngày chưa khóa trong kho → chỉ số tổng được so theo <b>bình quân/ngày</b>.':''}</div>`;
   $('trKpis').innerHTML=TR_METRICS.map(m=>{const v=cur.n?cur[m.k]:NaN;
     const ds=prev.map(p=>{const d=trDelta(m,cur,p.agg);return `<div class="tr-delta ${d.cls}"><span>${p.s===7?'WoW':'Wo2W'}</span><b>${d.txt}</b>${d.note?`<i>${d.note}</i>`:''}</div>`}).join('');
     return `<div class="kpi"><div class="label">${m.label}</div><div class="value">${cur.n?m.fmt(v):'—'}</div>${ds}</div>`}).join('');
@@ -3811,7 +3819,7 @@ function renderZone(){
     if(miss.length)warn.push(`Chưa có file ra vào vùng cho: ${miss.map(a=>a.name).join(', ')} → chưa đánh giá được định vị.${!areaF&&ds.areasLoaded.length?' KPI "Tất cả địa bàn" chỉ tính các địa bàn đã có file: '+ds.areasLoaded.map(k=>ZA[k].name).join(', ')+'.':''}`);
     if(day>=todayISO())warn.push('Ngày D là hôm nay – dữ liệu chưa đủ ngày.');
   }
-  $('zoneWarn').innerHTML=warn.length?`<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#8a4b0f">⚠ ${warn.join('<br>⚠ ')}</div>`:'';
+  $('zoneWarn').innerHTML=warn.length?`<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#8a4b0f"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> ${warn.join('<br><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> ')}</div>`:'';
   renderZoneStore();
   if(!E){$('zoneKpis').innerHTML='';['zoneMatrix','zoneOrgTable','zoneDetailTable','zoneAbsentTable'].forEach(id=>$(id).innerHTML='');destroyChart('zoneKhungChart');renderZoneTrend(areaF,khF);__zoneLast=null;return}
   /* KPI + so sánh */
@@ -3830,7 +3838,7 @@ function renderZone(){
   /* Ma trận */
   const sumCells=list=>list.reduce((a,c)=>{['need','present','hasOrder','noOrder','compliant','noGps','noDriver','ordV','cx','cxd'].forEach(k=>a[k]+=c[k]||0);return a},{need:0,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0,ordV:0,cx:0,cxd:0});
   const mcell=(c,loaded)=>{const pct=c.need?c.present/c.need*100:NaN;const l=perfLevel('zoneMeet',pct);
-    return `<td class="heat" style="${loaded!==false&&c.need?`background:${HEAT_BG[l]||'transparent'}`:''}"><b>${fmt(c.present)}</b> / ${fmt(c.need)}<div>${c.need?`<span class="pf pf-${l}">${pct1(pct)}</span>`:'—'}</div><div class="small">đơn ${fmt(c.hasOrder)} • không đơn ${fmt(c.noOrder)}${c.noGps?` • <span class="metric-warn">⚠ ${fmt(c.noGps)}</span>`:''}</div>${c.ordV+c.cx?`<div class="small">CR ${pct1(c.ordV/(c.ordV+c.cx)*100)} (${fmt(c.ordV)}/${fmt(c.ordV+c.cx)})</div>`:''}</td>`};
+    return `<td class="heat" style="${loaded!==false&&c.need?`background:${HEAT_BG[l]||'transparent'}`:''}"><b>${fmt(c.present)}</b> / ${fmt(c.need)}<div>${c.need?`<span class="pf pf-${l}">${pct1(pct)}</span>`:'—'}</div><div class="small">đơn ${fmt(c.hasOrder)} • không đơn ${fmt(c.noOrder)}${c.noGps?` • <span class="metric-warn"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 16H3z"/><path d="M12 10v5"/></svg></span> ${fmt(c.noGps)}</span>`:''}</div>${c.ordV+c.cx?`<div class="small">CR ${pct1(c.ordV/(c.ordV+c.cx)*100)} (${fmt(c.ordV)}/${fmt(c.ordV+c.cx)})</div>`:''}</td>`};
   const shownAreas=ZONE_AREAS.filter(a=>!areaF||a.k===areaF);
   $('zoneMatrix').innerHTML='<thead><tr><th>GĐ</th><th>Địa bàn</th>'+ZK.map(z=>`<th>${z.label}</th>`).join('')+'<th>Cộng các khung</th></tr></thead><tbody>'+
     shownAreas.map(a=>{const loaded=ds.areasLoaded.includes(a.k);return `<tr><td>${a.gd}</td><td><b>${a.name}</b>${loaded?'':'<div class="small metric-warn">chưa có file vùng</div>'}</td>${ZK.map((_,i)=>mcell(E.cells[a.k][i],loaded)).join('')}${mcell(sumCells(E.cells[a.k]),loaded)}</tr>`}).join('')+
