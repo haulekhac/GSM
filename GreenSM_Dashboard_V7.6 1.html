@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="dashboard-build" content="V7.2-ZONE-CR-CANCEL-EXPORT-20261001"><title>Green SM • Operations Analytics V4 Cyan</title>
+<meta name="dashboard-build" content="V7.6-ZONE-KINDS-20261002"><title>Green SM • Operations Analytics V4 Cyan</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js">
 function formatVNDate(v, withTime){
   if(v===null || v===undefined || v==='') return '';
@@ -723,6 +723,15 @@ tr.ds-suggest td{background:#fff9e8}
 .zone-setup{display:grid;grid-template-columns:1.4fr 1fr;gap:14px;align-items:start}
 .zone-need{width:72px;min-height:28px;border:1px solid var(--line);border-radius:6px;padding:3px 6px;font-size:11px}
 #zoneKpis{grid-template-columns:repeat(5,minmax(0,1fr))}
+.zone-mode-bar{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.zone-mode-btn{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 14px;font-weight:700;font-size:12px;color:var(--emerald-900);cursor:pointer}
+.zone-mode-btn.active{background:var(--emerald-600);border-color:var(--emerald-600);color:#fff;box-shadow:var(--shadow)}
+.zone-std-wrap{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.zone-std{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;cursor:pointer}
+.zone-std.active{border:2px solid var(--emerald-600);background:var(--emerald-50)}
+.zone-std-h{font-weight:800;color:var(--emerald-900);font-size:12px}
+.zone-std-v{font-size:22px;font-weight:800;margin:4px 0;display:flex;gap:8px;align-items:center}
+@media(max-width:800px){.zone-std-wrap{grid-template-columns:1fr}}
 .zone-grp-row td{background:#ecfeff!important;color:var(--emerald-900);font-size:11px;letter-spacing:.2px}
 #zoneMatrix td.heat{min-width:108px;line-height:1.45}
 @media(max-width:1100px){.zone-setup{grid-template-columns:1fr}#zoneKpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -731,7 +740,7 @@ tr.ds-suggest td{background:#fff9e8}
 <body>
 <div class="app">
 <aside class="sidebar">
-  <div class="brand"><div class="brand-text">GREEN SM<small>OPERATIONS ANALYTICS • V7.2</small></div><div class="brand-mini">GS</div><button id="sbToggle" class="sb-toggle" type="button" onclick="toggleSidebar()" title="Thu gọn menu (Ctrl+B)">«</button></div>
+  <div class="brand"><div class="brand-text">GREEN SM<small>OPERATIONS ANALYTICS • V7.6</small></div><div class="brand-mini">GS</div><button id="sbToggle" class="sb-toggle" type="button" onclick="toggleSidebar()" title="Thu gọn menu (Ctrl+B)">«</button></div>
   <div class="nav">
     <button class="active" data-tab="controltower">🚦 Control Tower</button>
     <button data-tab="trend">📈 Xu hướng & WoW</button>
@@ -797,7 +806,7 @@ tr.ds-suggest td{background:#fff9e8}
  <p class="small">Chỉ giữ Order có Depot = 1102 hoặc 1107. Depot 1107 → PLF. Depot 1102 → ghép biển số với file Xe: Tổ kết thúc 01.05 / 01.06 → RTO, còn lại → TAXI. Dòng Depot trống / mã khác bị bỏ qua, không tính vào bất kỳ tổng nào.</p>
  <div id="sourceControl"><div class="empty">Chưa nạp file Order.</div></div>
 </div></section>
-<section id="datanotes" class="section"><div class="note"><b>CHÚ THÍCH DỮ LIỆU & CÔNG THỨC:</b> Giải thích nguồn dữ liệu, điều kiện lọc và cách tính chỉ số.</div><div class="card"><h3>Quy ước và công thức</h3><ul><li><b>File Order:</b> 1 file gộp. Chỉ giữ dòng có <code>Depot</code> = 1102 hoặc 1107; Depot trống / mã khác bị bỏ qua, không tính vào tổng.</li><li><b>Nguồn Order:</b> Depot 1107 = <b>PLF</b>. Depot 1102 = ghép biển số với file Xe; Tổ kết thúc <code>01.05</code> / <code>01.06</code> = <b>RTO</b>, còn lại (kể cả biển số không có trong file Xe) = <b>TAXI</b>.</li><li><b>Order trend:</b> dùng <code>Create Time</code>.</li><li><b>GMV:</b> chỉ Status chứa <code>COMPLET</code>; công thức = Applicable Fee hoặc Base Fee + Surcharge Fee − Discount + Tip Amount.</li><li><b>Xe vận doanh:</b> chỉ <code>Trạng thái cấp 2 = Xe vận doanh</code>.</li><li><b>Tỷ lệ hoàn thành:</b> Order hoàn thành / Tổng Order × 100%.</li><li><b>Tỷ lệ hủy:</b> Order hủy / Tổng Order × 100%.</li><li><b>GMV/Order hoàn thành:</b> GMV / Số Order hoàn thành.</li><li><b>Tỷ lệ đạt định biên:</b> Xe thực tế / Xe định biên × 100%.</li></ul></div><div class="card"><h3>Diễn giải các bảng</h3><ul><li><b>Đội/Tổ:</b> so sánh nguồn lực, Order, GMV và hiệu quả.</li><li><b>Hiệu suất xe:</b> phân tích theo biển số sau khi ghép dữ liệu.</li><li><b>Tài xế chưa có cuốc:</b> tài xế được gán xe nhưng không có Order hợp lệ; Order CANCELLED không được tính là đã có đơn.</li><li><b>Hủy cuốc:</b> phân tích địa chỉ đón, tài xế và tỷ lệ hủy.</li><li><b>XDV:</b> hiện trạng xe nằm xưởng; số ngày tồn = hôm nay − Từ ngày; nhóm tồn 0–7 / 8–14 / 15–30 / &gt;30 ngày (4 bậc màu); GMV mất ước tính = xe XDV × KPI GMV/xe/ngày.</li><li><b>Pool xe Depot:</b> đối chiếu xe thực tế với định biên, thiếu/thừa và tỷ lệ đạt.</li></ul></div><div class="card"><h3>🗄 Kho dữ liệu ngày & so sánh tuần</h3><ul><li><b>Kho ngày:</b> mỗi ngày đã khóa lưu tổng hợp Order/GMV/hủy theo giờ, nguồn, Tổ và danh sách tài xế được gán xe vận doanh (kể cả tài xế 0 đồng) theo file Xe tại thời điểm khóa. Không khóa ngày hôm nay.</li><li><b>WoW / Wo2W:</b> kỳ chọn so với cùng kỳ lùi 7 / 14 ngày. Đủ ngày trong kho → so tổng; thiếu ngày → so bình quân/ngày; tỷ lệ so theo điểm %.</li><li><b>0 đồng liên tiếp:</b> số ngày liền nhau (tính lùi từ ngày chọn) tài xế được gán xe và GMV = 0; ngắt khi có GMV, không còn gán xe, hoặc ngày chưa có trong kho. Mặc định ngưỡng 2 ngày, Khẩn từ ngưỡng + 3.</li><li><b>Kiểm soát xe trong vùng:</b> xe Trạng thái cấp 3 = Xe vận doanh (không PLF, RTO, xe ngoài file Xe). Có mặt = định vị trong vùng ≥ 30 phút/khung (bỏ lượt &lt; 5 phút) hoặc có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn theo địa chỉ đón; đơn hủy là nhóm riêng, CR = hợp lệ / (hợp lệ + hủy); đơn được ghép với lượt vào vùng theo Create Time ± 10 phút (A khớp / B không định vị / C vùng khác / D không ghép được xe / E chưa có file vùng); Tuân thủ = có mặt + có định vị + có tài xế; % đáp ứng = có mặt / TX cần (số xe khác nhau cần có mặt trong khung).</li><li><b>Bình Dương:</b> Demand = Completed + Driver Cancel; CR = Completed / Demand; Supply = số xe có Order; Trip thiếu = Demand × CR mục tiêu − Completed.</li></ul></div><div class="card"><h3>🎨 Thang màu hiệu suất 4 bậc & ngưỡng</h3><p class="small">Thấp → đỏ, cao → xanh lá. Chỉ số có dấu ↓ là "càng thấp càng tốt" nên thang màu đảo chiều. Ngưỡng cấu hình tại hằng số <code>PERF_RULES</code> ở cuối file.</p><div class="table-wrap"><table class="table" id="perfRulesTable"></table></div></div><div class="card"><p class="small">Số liệu phụ thuộc vào bộ lọc, trường dữ liệu và khả năng ghép biển số. Dòng Order Depot trống/mã khác bị loại ngay khi nạp; các dòng hợp lệ nhưng thiếu thông tin khác được giữ lại để kiểm soát chất lượng dữ liệu.</p></div></section>
+<section id="datanotes" class="section"><div class="note"><b>CHÚ THÍCH DỮ LIỆU & CÔNG THỨC:</b> Giải thích nguồn dữ liệu, điều kiện lọc và cách tính chỉ số.</div><div class="card"><h3>Quy ước và công thức</h3><ul><li><b>File Order:</b> 1 file gộp. Chỉ giữ dòng có <code>Depot</code> = 1102 hoặc 1107; Depot trống / mã khác bị bỏ qua, không tính vào tổng.</li><li><b>Nguồn Order:</b> Depot 1107 = <b>PLF</b>. Depot 1102 = ghép biển số với file Xe; Tổ kết thúc <code>01.05</code> / <code>01.06</code> = <b>RTO</b>, còn lại (kể cả biển số không có trong file Xe) = <b>TAXI</b>.</li><li><b>Order trend:</b> dùng <code>Create Time</code>.</li><li><b>GMV:</b> chỉ Status chứa <code>COMPLET</code>; công thức = Applicable Fee hoặc Base Fee + Surcharge Fee − Discount + Tip Amount.</li><li><b>Xe vận doanh:</b> chỉ <code>Trạng thái cấp 2 = Xe vận doanh</code>.</li><li><b>Tỷ lệ hoàn thành:</b> Order hoàn thành / Tổng Order × 100%.</li><li><b>Tỷ lệ hủy:</b> Order hủy / Tổng Order × 100%.</li><li><b>GMV/Order hoàn thành:</b> GMV / Số Order hoàn thành.</li><li><b>Tỷ lệ đạt định biên:</b> Xe thực tế / Xe định biên × 100%.</li></ul></div><div class="card"><h3>Diễn giải các bảng</h3><ul><li><b>Đội/Tổ:</b> so sánh nguồn lực, Order, GMV và hiệu quả.</li><li><b>Hiệu suất xe:</b> phân tích theo biển số sau khi ghép dữ liệu.</li><li><b>Tài xế chưa có cuốc:</b> tài xế được gán xe nhưng không có Order hợp lệ; Order CANCELLED không được tính là đã có đơn.</li><li><b>Hủy cuốc:</b> phân tích địa chỉ đón, tài xế và tỷ lệ hủy.</li><li><b>XDV:</b> hiện trạng xe nằm xưởng; số ngày tồn = hôm nay − Từ ngày; nhóm tồn 0–7 / 8–14 / 15–30 / &gt;30 ngày (4 bậc màu); GMV mất ước tính = xe XDV × KPI GMV/xe/ngày.</li><li><b>Pool xe Depot:</b> đối chiếu xe thực tế với định biên, thiếu/thừa và tỷ lệ đạt.</li></ul></div><div class="card"><h3>🗄 Kho dữ liệu ngày & so sánh tuần</h3><ul><li><b>Kho ngày:</b> mỗi ngày đã khóa lưu tổng hợp Order/GMV/hủy theo giờ, nguồn, Tổ và danh sách tài xế được gán xe vận doanh (kể cả tài xế 0 đồng) theo file Xe tại thời điểm khóa. Không khóa ngày hôm nay.</li><li><b>WoW / Wo2W:</b> kỳ chọn so với cùng kỳ lùi 7 / 14 ngày. Đủ ngày trong kho → so tổng; thiếu ngày → so bình quân/ngày; tỷ lệ so theo điểm %.</li><li><b>0 đồng liên tiếp:</b> số ngày liền nhau (tính lùi từ ngày chọn) tài xế được gán xe và GMV = 0; ngắt khi có GMV, không còn gán xe, hoặc ngày chưa có trong kho. Mặc định ngưỡng 2 ngày, Khẩn từ ngưỡng + 3.</li><li><b>Kiểm soát xe trong vùng – 2 chuẩn:</b> Chuẩn thị trường = 100% TX cần; Chuẩn điều phối 1102 = TX cần × 60% (chỉnh được, làm tròn lên từng ô). Đạt khi số xe có mặt ≥ chuẩn.</li><li><b>Kiểm soát xe trong vùng:</b> TAXI 1102 Trạng thái cấp 3 = Vận doanh hằng ngày; RTO và PLF có mặt khi có đơn hoàn thành. Có mặt = định vị trong vùng ≥ 30 phút/khung (bỏ lượt &lt; 5 phút) hoặc có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn theo địa chỉ đón; đơn hủy là nhóm riêng, CR = hợp lệ / (hợp lệ + hủy); đơn được ghép với lượt vào vùng theo Create Time ± 10 phút (A khớp / B không định vị / C vùng khác / D không ghép được xe / E chưa có file vùng); Tuân thủ = có mặt + có định vị + có tài xế; % đáp ứng = có mặt / TX cần (số xe khác nhau cần có mặt trong khung).</li><li><b>Bình Dương:</b> Demand = Completed + Driver Cancel; CR = Completed / Demand; Supply = số xe có Order; Trip thiếu = Demand × CR mục tiêu − Completed.</li></ul></div><div class="card"><h3>🎨 Thang màu hiệu suất 4 bậc & ngưỡng</h3><p class="small">Thấp → đỏ, cao → xanh lá. Chỉ số có dấu ↓ là "càng thấp càng tốt" nên thang màu đảo chiều. Ngưỡng cấu hình tại hằng số <code>PERF_RULES</code> ở cuối file.</p><div class="table-wrap"><table class="table" id="perfRulesTable"></table></div></div><div class="card"><p class="small">Số liệu phụ thuộc vào bộ lọc, trường dữ liệu và khả năng ghép biển số. Dòng Order Depot trống/mã khác bị loại ngay khi nạp; các dòng hợp lệ nhưng thiếu thông tin khác được giữ lại để kiểm soát chất lượng dữ liệu.</p></div></section>
 
 
 <section id="controltower" class="section active">
@@ -1047,7 +1056,7 @@ tr.ds-suggest td{background:#fff9e8}
 </section>
 
 <section id="zone" class="section">
- <div class="note"><b>KIỂM SOÁT XE TRONG VÙNG:</b> nạp file <b>Báo cáo ra vào vùng</b> (mỗi file 1 địa bàn) + Order + Xe của cùng ngày. Phạm vi: xe <b>Trạng thái cấp 3 = Xe vận doanh</b>, không gồm PLF, RTO và xe ngoài file Xe.
+ <div class="note"><b>KIỂM SOÁT XE TRONG VÙNG:</b> nạp file <b>Báo cáo ra vào vùng</b> (mỗi file 1 địa bàn) + Order + Xe của cùng ngày. Nhóm xe: <b>TAXI 1102 có Trạng thái cấp 3 = Vận doanh hằng ngày</b> (trạng thái khác không tính có mặt) • <b>RTO và PLF</b> tính có mặt khi có đơn hoàn thành tại địa bàn.
   <b>Có mặt</b> = có định vị trong vùng ≥ ngưỡng phút trong khung <i>hoặc</i> có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn (theo địa chỉ đón) • Đơn được ghép với lượt vào vùng theo <b>Create Time ± dung sai</b> • <b>Tuân thủ</b> = có mặt + có định vị ≥ ngưỡng + xe đã gán tài xế • <b>TX cần</b> = số xe khác nhau cần có mặt trong khung.</div>
 
  <div class="card" style="margin-bottom:13px"><h3>📂 File ra vào vùng & chỉ tiêu</h3>
@@ -1080,15 +1089,22 @@ tr.ds-suggest td{background:#fff9e8}
   <div class="field"><label>Nguồn số liệu ngày D</label><select id="zoneSrc"><option value="auto">Tự động (file đang nạp, nếu không thì kho)</option><option value="live">File đang nạp</option><option value="store">Kho đã khóa</option></select></div>
   <button class="btn primary" onclick="exportZoneXlsx()">⬇ Xuất Excel toàn bộ</button>
  </div>
+ <div class="zone-mode-bar no-snap">
+  <button class="zone-mode-btn" data-mode="market" onclick="setZoneMode('market')">📊 Dashboard 1 — Chuẩn thị trường (100% TX cần)</button>
+  <button class="zone-mode-btn" data-mode="1102" onclick="setZoneMode('1102')">🎯 Dashboard 2 — Chuẩn điều phối 1102</button>
+  <div class="field" style="margin-left:auto"><label>Tỷ lệ điều phối 1102 (% TX cần)</label><input id="zoneRatio" type="number" min="1" max="100" value="60" style="width:110px"></div>
+ </div>
+ <div id="zoneStdCompare"></div>
  <div id="zoneWarn"></div>
+ <div id="zoneScopeBox"></div>
  <div class="kpis" id="zoneKpis"></div>
 
  <div class="grid">
-  <div class="card"><h3>🚖 Có mặt vs TX cần theo khung giờ</h3><div class="chartbox tall"><canvas id="zoneKhungChart"></canvas></div></div>
-  <div class="card"><h3>📈 % đáp ứng theo ngày (kho)</h3><div class="chartbox tall"><canvas id="zoneTrendChart"></canvas></div></div>
+  <div class="card"><h3>🚖 Có mặt vs TX cần theo khung giờ <span class="small" id="zoneChartMode"></span></h3><div class="chartbox tall"><canvas id="zoneKhungChart"></canvas></div></div>
+  <div class="card"><h3>📈 % đáp ứng theo ngày — 2 chuẩn (kho)</h3><div class="chartbox tall"><canvas id="zoneTrendChart"></canvas></div></div>
  </div>
 
- <div class="card" style="margin-bottom:13px"><h3>🗺 Địa bàn × Khung giờ</h3>
+ <div class="card" style="margin-bottom:13px"><h3>🗺 Địa bàn × Khung giờ <span class="small" id="zoneMatrixMode"></span></h3>
   <div class="pf-legend" data-rules="zoneMeet"></div>
   <p class="small">Mỗi ô: <b>có mặt / cần</b> • % đáp ứng • xe có đơn / không đơn • ⚠ xe có đơn loại B • CR = đơn hợp lệ / (hợp lệ + hủy).</p>
   <div class="table-wrap"><table class="table heat-table" id="zoneMatrix"></table></div></div>
@@ -1113,13 +1129,13 @@ tr.ds-suggest td{background:#fff9e8}
 
  <div class="card" style="margin-bottom:13px"><h3>📋 Chi tiết xe có mặt <span class="small" id="zoneDetailMeta"></span></h3>
   <div class="xdv-filters no-snap" style="grid-template-columns:repeat(3,minmax(160px,1fr));box-shadow:none;margin-bottom:8px">
-   <div class="field"><label>Trạng thái</label><select id="zoneStatusF"><option value="">Tất cả</option><option value="ok_order">Tuân thủ – có đơn</option><option value="ok_noorder">Tuân thủ – không đơn</option><option value="no_gps">Có đơn – không định vị</option><option value="no_driver">Có định vị – chưa gán TX</option></select></div>
+   <div class="field"><label>Trạng thái</label><select id="zoneStatusF"><option value="">Tất cả</option><option value="ok_order">Tuân thủ – có đơn</option><option value="ok_noorder">Tuân thủ – không đơn</option><option value="no_gps">Có đơn – không định vị</option><option value="no_driver">Có định vị – chưa gán TX</option><option value="by_order">Có mặt theo đơn hoàn thành (RTO/PLF)</option></select></div>
    <div class="field"><label>Đội</label><select id="zoneTeamF"><option value="">Tất cả</option></select></div>
    <div class="field"><label>Tìm biển số / tài xế</label><input id="zoneSearch" type="text" placeholder="VD: 61A, Nguyễn"></div>
   </div>
   <div class="table-wrap" style="max-height:560px"><table class="table" id="zoneDetailTable"></table></div></div>
 
- <div class="card" style="margin-bottom:13px"><h3>🚫 Xe vận doanh không có mặt ở địa bàn nào <span class="small" id="zoneAbsentMeta"></span></h3>
+ <div class="card" style="margin-bottom:13px"><h3>🚫 Xe TAXI vận doanh hằng ngày không có mặt <span class="small" id="zoneAbsentMeta"></span></h3>
   <p class="small">Theo bộ lọc địa bàn / khung giờ đang chọn. Gồm xe có định vị nhưng chưa đủ ngưỡng phút.</p>
   <div class="table-wrap" style="max-height:420px"><table class="table" id="zoneAbsentTable"></table></div></div>
 
@@ -3589,6 +3605,11 @@ const ZONE_NEED_DEFAULT={TDM:[382,481,1485,869,1156],DA:[460,552,1902,963,1579],
 PERF_RULES.zoneMeet={label:'% đáp ứng (có mặt / TX cần)',t:[70,90,100],unit:'%'};
 PERF_RULES.zoneMatch={label:'% đơn khớp định vị',t:[70,85,95],unit:'%'};
 let zoneFilesData=[], ZS=new Map(), ZONE_NEED=null;
+/* 2 chuẩn đánh giá: 'market' = 100% TX cần thị trường • '1102' = TX cần × tỷ lệ điều phối Depot 1102 (mặc định 60%) */
+let ZONE_MODE=(()=>{try{return localStorage.getItem('gsm_zone_mode')||'1102'}catch(e){return '1102'}})();
+function zoneRatio(){const v=num($('zoneRatio')?.value);return Math.min(100,Math.max(1,v||60))/100}
+function zoneModeLabel(m){m=m||ZONE_MODE;return m==='market'?'Chuẩn thị trường (100% TX cần)':`Chuẩn điều phối 1102 (${Math.round(zoneRatio()*100)}% TX cần)`}
+function setZoneMode(m){ZONE_MODE=m;v2Store('gsm_zone_mode',m);document.querySelectorAll('.zone-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));renderZone()}
 const zKhungOfHour=h=>ZK.findIndex(z=>h>=z.s&&h<z.e);
 function zAreaOfName(s){const n=bdNorm(s);const a=ZONE_AREAS.find(x=>n.includes(x.m));return a?a.k:''}
 function zoneNeedGet(){if(ZONE_NEED)return ZONE_NEED;try{ZONE_NEED=JSON.parse(v2Store('gsm_zone_need')||'null')}catch(e){}if(!ZONE_NEED)ZONE_NEED=JSON.parse(JSON.stringify(ZONE_NEED_DEFAULT));return ZONE_NEED}
@@ -3637,25 +3658,34 @@ function renderZoneFiles(){
 
 /* ---------- Phạm vi xe ---------- */
 function zoneHasLvl3(){return vehicles.some(v=>String(key(v,'Trạng thái cấp 3')||'').trim()!=='')}
-function zoneVehInScope(v,lvl3){
-  const ok=lvl3?normalizeStatusText(key(v,'Trạng thái cấp 3')).includes('xe van doanh'):isOperatingVehicle(v);
-  return ok&&vehicleSourceOf(v)!=='PLF'&&!isRtoGroup(key(v,'Tổ'));
-}
+/* NHÓM XE trong tab Kiểm soát xe trong vùng
+   T = TAXI 1102 có Trạng thái cấp 3 = "Vận doanh hằng ngày" (chấp nhận cả "Xe vận doanh hằng ngày"; hằng/hàng như nhau)
+       → có mặt khi định vị ≥ ngưỡng HOẶC có đơn hợp lệ; được đánh giá tuân thủ.
+   N = TAXI 1102 trạng thái cấp 3 khác → KHÔNG tính có mặt; đơn vẫn cộng vào tổng cuốc / CR.
+   R = Tổ RTO (01.05 / 01.06) và P = PLF → không cần điều kiện cấp 3; có mặt khi có ĐƠN HOÀN THÀNH tại địa bàn trong khung. */
+const ZONE_LVL3_LABEL='Vận doanh hằng ngày';
+const ZONE_LVL3_OK=new Set(['van doanh hang ngay','xe van doanh hang ngay']);
+const ZKIND={T:'TAXI vận doanh hằng ngày',N:'TAXI – cấp 3 khác (không tính có mặt)',R:'RTO',P:'PLF'};
+function zoneIsLvl3VD(v){return ZONE_LVL3_OK.has(normalizeStatusText(key(v,'Trạng thái cấp 3')))}
+function zoneKindOf(v){if(vehicleSourceOf(v)==='PLF')return 'P';if(isRtoGroup(key(v,'Tổ')))return 'R';return zoneIsLvl3VD(v)?'T':'N'}
+function zoneScopeReason(v){return {T:'ok',N:'lvl3',R:'rto',P:'plf'}[zoneKindOf(v)]}
+function zoneVehInScope(v){return zoneKindOf(v)==='T'}
 
 /* ---------- Dựng bộ dữ liệu ngày D (từ file đang nạp) ---------- */
 function zoneBuildDataset(day){
   const minVisit=Math.max(0,num($('zoneMinVisit').value)),minPresent=Math.max(1,num($('zoneMinPresent').value)||30),tol=Math.max(0,num($('zoneTol')?.value??10)),lvl3=zoneHasLvl3();
   const [y,m,d]=day.split('-').map(Number);const base=new Date(y,m-1,d).getTime();
   const win=ZK.map(z=>[base+z.s*36e5,base+z.e*36e5]);
-  const scope=vehicles.filter(v=>zoneVehInScope(v,lvl3));
-  const allPlates=new Set(vehicles.map(v=>norm(key(v,'Biển số'))).filter(Boolean));
   const P=new Map(),groupsVeh={},sapName=new Map();
   vehicles.forEach(v=>{const dc=parseDriverCell(key(v,'Tài xế'));if(dc.sap&&!sapName.has(dc.sap))sapName.set(dc.sap,dc.name)});
   drivers.forEach(r=>{const sp=normSap(key(r,...DRIVER_SAP_COLS));if(sp&&!sapName.has(sp))sapName.set(sp,parseDriverCell(driverNameOf(r)).name)});
-  scope.forEach(v=>{const p=norm(key(v,'Biển số'));if(!p||P.has(p))return;const dc=parseDriverCell(key(v,'Tài xế'));const team=String(key(v,'Đội')||'').trim()||'Chưa xác định',group=String(key(v,'Tổ')||'').trim()||'Chưa xác định';
-    P.set(p,{p,plate:String(key(v,'Biển số')).trim(),team,group,drv:dc.name,sap:dc.sap,d:{}});groupsVeh[team+'||'+group]=(groupsVeh[team+'||'+group]||0)+1});
-  /* cell = [phút định vị, đơn hợp lệ tại địa bàn đón, hợp lệ A, hợp lệ B, hợp lệ C, đơn hủy, hủy bởi TX] */
-  const cell=(x,a,i)=>{if(!x.d[a])x.d[a]=ZK.map(()=>[0,0,0,0,0,0,0]);return x.d[a][i]};
+  const KR={T:3,R:2,P:1,N:0};
+  vehicles.forEach(v=>{const p=norm(key(v,'Biển số'));if(!p)return;const kind=zoneKindOf(v);const old=P.get(p);if(old&&KR[old.kind]>=KR[kind])return;
+    const dc=parseDriverCell(key(v,'Tài xế'));const team=kind==='P'?'PLF':(String(key(v,'Đội')||'').trim()||'Chưa xác định'),group=kind==='P'?'PLF':(String(key(v,'Tổ')||'').trim()||'Chưa xác định');
+    if(old&&old.kind==='T'){const k=old.team+'||'+old.group;groupsVeh[k]--}
+    P.set(p,{p,plate:String(key(v,'Biển số')).trim(),team,group,drv:dc.name,sap:dc.sap,kind,d:old?old.d:{}});if(kind==='T')groupsVeh[team+'||'+group]=(groupsVeh[team+'||'+group]||0)+1});
+  /* cell = [phút định vị, đơn hợp lệ, hợp lệ A, hợp lệ B, hợp lệ C, đơn hủy, hủy bởi TX, đơn HOÀN THÀNH] (theo địa bàn đón) */
+  const cell=(x,a,i)=>{if(!x.d[a])x.d[a]=ZK.map(()=>[0,0,0,0,0,0,0,0]);return x.d[a][i]};
   const areasLoaded=new Set(),visits=new Map();let outGps=new Set();
   const dayStart=base-tol*6e4,dayEnd=base+864e5+tol*6e4;
   zoneFilesData.forEach(f=>{if(!f.area)return;const touches=f.rows.some(r=>r.tout.getTime()>=base&&r.tin.getTime()<base+864e5);if(!touches)return;areasLoaded.add(f.area);
@@ -3667,29 +3697,30 @@ function zoneBuildDataset(day){
   const inZone=(area,p,t)=>{const arr=visits.get(area)?.get(p);if(!arr)return null;const T=tol*6e4;return arr.find(v=>t>=v[0]-T&&t<=v[1]+T)||null};
   const hm=ms=>{const x=new Date(ms);return String(x.getHours()).padStart(2,'0')+':'+String(x.getMinutes()).padStart(2,'0')};
   const orders=[];let orderRows=0,outScope=0;
-  joined.forEach(r=>{if(createDay(r)!==day||r.__orderSource==='PLF')return;orderRows++;
+  joined.forEach(r=>{if(createDay(r)!==day)return;orderRows++;
     const grp=validNoCuocStatus(r)?'V':isCancel(r)?'X':'';if(!grp)return;const cbd=grp==='X'&&cancelByDriver(r);
     const ct=parseDate(key(r,'Create Time'));if(!ct)return;const t=ct.getTime(),h=ct.getHours(),i=zKhungOfHour(h);
-    const p=norm(r.__plate);const x=P.get(p);
+    const p=norm(r.__plate);let x=P.get(p);
+    if(!x&&r.__orderSource==='PLF'&&p){x={p,plate:String(r.__plate||'').trim(),team:'PLF',group:'PLF',drv:'',sap:'',kind:'P',d:{}};P.set(p,x)}
     const loc=r.__bdLoc||(r.__bdLoc=bdLocate(key(r,'Pick Up Address','Pickup Address','Địa chỉ đón')));const a=zAreaOfName(loc.region);
     const sap=r.__sap!==undefined?r.__sap:orderSapOf(r);
     let cls,vz='',vt='';
-    if(!x){if(allPlates.has(p)){outScope++;return}cls='D'}
+    if(!x){cls='D'}
     else{
       const va=a&&areasLoaded.has(a)?inZone(a,p,t):null;
       if(va){cls='A';vz=a;vt=hm(va[0])+'–'+hm(va[1])}
       else{let other=null,ob='';for(const b of areasLoaded){if(b===a)continue;const v=inZone(b,p,t);if(v){other=v;ob=b;break}}
         if(other){cls='C';vz=ob;vt=hm(other[0])+'–'+hm(other[1])}
         else cls=a&&areasLoaded.has(a)?'B':'E'}
-      if(a&&i>=0){const c=cell(x,a,i);if(grp==='V'){c[1]++;if(cls==='A')c[2]++;else if(cls==='B')c[3]++;else if(cls==='C')c[4]++}else{c[5]++;if(cbd)c[6]++}}
+      if(a&&i>=0){const c=cell(x,a,i);if(grp==='V'){c[1]++;if(String(key(r,'Status')).toUpperCase().includes('COMPLET'))c[7]++;if(cls==='A')c[2]++;else if(cls==='B')c[3]++;else if(cls==='C')c[4]++}else{c[5]++;if(cbd)c[6]++}}
     }
     orders.push({id:String(key(r,'Order ID','Booking ID','ID')||''),t:hm(t),k:i,p:x?x.plate:String(r.__plate||''),sap,drv:sapName.get(sap)||(x&&x.sap===sap?x.drv:'')||(!sap&&x?x.drv:''),
-      grp,cbd,st:String(key(r,'Status')||''),cb:grp==='X'?String(key(r,'Cancel By')||''):'',team:x?x.team:'',group:x?x.group:'',addr:String(key(r,'Pick Up Address','Pickup Address','Địa chỉ đón')||'').slice(0,120),area:a,cls,vz,vt});
+      grp,cbd,st:String(key(r,'Status')||''),cb:grp==='X'?String(key(r,'Cancel By')||''):'',kind:x?x.kind:'',team:x?x.team:'',group:x?x.group:'',addr:String(key(r,'Pick Up Address','Pickup Address','Địa chỉ đón')||'').slice(0,120),area:a,cls,vz,vt});
   });
   P.forEach(x=>Object.values(x.d).forEach(arr=>arr.forEach(c=>c[0]=Math.round(c[0]))));
   const plates=[...P.values()];
   const sig=`${plates.reduce((s,x)=>s+Object.values(x.d).reduce((t,a)=>t+a.reduce((u,c)=>u+c[0]+c[1]*1000+c[2]*7,0),0),0)}|${orderRows}|${orders.length}|${[...areasLoaded].sort().join(',')}`;
-  return {day,builtAt:new Date().toISOString(),params:{minVisit,minPresent,tol,lvl3,v:3},areasLoaded:[...areasLoaded],need:JSON.parse(JSON.stringify(zoneNeedGet())),groupsVeh,plates,orders,orderRows,outScope,outGps:outGps.size,sig};
+  return {day,builtAt:new Date().toISOString(),params:{minVisit,minPresent,tol,lvl3,v:4},areasLoaded:[...areasLoaded],need:JSON.parse(JSON.stringify(zoneNeedGet())),groupsVeh,plates,orders,orderRows,outScope,outGps:outGps.size,sig};
 }
 function zoneLiveDays(){const s=new Set();zoneFilesData.forEach(f=>f.days.forEach(d=>s.add(d)));return s}
 const __zCache=new Map();
@@ -3704,29 +3735,31 @@ function zoneGetDataset(day,src){
 }
 
 /* ---------- Đánh giá bộ dữ liệu theo bộ lọc ---------- */
-function zoneEval(ds,areaF,khF,teamF){
-  if(!ds)return null;
+function zoneEval(ds,areaF,khF,teamF,mode){
+  if(!ds)return null;mode=mode||ZONE_MODE;const ratio=zoneRatio();
   const mp=ds.params.minPresent,loadedA=ZONE_AREAS.filter(a=>ds.areasLoaded.includes(a.k)),areas=areaF?ZONE_AREAS.filter(a=>a.k===areaF):(loadedA.length?loadedA:ZONE_AREAS),kis=ZK.map((_,i)=>i).filter(i=>khF===''||khF==null||i===+khF);
-  const cells={};ZONE_AREAS.forEach(a=>cells[a.k]=ZK.map((_,i)=>({need:ds.need?.[a.k]?.[i]||0,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0,oA:0,oB:0,oC:0,ordV:0,cx:0,cxd:0,loaded:ds.areasLoaded.includes(a.k)})));
+  const cells={};ZONE_AREAS.forEach(a=>cells[a.k]=ZK.map((_,i)=>{const nm=ds.need?.[a.k]?.[i]||0,n6=Math.ceil(nm*ratio);return {needMkt:nm,need1102:n6,need:mode==='market'?nm:n6,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0,oA:0,oB:0,oC:0,ordV:0,cx:0,cxd:0,trips:0,presT:0,presR:0,presP:0,compBase:0,loaded:ds.areasLoaded.includes(a.k)}}));
   const per=[];
   ds.plates.forEach(x=>{
-    const inTeam=!teamF||x.team===teamF;
+    const inTeam=!teamF||x.team===teamF,kind=x.kind||'T';
     const agg={x,present:0,gps:0,orders:0,completed:0,oA:0,oB:0,oC:0,khung:new Set(),areas:new Set(),okOrder:false,okNo:false,noGps:false,noDriver:false,gpsAny:0};
     ZONE_AREAS.forEach(a=>{const arr=x.d[a.k];if(!arr)return;arr.forEach((c,i)=>{
-      if(inTeam&&c.length>3){const C0=cells[a.k][i];C0.ordV+=c[1];C0.cx+=c[5]||0;C0.cxd+=c[6]||0}
-      const pres=c[0]>=mp||c[1]>0;if(!pres){if(areas.includes(a)&&kis.includes(i))agg.gpsAny+=c[0];return}
-      const v2=c.length>3,comp=c[0]>=mp&&(!!x.drv||(v2&&c[1]>0)),ng=v2?c[3]>0:(c[1]>0&&c[0]<mp),nd=c[0]>=mp&&!x.drv&&!(v2&&c[1]>0);
-      if(inTeam){const C=cells[a.k][i];C.present++;if(c[1]>0)C.hasOrder++;else C.noOrder++;if(comp)C.compliant++;if(ng)C.noGps++;if(nd)C.noDriver++;if(v2){C.oA+=c[2];C.oB+=c[3];C.oC+=c[4];C.v2=true}}
+      const done=c.length>7?c[7]:c[1];
+      if(inTeam&&c.length>3){const C0=cells[a.k][i];C0.ordV+=c[1];C0.cx+=c[5]||0;C0.cxd+=c[6]||0;C0.trips+=done}
+      const pres=kind==='T'?(c[0]>=mp||c[1]>0):(kind==='R'||kind==='P')?done>0:false;
+      if(!pres){if(kind==='T'&&areas.includes(a)&&kis.includes(i))agg.gpsAny+=c[0];return}
+      const v2=c.length>3,isT=kind==='T',comp=isT&&c[0]>=mp&&(!!x.drv||(v2&&c[1]>0)),ng=v2?c[3]>0:(c[1]>0&&c[0]<mp),nd=isT&&c[0]>=mp&&!x.drv&&!(v2&&c[1]>0);
+      if(inTeam){const C=cells[a.k][i];C.present++;C['pres'+kind]++;if(isT)C.compBase++;if(c[1]>0)C.hasOrder++;else C.noOrder++;if(comp)C.compliant++;if(ng)C.noGps++;if(nd)C.noDriver++;if(v2){C.oA+=c[2];C.oB+=c[3];C.oC+=c[4];C.v2=true}}
       if(areas.includes(a)&&kis.includes(i)){agg.present++;agg.gps+=c[0];agg.orders+=c[1];agg.completed+=v2?c[1]:c[2];if(v2){agg.oA+=c[2];agg.oB+=c[3];agg.oC+=c[4]}agg.khung.add(i);agg.areas.add(a.k);
         if(comp&&c[1]>0)agg.okOrder=true;else if(comp)agg.okNo=true;if(ng)agg.noGps=true;if(nd)agg.noDriver=true}})});
-    if(inTeam)per.push(agg);
+    agg.kind=kind;if(inTeam&&(kind==='T'||agg.present))per.push(agg);
   });
-  per.forEach(a=>{a.status=!a.present?'absent':a.okOrder?'ok_order':a.okNo?'ok_noorder':a.noDriver?'no_driver':'no_gps'});
+  per.forEach(a=>{a.status=!a.present?'absent':a.kind==='R'||a.kind==='P'?'by_order':a.okOrder?'ok_order':a.okNo?'ok_noorder':a.noDriver?'no_driver':'no_gps'});
   const sel=[];areas.forEach(a=>kis.forEach(i=>sel.push(cells[a.k][i])));
   const S=k=>sel.reduce((s,c)=>s+c[k],0);
-  const T={cells:sel.length,need:S('need'),present:S('present'),hasOrder:S('hasOrder'),noOrder:S('noOrder'),compliant:S('compliant'),noGps:S('noGps'),noDriver:S('noDriver'),oA:S('oA'),oB:S('oB'),oC:S('oC'),ordV:S('ordV'),cx:S('cx'),cxd:S('cxd'),v2:!!ds.orders,v3:ds.params.v>=3,
-    distinct:per.filter(a=>a.present).length,scope:per.length};
-  T.meet=T.need?T.present/T.need*100:NaN;T.matchPct=T.v2&&T.oA+T.oB+T.oC?T.oA/(T.oA+T.oB+T.oC)*100:NaN;T.cr=T.v3&&T.ordV+T.cx?T.ordV/(T.ordV+T.cx)*100:NaN;T.compPct=T.present?T.compliant/T.present*100:NaN;T.absent=T.scope-T.distinct;
+  const T={cells:sel.length,need:S('need'),present:S('present'),hasOrder:S('hasOrder'),noOrder:S('noOrder'),compliant:S('compliant'),noGps:S('noGps'),noDriver:S('noDriver'),oA:S('oA'),oB:S('oB'),oC:S('oC'),ordV:S('ordV'),cx:S('cx'),cxd:S('cxd'),trips:S('trips'),presT:S('presT'),presR:S('presR'),presP:S('presP'),compBase:S('compBase'),v2:!!ds.orders,v3:ds.params.v>=3,v4:ds.params.v>=4,
+    distinct:per.filter(a=>a.present).length,scope:per.filter(a=>a.kind==='T').length};
+  T.mode=mode;T.needMkt=S('needMkt');T.need1102=S('need1102');T.meet=T.need?T.present/T.need*100:NaN;T.meetMkt=T.needMkt?T.present/T.needMkt*100:NaN;T.meet1102=T.need1102?T.present/T.need1102*100:NaN;T.matchPct=T.v2&&T.oA+T.oB+T.oC?T.oA/(T.oA+T.oB+T.oC)*100:NaN;T.cr=T.v3&&T.ordV+T.cx?T.ordV/(T.ordV+T.cx)*100:NaN;if(!T.v4){T.presT=T.present;T.compBase=T.present}T.compPct=T.compBase?T.compliant/T.compBase*100:NaN;T.absent=per.filter(a=>a.kind==='T'&&!a.present).length;
   return {ds,cells,per,T,areas,kis};
 }
 
@@ -3784,16 +3817,17 @@ function zDelta(cur,prev,k,rate,good=1){
   return {txt,cls:Math.abs(d)<1e-9?'':d*good>0?'up':'down'};
 }
 const ZONE_KPI=[
-  {k:'present',label:'Xe có mặt',sub:E=>E.T.cells>1?`cộng ${E.T.cells} ô địa bàn × khung • ${fmt(E.T.distinct)} xe khác nhau`:`${fmt(E.T.distinct)} xe khác nhau`,f:v=>fmt(v),good:1},
+  {k:'present',label:'Xe có mặt',sub:E=>`TAXI hằng ngày ${fmt(E.T.presT)} • RTO ${fmt(E.T.presR)} • PLF ${fmt(E.T.presP)}${E.T.cells>1?` • cộng ${E.T.cells} ô`:''}`,f:v=>fmt(v),good:1},
+  {k:'trips',label:'Tổng cuốc hoàn thành',sub:()=>'đơn COMPLETED tại địa bàn (mọi nhóm xe)',f:v=>fmt(v),good:1},
   {k:'matchPct',label:'% đơn khớp định vị',sub:E=>E.T.v2?`A ${fmt(E.T.oA)} • B ${fmt(E.T.oB)} • C ${fmt(E.T.oC)} (đơn hợp lệ)`:'kho bản cũ – chưa ghép đơn',f:pct1,rate:true,good:1,perf:'zoneMatch'},
-  {k:'meet',label:'% đáp ứng',sub:E=>`có mặt ${fmt(E.T.present)} / TX cần ${fmt(E.T.need)} • thiếu ${fmt(Math.max(0,E.T.need-E.T.present))}`,f:pct1,rate:true,good:1,perf:'zoneMeet'},
+  {k:'meet',label:'% đáp ứng (chuẩn đang xem)',sub:E=>`có mặt ${fmt(E.T.present)} / cần ${fmt(E.T.need)} • thiếu ${fmt(Math.max(0,E.T.need-E.T.present))}`,f:pct1,rate:true,good:1,perf:'zoneMeet'},
   {k:'hasOrder',label:'Xe có đơn',sub:E=>`${pct1(E.T.present?E.T.hasOrder/E.T.present*100:NaN)} xe có mặt`,f:v=>fmt(v),good:1},
   {k:'noOrder',label:'Xe không có đơn',sub:E=>`${pct1(E.T.present?E.T.noOrder/E.T.present*100:NaN)} xe có mặt`,f:v=>fmt(v),good:-1},
-  {k:'compPct',label:'% tuân thủ',sub:E=>`${fmt(E.T.compliant)} xe tuân thủ`,f:pct1,rate:true,good:1},
+  {k:'compPct',label:'% tuân thủ (TAXI hằng ngày)',sub:E=>`${fmt(E.T.compliant)} / ${fmt(E.T.compBase)} xe TAXI hằng ngày có mặt`,f:pct1,rate:true,good:1},
   {k:'noGps',label:'Xe có đơn loại B',sub:()=>'đón tại địa bàn nhưng không ở trong vùng lúc tạo đơn – vẫn tính có mặt',f:v=>fmt(v),good:-1},
   {k:'cr',label:'CR đơn tại địa bàn',sub:E=>E.T.v3?`hợp lệ ${fmt(E.T.ordV)} / tổng ${fmt(E.T.ordV+E.T.cx)}`:'kho bản cũ – chưa có đơn hủy',f:pct1,rate:true,good:1,perf:'zoneCR'},
   {k:'cx',label:'Đơn hủy tại địa bàn',sub:E=>`hủy bởi tài xế ${fmt(E.T.cxd)}`,f:v=>fmt(v),good:-1},
-  {k:'absent',label:'Xe VD không có mặt',sub:E=>`/${fmt(E.T.scope)} xe vận doanh (cấp 3)`,f:v=>fmt(v),good:-1}
+  {k:'absent',label:'TAXI hằng ngày không có mặt',sub:E=>`/${fmt(E.T.scope)} xe vận doanh hằng ngày`,f:v=>fmt(v),good:-1}
 ];
 let __zoneLast=null;
 function renderZone(){
@@ -3805,29 +3839,36 @@ function renderZone(){
   if(!zoneFilesData.length&&!ZS.size)warn.push('Chưa có dữ liệu ra vào vùng. Nạp file ở khung phía trên.');
   if(zoneFilesData.some(f=>!f.area))warn.push('Có file chưa chọn địa bàn – dữ liệu file đó chưa được tính.');
   if(ds){
-    if(!ds.params.lvl3)warn.push('File Xe không có cột <b>Trạng thái cấp 3</b> – đang dùng tạm Trạng thái cấp 2 = Xe vận doanh.');
+    if(!ds.params.lvl3)warn.push('File Xe <b>không có dữ liệu cột Trạng thái cấp 3</b> → không có xe TAXI nào được tính có mặt (không dùng Trạng thái cấp 2 thay thế). RTO / PLF vẫn tính theo đơn hoàn thành.');
     if(!ds.orderRows)warn.push(`Chưa có Order ngày ${dLabel(day)} – số "có đơn" bằng 0.`);
     const miss=ZONE_AREAS.filter(a=>!ds.areasLoaded.includes(a.k)&&(!areaF||a.k===areaF));
     if(miss.length)warn.push(`Chưa có file ra vào vùng cho: ${miss.map(a=>a.name).join(', ')} → chưa đánh giá được định vị.${!areaF&&ds.areasLoaded.length?' KPI "Tất cả địa bàn" chỉ tính các địa bàn đã có file: '+ds.areasLoaded.map(k=>ZA[k].name).join(', ')+'.':''}`);
     if(day>=todayISO())warn.push('Ngày D là hôm nay – dữ liệu chưa đủ ngày.');
   }
   $('zoneWarn').innerHTML=warn.length?`<div class="note" style="background:#fef1e4;border-color:#f5c89a;color:#8a4b0f">⚠ ${warn.join('<br>⚠ ')}</div>`:'';
+  renderZoneScope();
   renderZoneStore();
   if(!E){$('zoneKpis').innerHTML='';['zoneMatrix','zoneOrgTable','zoneDetailTable','zoneAbsentTable'].forEach(id=>$(id).innerHTML='');destroyChart('zoneKhungChart');renderZoneTrend(areaF,khF);__zoneLast=null;return}
+  /* So sánh 2 chuẩn */
+  document.querySelectorAll('.zone-mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===ZONE_MODE));
+  {const Tm=E.T,ok=v=>Number.isFinite(v)&&v>=100,card=(m,need,meet)=>`<div class="zone-std ${m===ZONE_MODE?'active':''}" onclick="setZoneMode('${m}')"><div class="zone-std-h">${m==='market'?'📊 Chuẩn thị trường':'🎯 Chuẩn điều phối 1102'} <span class="small">${m==='market'?'100% TX cần':Math.round(zoneRatio()*100)+'% TX cần'}</span></div><div class="zone-std-v">${perfPill('zoneMeet',meet,pct1(meet))} <span class="badge ${ok(meet)?'good':'bad'}">${ok(meet)?'Đạt':'Chưa đạt'}</span></div><div class="small">Có mặt ${fmt(Tm.present)} / cần ${fmt(need)} • ${need>Tm.present?'thiếu '+fmt(need-Tm.present):'dư '+fmt(Tm.present-need)} xe</div></div>`;
+   $('zoneStdCompare').innerHTML=`<div class="zone-std-wrap">${card('market',Tm.needMkt,Tm.meetMkt)}${card('1102',Tm.need1102,Tm.meet1102)}</div>`}
   /* KPI + so sánh */
   const cmp=[['D-1',1],['WoW',7],['Wo2W',14]].map(([lb,n])=>{const d2=isoAdd(day,-n);const e=zoneEval(zoneGetDataset(d2),areaF,khF,'');return {lb,d:d2,T:e?e.T:null}});
   $('zoneKpis').innerHTML=ZONE_KPI.map(m=>{const v=E.T[m.k];
     const ds2=m.noDelta?'':cmp.map(c=>{const d=zDelta(E.T,c.T,m.k,m.rate,m.good);return `<div class="tr-delta ${d.cls}"><span>${c.lb}</span><b>${d.txt}</b></div>`}).join('');
     return `<div class="kpi"><div class="label">${m.label}</div><div class="value">${m.perf&&Number.isFinite(v)?perfPill(m.perf,v,m.f(v)):m.f(v)}</div><div class="sub">${m.sub(E)}</div>${ds2}</div>`}).join('');
   /* Biểu đồ khung */
+  $('zoneChartMode').textContent='— '+zoneModeLabel();
   const byK=ZK.map((_,i)=>E.areas.reduce((a,ar)=>{const c=E.cells[ar.k][i];a.need+=c.need;a.hasOrder+=c.hasOrder;a.noOrder+=c.noOrder;return a},{need:0,hasOrder:0,noOrder:0}));
   destroyChart('zoneKhungChart');charts.zoneKhungChart=new Chart($('zoneKhungChart'),{type:'bar',data:{labels:ZK.map(z=>z.label),datasets:[
-    {label:'TX cần',data:byK.map(x=>x.need),backgroundColor:'#cbd5db',borderRadius:5,stack:'need'},
+    {label:ZONE_MODE==='market'?'TX cần (thị trường)':`TX cần 1102 (${Math.round(zoneRatio()*100)}%)`,data:byK.map(x=>x.need),backgroundColor:'#cbd5db',borderRadius:5,stack:'need'},
     {label:'Có mặt – có đơn',data:byK.map(x=>x.hasOrder),backgroundColor:'#0891b2',borderRadius:5,stack:'pres'},
     {label:'Có mặt – không đơn',data:byK.map(x=>x.noOrder),backgroundColor:'#7dd3fc',borderRadius:5,stack:'pres'}]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom'},tooltip:{callbacks:{footer:it=>{const i=it[0].dataIndex,x=byK[i];return `Có mặt ${fmt(x.hasOrder+x.noOrder)} / cần ${fmt(x.need)} = ${pct1(x.need?(x.hasOrder+x.noOrder)/x.need*100:NaN)}`}}}},scales:{x:{stacked:true,grid:{display:false}},y:{stacked:true,beginAtZero:true}}}});
   renderZoneTrend(areaF,khF);
   /* Ma trận */
+  $('zoneMatrixMode').textContent='— '+zoneModeLabel();
   const sumCells=list=>list.reduce((a,c)=>{['need','present','hasOrder','noOrder','compliant','noGps','noDriver','ordV','cx','cxd'].forEach(k=>a[k]+=c[k]||0);return a},{need:0,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0,ordV:0,cx:0,cxd:0});
   const mcell=(c,loaded)=>{const pct=c.need?c.present/c.need*100:NaN;const l=perfLevel('zoneMeet',pct);
     return `<td class="heat" style="${loaded!==false&&c.need?`background:${HEAT_BG[l]||'transparent'}`:''}"><b>${fmt(c.present)}</b> / ${fmt(c.need)}<div>${c.need?`<span class="pf pf-${l}">${pct1(pct)}</span>`:'—'}</div><div class="small">đơn ${fmt(c.hasOrder)} • không đơn ${fmt(c.noOrder)}${c.noGps?` • <span class="metric-warn">⚠ ${fmt(c.noGps)}</span>`:''}</div>${c.ordV+c.cx?`<div class="small">CR ${pct1(c.ordV/(c.ordV+c.cx)*100)} (${fmt(c.ordV)}/${fmt(c.ordV+c.cx)})</div>`:''}</td>`};
@@ -3836,28 +3877,28 @@ function renderZone(){
     shownAreas.map(a=>{const loaded=ds.areasLoaded.includes(a.k);return `<tr><td>${a.gd}</td><td><b>${a.name}</b>${loaded?'':'<div class="small metric-warn">chưa có file vùng</div>'}</td>${ZK.map((_,i)=>mcell(E.cells[a.k][i],loaded)).join('')}${mcell(sumCells(E.cells[a.k]),loaded)}</tr>`}).join('')+
     `<tr class="total-row"><td colspan="2"><b>TỔNG</b></td>${ZK.map((_,i)=>mcell(sumCells(shownAreas.map(a=>E.cells[a.k][i])),false)).join('')}${mcell(sumCells(shownAreas.flatMap(a=>E.cells[a.k])),false)}</tr></tbody>`;
   /* Đội / Tổ */
-  const G=new Map();Object.entries(ds.groupsVeh).forEach(([k,n])=>{const [team,group]=k.split('||');G.set(k,{team,group,veh:n,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0})});
-  E.per.forEach(a=>{if(!a.present)return;const g=G.get(a.x.team+'||'+a.x.group);if(!g)return;g.present++;if(a.orders>0)g.hasOrder++;else g.noOrder++;if(a.status==='ok_order'||a.status==='ok_noorder')g.compliant++;if(a.noGps&&!(a.okOrder||a.okNo))g.noGps++;if(a.status==='no_driver')g.noDriver++});
-  const groups=[...G.values()];groups.forEach(g=>{g.presPct=g.veh?g.present/g.veh*100:0;g.compPct=g.present?g.compliant/g.present*100:0});
+  const G=new Map();Object.entries(ds.groupsVeh).forEach(([k,n])=>{const [team,group]=k.split('||');G.set(k,{team,group,veh:n,present:0,presT:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0})});
+  E.per.forEach(a=>{if(!a.present)return;const gk=a.x.team+'||'+a.x.group;if(!G.has(gk))G.set(gk,{team:a.x.team,group:a.x.group,veh:0,kindLabel:ZKIND[a.kind],present:0,presT:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0});const g=G.get(gk);g.present++;if(a.kind==='T')g.presT++;if(a.orders>0)g.hasOrder++;else g.noOrder++;if(a.status==='ok_order'||a.status==='ok_noorder')g.compliant++;if(a.noGps&&!(a.okOrder||a.okNo))g.noGps++;if(a.status==='no_driver')g.noDriver++});
+  const groups=[...G.values()];groups.forEach(g=>{g.presPct=g.veh?g.presT/g.veh*100:NaN;g.compPct=g.presT?g.compliant/g.presT*100:NaN});
   const mk=get=>{const f=relLevelFn(groups.map(get));f.get=get;return f};const L={pres:mk(g=>g.presPct),comp:mk(g=>g.compPct)};
-  const sum=(label,gs)=>{const t={team:label,group:'',__total:true,veh:0,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0};gs.forEach(g=>['veh','present','hasOrder','noOrder','compliant','noGps','noDriver'].forEach(k=>t[k]+=g[k]));t.presPct=t.veh?t.present/t.veh*100:0;t.compPct=t.present?t.compliant/t.present*100:0;return t};
+  const sum=(label,gs)=>{const t={team:label,group:'',__total:true,veh:0,present:0,presT:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0};gs.forEach(g=>['veh','present','presT','hasOrder','noOrder','compliant','noGps','noDriver'].forEach(k=>t[k]+=g[k]));t.presPct=t.veh?t.presT/t.veh*100:NaN;t.compPct=t.presT?t.compliant/t.presT*100:NaN;return t};
   const orgRows=[];
   [...new Set(groups.map(g=>g.team))].sort(natCmp).forEach(t=>{groups.filter(g=>g.team===t).sort((a,b)=>natCmp(a.group,b.group)).forEach(g=>orgRows.push(g));orgRows.push(sum('TỔNG '+t,groups.filter(g=>g.team===t)))});
   orgRows.push(sum('TỔNG CỘNG',groups));
-  const line=g=>`<tr class="${g.team==='TỔNG CỘNG'?'total-row':g.__total?'team-total-row':''}"><td>${g.__total?`<b>${esc(g.team)}</b>`:esc(g.team)}</td><td>${g.__total?'':`<b>${esc(g.group)}</b>`}</td><td>${fmt(g.veh)}</td><td>${fmt(g.present)}</td><td>${relCell(L.pres,g,pct1(g.presPct))}</td><td>${fmt(g.hasOrder)}</td><td>${fmt(g.noOrder)}</td><td>${fmt(g.compliant)}</td><td>${relCell(L.comp,g,pct1(g.compPct))}</td><td>${fmt(g.noGps)}</td><td>${fmt(g.noDriver)}</td></tr>`;
-  $('zoneOrgTable').innerHTML='<thead><tr><th>Đội</th><th>Tổ</th><th>Xe VD (cấp 3)</th><th>Xe có mặt</th><th>% có mặt</th><th>Có đơn</th><th>Không đơn</th><th>Tuân thủ</th><th>% tuân thủ</th><th>Có đơn – không định vị</th><th>Định vị – chưa gán TX</th></tr></thead><tbody>'+orgRows.map(line).join('')+'</tbody>';
+  const line=g=>`<tr class="${g.team==='TỔNG CỘNG'?'total-row':g.__total?'team-total-row':''}"><td>${g.__total?`<b>${esc(g.team)}</b>`:esc(g.team)}</td><td>${g.__total?'':`<b>${esc(g.group)}</b>`}</td><td>${g.veh?fmt(g.veh):'—'}</td><td>${fmt(g.present)}</td><td>${relCell(L.pres,g,pct1(g.presPct))}</td><td>${fmt(g.hasOrder)}</td><td>${fmt(g.noOrder)}</td><td>${fmt(g.compliant)}</td><td>${relCell(L.comp,g,pct1(g.compPct))}</td><td>${fmt(g.noGps)}</td><td>${fmt(g.noDriver)}</td></tr>`;
+  $('zoneOrgTable').innerHTML='<thead><tr><th>Đội</th><th>Tổ</th><th>Xe TAXI hằng ngày</th><th>Xe có mặt (mọi nhóm)</th><th>% có mặt TAXI hằng ngày</th><th>Có đơn</th><th>Không đơn</th><th>Tuân thủ</th><th>% tuân thủ</th><th>Có đơn – không định vị</th><th>Định vị – chưa gán TX</th></tr></thead><tbody>'+orgRows.map(line).join('')+'</tbody>';
   /* Chi tiết */
   setOptions('zoneTeamF',groups.map(g=>g.team).sort(natCmp));
-  const ST={ok_order:['Tuân thủ – có đơn','good'],ok_noorder:['Tuân thủ – không đơn','neutral'],no_gps:['Có đơn – không định vị','warn'],no_driver:['Có định vị – chưa gán TX','bad']};
+  const ST={by_order:['Có mặt theo đơn hoàn thành (RTO/PLF)','neutral'],ok_order:['Tuân thủ – có đơn','good'],ok_noorder:['Tuân thủ – không đơn','neutral'],no_gps:['Có đơn – không định vị','warn'],no_driver:['Có định vị – chưa gán TX','bad']};
   const stF=$('zoneStatusF').value,q=bdNorm($('zoneSearch').value);
   const det=E.per.filter(a=>a.present&&(!stF||a.status===stF)&&(!teamF||a.x.team===teamF)&&(!q||bdNorm(a.x.plate+' '+a.x.drv+' '+a.x.sap).includes(q)))
     .sort((a,b)=>natCmp(a.x.team,b.x.team)||natCmp(a.x.group,b.x.group)||natCmp(a.x.plate,b.x.plate));
   $('zoneDetailMeta').textContent=`| ${fmt(det.length)} xe`;
   const kTxt=a=>[...a.khung].sort((x,y)=>x-y).map(i=>ZK[i].label).join(', ');
-  $('zoneDetailTable').innerHTML='<thead><tr><th>#</th><th>Biển số</th><th>Đội</th><th>Tổ</th><th>Tài xế</th><th>Mã SAP</th><th>Địa bàn</th><th>Khung có mặt</th><th>Phút định vị</th><th>Đơn HT</th><th>Đơn khớp (A)</th><th>Trạng thái</th></tr></thead><tbody>'+
-    det.slice(0,3000).map((a,i)=>`<tr><td>${i+1}</td><td><b>${esc(a.x.plate)}</b></td><td>${esc(a.x.team)}</td><td>${esc(a.x.group)}</td><td>${esc(a.x.drv||'—')}</td><td>${esc(a.x.sap||'—')}</td><td>${[...a.areas].map(k=>ZA[k].name).join(', ')}</td><td class="small">${kTxt(a)}</td><td>${fmt(a.gps)}</td><td>${fmt(a.orders)}</td><td>${E.T.v2?fmt(a.oA):'—'}</td><td><span class="badge ${ST[a.status][1]}">${ST[a.status][0]}</span></td></tr>`).join('')+
-    (det.length?'':'<tr><td colspan="12">Không có xe phù hợp.</td></tr>')+'</tbody>';
-  const abs=E.per.filter(a=>!a.present&&(!teamF||a.x.team===teamF)).sort((a,b)=>natCmp(a.x.team,b.x.team)||natCmp(a.x.group,b.x.group)||natCmp(a.x.plate,b.x.plate));
+  $('zoneDetailTable').innerHTML='<thead><tr><th>#</th><th>Biển số</th><th>Nhóm xe</th><th>Đội</th><th>Tổ</th><th>Tài xế</th><th>Mã SAP</th><th>Địa bàn</th><th>Khung có mặt</th><th>Phút định vị</th><th>Đơn HT</th><th>Đơn khớp (A)</th><th>Trạng thái</th></tr></thead><tbody>'+
+    det.slice(0,3000).map((a,i)=>`<tr><td>${i+1}</td><td><b>${esc(a.x.plate)}</b></td><td class="small">${ZKIND[a.kind]}</td><td>${esc(a.x.team)}</td><td>${esc(a.x.group)}</td><td>${esc(a.x.drv||'—')}</td><td>${esc(a.x.sap||'—')}</td><td>${[...a.areas].map(k=>ZA[k].name).join(', ')}</td><td class="small">${kTxt(a)}</td><td>${fmt(a.gps)}</td><td>${fmt(a.orders)}</td><td>${E.T.v2?fmt(a.oA):'—'}</td><td><span class="badge ${ST[a.status][1]}">${ST[a.status][0]}</span></td></tr>`).join('')+
+    (det.length?'':'<tr><td colspan="13">Không có xe phù hợp.</td></tr>')+'</tbody>';
+  const abs=E.per.filter(a=>a.kind==='T'&&!a.present&&(!teamF||a.x.team===teamF)).sort((a,b)=>natCmp(a.x.team,b.x.team)||natCmp(a.x.group,b.x.group)||natCmp(a.x.plate,b.x.plate));
   $('zoneAbsentMeta').textContent=`| ${fmt(abs.length)} xe`;
   $('zoneAbsentTable').innerHTML='<thead><tr><th>#</th><th>Biển số</th><th>Đội</th><th>Tổ</th><th>Tài xế</th><th>Mã SAP</th><th>Phút định vị (chưa đủ ngưỡng)</th></tr></thead><tbody>'+
     abs.slice(0,3000).map((a,i)=>`<tr><td>${i+1}</td><td><b>${esc(a.x.plate)}</b></td><td>${esc(a.x.team)}</td><td>${esc(a.x.group)}</td><td>${esc(a.x.drv||'—')}</td><td>${esc(a.x.sap||'—')}</td><td>${a.gpsAny?fmt(a.gpsAny):'—'}</td></tr>`).join('')+
@@ -3865,12 +3906,25 @@ function renderZone(){
   __zoneLast={E,cmp,orgRows,det,abs,ST,day,areaF,khF};
   renderZoneOrders();
 }
+function renderZoneScope(){
+  const box=$('zoneScopeBox');if(!box)return;
+  if(!vehicles.length){box.innerHTML='';return}
+  const byVal=new Map(),K={T:0,N:0,R:0,P:0},seen=new Set();let dup=0;
+  vehicles.forEach(v=>{const p=norm(key(v,'Biển số'));if(p&&seen.has(p))dup++;if(p)seen.add(p);const kind=zoneKindOf(v);K[kind]++;
+    const raw=String(key(v,'Trạng thái cấp 3')||'').trim()||'(trống)';const k=raw+'||'+kind;if(!byVal.has(k))byVal.set(k,{raw,kind,n:0});byVal.get(k).n++});
+  const rows=[...byVal.values()].sort((a,b)=>'TRPN'.indexOf(a.kind)-'TRPN'.indexOf(b.kind)||b.n-a.n);
+  const RES={T:'<span class="badge good">Tính có mặt (định vị hoặc đơn)</span>',R:'<span class="badge neutral">RTO – có mặt khi có đơn hoàn thành</span>',P:'<span class="badge neutral">PLF – có mặt khi có đơn hoàn thành</span>',N:'<span class="badge bad">Không tính có mặt (đơn vẫn cộng tổng cuốc)</span>'};
+  box.innerHTML=`<details class="card" style="margin-bottom:12px;padding:10px 14px" ${K.T?'':'open'}><summary style="cursor:pointer"><b>🔎 Kiểm soát nhóm xe (file Xe)</b> — <span class="pf pf-4">TAXI vận doanh hằng ngày ${fmt(K.T)}</span> • RTO ${fmt(K.R)} • PLF ${fmt(K.P)} • <span class="metric-bad">TAXI cấp 3 khác ${fmt(K.N)}</span>${dup?` • <span class="metric-warn">${fmt(dup)} dòng trùng biển số</span>`:''}</summary>
+   <div class="table-wrap" style="margin-top:8px;max-height:280px"><table class="table"><thead><tr><th>Trạng thái cấp 3 trong file Xe</th><th>Nhóm</th><th>Số xe</th><th>Cách tính</th></tr></thead><tbody>${rows.map(r=>`<tr><td><b>${esc(r.raw)}</b></td><td>${ZKIND[r.kind]}</td><td>${fmt(r.n)}</td><td>${RES[r.kind]}</td></tr>`).join('')}</tbody></table></div>
+   <p class="small">TAXI 1102 chỉ tính có mặt khi Trạng thái cấp 3 = <b>"Vận doanh hằng ngày"</b>. RTO và PLF không xét cấp 3: có mặt khi có đơn hoàn thành tại địa bàn trong khung. Xe PLF không có trong file Xe vẫn được nhận từ đơn PLF (Depot 1107).</p></details>`;
+}
 function renderZoneTrend(areaF,khF){
   const days=[...new Set([...ZS.keys(),...zoneLiveDays()])].filter(d=>d<todayISO()||ZS.has(d)).sort().slice(-30);
   const pts=days.map(d=>{const e=zoneEval(zoneGetDataset(d),areaF,khF,'');return e?e.T:null});
   destroyChart('zoneTrendChart');if(!$('zoneTrendChart'))return;
   charts.zoneTrendChart=new Chart($('zoneTrendChart'),{type:'line',data:{labels:days.map(dLabel),datasets:[
-    {label:'% đáp ứng',data:pts.map(t=>t&&Number.isFinite(t.meet)?+t.meet.toFixed(1):null),borderColor:'#0891b2',backgroundColor:'#0891b2',borderWidth:3,tension:.25},
+    {label:'% đáp ứng chuẩn 1102',data:pts.map(t=>t&&Number.isFinite(t.meet1102)?+t.meet1102.toFixed(1):null),borderColor:'#0891b2',backgroundColor:'#0891b2',borderWidth:3,tension:.25},
+    {label:'% đáp ứng chuẩn thị trường',data:pts.map(t=>t&&Number.isFinite(t.meetMkt)?+t.meetMkt.toFixed(1):null),borderColor:'#6366f1',backgroundColor:'#6366f1',borderWidth:2,borderDash:[4,3],tension:.25},
     {label:'% tuân thủ',data:pts.map(t=>t&&Number.isFinite(t.compPct)?+t.compPct.toFixed(1):null),borderColor:'#1f9d55',backgroundColor:'#1f9d55',borderWidth:2,tension:.25},
     {label:'Mục tiêu 100%',data:days.map(()=>100),borderColor:'#a3a3a3',borderDash:[6,4],pointRadius:0,borderWidth:1}]},
     options:{responsive:true,maintainAspectRatio:false,animation:false,plugins:{legend:{position:'bottom'}},scales:{x:{grid:{display:false}},y:{beginAtZero:true,ticks:{callback:v=>v+'%'}}}}});
@@ -3907,25 +3961,32 @@ async function writeSheetsXlsx(fileName,sheets){
 async function exportZoneXlsx(){
   const Z=__zoneLast;if(!Z){alert('Chưa có dữ liệu để xuất.');return}
   const {E,cmp,orgRows,det,abs,ST,day,areaF,khF}=Z,ds=E.ds;
-  const scopeTxt=`Ngày ${dateVN(new Date(day+'T00:00'))} • Địa bàn: ${areaF?ZA[areaF].name:'Tất cả'} • Khung: ${khF!==''?ZK[+khF].label:'Tất cả'} • Ngưỡng có mặt ${ds.params.minPresent} phút, bỏ lượt < ${ds.params.minVisit} phút`;
+  const scopeTxt=`${zoneModeLabel()} • Ngày ${dateVN(new Date(day+'T00:00'))} • Địa bàn: ${areaF?ZA[areaF].name:'Tất cả'} • Khung: ${khF!==''?ZK[+khF].label:'Tất cả'} • Ngưỡng có mặt ${ds.params.minPresent} phút, bỏ lượt < ${ds.params.minVisit} phút`;
   const r1=v=>Number.isFinite(v)?+v.toFixed(1):'';
   const kpiRows=ZONE_KPI.map(m=>{const row=[m.label,m.rate?r1(E.T[m.k]):E.T[m.k]];cmp.forEach(c=>{row.push(c.T?(m.rate?r1(c.T[m.k]):c.T[m.k]):'');row.push(m.noDelta?'':zDelta(E.T,c.T,m.k,m.rate,m.good).txt)});return row});
+  kpiRows.unshift({style:'sub',cells:['TX cần chuẩn thị trường',E.T.needMkt,...cmp.flatMap(c=>[c.T?c.T.needMkt:'',''])]},
+    {style:'sub',cells:['% đáp ứng chuẩn thị trường (100%)',r1(E.T.meetMkt),...cmp.flatMap(c=>[c.T?r1(c.T.meetMkt):'',zDelta(E.T,c.T,'meetMkt',true,1).txt])]},
+    {style:'sub',cells:[`TX cần chuẩn 1102 (${Math.round(zoneRatio()*100)}%)`,E.T.need1102,...cmp.flatMap(c=>[c.T?c.T.need1102:'',''])]},
+    {style:'sub',cells:[`% đáp ứng chuẩn 1102 (${Math.round(zoneRatio()*100)}%)`,r1(E.T.meet1102),...cmp.flatMap(c=>[c.T?r1(c.T.meet1102):'',zDelta(E.T,c.T,'meet1102',true,1).txt])]});
+  const matrixRows=Ev=>{const R=[];ZONE_AREAS.forEach(a=>{ZK.forEach((z,i)=>R.push(mline(a.gd,a.full,z.label,Ev.cells[a.k][i])));R.push(mline('',`TỔNG ${a.name}`,'Cộng các khung',sumC(Ev.cells[a.k]),'sub'))});R.push(mline('','TỔNG CỘNG','',sumC(ZONE_AREAS.flatMap(a=>Ev.cells[a.k])),'total'));return R};
+  const E_mkt=zoneEval(ds,areaF,khF,'','market'),E_1102=zoneEval(ds,areaF,khF,'','1102');
   const mRows=[];const sumC=l=>l.reduce((a,c)=>{['need','present','hasOrder','noOrder','compliant','noGps','noDriver','ordV','cx','cxd'].forEach(k=>a[k]+=c[k]||0);return a},{need:0,present:0,hasOrder:0,noOrder:0,compliant:0,noGps:0,noDriver:0,ordV:0,cx:0,cxd:0});
   const mline=(gd,a,k,c,style)=>({style,cells:[gd,a,k,c.need,c.present,c.need?r1(c.present/c.need*100):'',Math.max(0,c.need-c.present),c.hasOrder,c.noOrder,c.compliant,c.present?r1(c.compliant/c.present*100):'',c.noGps,c.noDriver,c.ordV,c.cx,c.cxd,c.ordV+c.cx?r1(c.ordV/(c.ordV+c.cx)*100):'']});
   ZONE_AREAS.forEach(a=>{ZK.forEach((z,i)=>mRows.push(mline(a.gd,a.full,z.label,E.cells[a.k][i])));mRows.push(mline('',`TỔNG ${a.name}`,'Cộng các khung',sumC(E.cells[a.k]),'sub'))});
   mRows.push(mline('','TỔNG CỘNG','',sumC(ZONE_AREAS.flatMap(a=>E.cells[a.k])),'total'));
   await writeSheetsXlsx(`KiemSoatVung_${day}.xlsx`,[
     {name:'Tong_quan',title:'KIỂM SOÁT XE TRONG VÙNG – TỔNG QUAN',sub:scopeTxt,headers:['Chỉ số','Ngày D',...cmp.flatMap(c=>[`${c.lb} (${dLabel(c.d)})`,`Δ ${c.lb}`])],rows:kpiRows,widths:[26,14,16,14,16,14,16,14]},
-    {name:'DiaBan_Khung',title:'ĐỊA BÀN × KHUNG GIỜ',sub:scopeTxt,headers:['GĐ','Địa bàn','Khung giờ','TX cần','Xe có mặt','% đáp ứng','Thiếu so với cần','Xe có đơn','Xe không đơn','Tuân thủ','% tuân thủ','Xe có đơn loại B','Định vị – chưa gán TX','Đơn hợp lệ','Đơn hủy','Hủy bởi TX','CR (%)'],rows:mRows,widths:[6,24,14,10,10,10,12,10,10,10,10,12,14,10,10,10,8]},
-    {name:'Doi_To',title:'THEO ĐỘI / TỔ',sub:scopeTxt,headers:['Đội','Tổ','Xe VD (cấp 3)','Xe có mặt','% có mặt','Có đơn','Không đơn','Tuân thủ','% tuân thủ','Có đơn – không định vị','Định vị – chưa gán TX'],
+    {name:'DiaBan_Khung_1102',title:`ĐỊA BÀN × KHUNG GIỜ – CHUẨN ĐIỀU PHỐI 1102 (${Math.round(zoneRatio()*100)}% TX CẦN)`,sub:scopeTxt,headers:['GĐ','Địa bàn','Khung giờ','TX cần 1102','Xe có mặt','% đáp ứng','Thiếu so với cần','Xe có đơn','Xe không đơn','Tuân thủ','% tuân thủ','Xe có đơn loại B','Định vị – chưa gán TX','Đơn hợp lệ','Đơn hủy','Hủy bởi TX','CR (%)'],rows:matrixRows(E_1102),widths:[6,24,14,10,10,10,12,10,10,10,10,12,14,10,10,10,8]},
+    {name:'DiaBan_Khung_ThiTruong',title:'ĐỊA BÀN × KHUNG GIỜ – CHUẨN THỊ TRƯỜNG (100% TX CẦN)',sub:scopeTxt,headers:['GĐ','Địa bàn','Khung giờ','TX cần','Xe có mặt','% đáp ứng','Thiếu so với cần','Xe có đơn','Xe không đơn','Tuân thủ','% tuân thủ','Xe có đơn loại B','Định vị – chưa gán TX','Đơn hợp lệ','Đơn hủy','Hủy bởi TX','CR (%)'],rows:matrixRows(E_mkt),widths:[6,24,14,10,10,10,12,10,10,10,10,12,14,10,10,10,8]},
+    {name:'Doi_To',title:'THEO ĐỘI / TỔ',sub:scopeTxt,headers:['Đội','Tổ','Xe VD hằng ngày','Xe có mặt','% có mặt','Có đơn','Không đơn','Tuân thủ','% tuân thủ','Có đơn – không định vị','Định vị – chưa gán TX'],
       rows:orgRows.map(g=>({style:g.team==='TỔNG CỘNG'?'total':g.__total?'sub':'',cells:[g.team,g.group,g.veh,g.present,r1(g.presPct),g.hasOrder,g.noOrder,g.compliant,r1(g.compPct),g.noGps,g.noDriver]})),widths:[22,22,12,10,10,10,10,10,10,14,14]},
-    {name:'Chi_tiet_xe',title:'CHI TIẾT XE CÓ MẶT',sub:scopeTxt,headers:['STT','Biển số','Đội','Tổ','Tài xế','Mã SAP','Địa bàn','Khung có mặt','Phút định vị','Số đơn','Hoàn thành','Trạng thái','Ghi chú / Hành động'],text:[1,5],
-      rows:det.map((a,i)=>[i+1,a.x.plate,a.x.team,a.x.group,a.x.drv,a.x.sap,[...a.areas].map(k=>ZA[k].name).join(', '),[...a.khung].sort((x,y)=>x-y).map(i=>ZK[i].label).join(', '),a.gps,a.orders,a.completed,ST[a.status][0],'']),widths:[6,14,18,22,24,12,18,22,10,8,10,22,30]},
+    {name:'Chi_tiet_xe',title:'CHI TIẾT XE CÓ MẶT',sub:scopeTxt,headers:['STT','Biển số','Nhóm xe','Đội','Tổ','Tài xế','Mã SAP','Địa bàn','Khung có mặt','Phút định vị','Số đơn','Hoàn thành','Trạng thái','Ghi chú / Hành động'],text:[1,6],
+      rows:det.map((a,i)=>[i+1,a.x.plate,ZKIND[a.kind],a.x.team,a.x.group,a.x.drv,a.x.sap,[...a.areas].map(k=>ZA[k].name).join(', '),[...a.khung].sort((x,y)=>x-y).map(i=>ZK[i].label).join(', '),a.gps,a.orders,a.completed,ST[a.status][0],'']),widths:[6,14,26,18,22,24,12,18,22,10,8,10,22,30]},
     ...zoneOrderExcelSheets(scopeTxt,ds),
-    {name:'Xe_vang_mat',title:'XE VẬN DOANH KHÔNG CÓ MẶT',sub:scopeTxt,headers:['STT','Biển số','Đội','Tổ','Tài xế','Mã SAP','Phút định vị (chưa đủ ngưỡng)','Ghi chú / Hành động'],text:[1,5],
+    {name:'Xe_vang_mat',title:'XE TAXI VẬN DOANH HẰNG NGÀY KHÔNG CÓ MẶT',sub:scopeTxt,headers:['STT','Biển số','Đội','Tổ','Tài xế','Mã SAP','Phút định vị (chưa đủ ngưỡng)','Ghi chú / Hành động'],text:[1,5],
       rows:abs.map((a,i)=>[i+1,a.x.plate,a.x.team,a.x.group,a.x.drv,a.x.sap,a.gpsAny||'','']),widths:[6,14,18,22,24,12,16,30]},
     {name:'Chu_thich',headers:['Mục','Diễn giải'],widths:[26,110],rows:[
-      ['Phạm vi','Xe Trạng thái cấp 3 = Xe vận doanh; không gồm PLF, Tổ RTO (01.05/01.06) và xe ngoài file Xe'],
+      ['Nhóm xe','TAXI 1102 Trạng thái cấp 3 = "Vận doanh hằng ngày": có mặt khi định vị ≥ ngưỡng hoặc có đơn hợp lệ, được đánh giá tuân thủ • TAXI cấp 3 khác: không tính có mặt, đơn vẫn cộng tổng cuốc/CR • RTO và PLF: không xét cấp 3, có mặt khi có đơn HOÀN THÀNH tại địa bàn trong khung'],
       ['Khung giờ','6–7h = 06:00–07:59 • 8–9h = 08:00–09:59 • 10–16h = 10:00–16:59 • 17–19h = 17:00–19:59 • 20–24h = 20:00–23:59'],
       ['Có mặt',`Có định vị trong vùng ≥ ${ds.params.minPresent} phút trong khung (bỏ lượt < ${ds.params.minVisit} phút) HOẶC có đơn hợp lệ (ASSIGNED / IN PROCESS / COMPLETED) tại địa bàn (theo địa chỉ đón)`],
       ['Tuân thủ','Có mặt + có định vị ≥ ngưỡng + có tài xế (gán trên xe hoặc theo SAP của đơn)'],
@@ -3933,7 +3994,8 @@ async function exportZoneXlsx(){
       ['Ghép đơn – định vị','Áp dụng cho cả 2 nhóm đơn; Create Time nằm trong [giờ vào vùng − dung sai, giờ ra vùng + dung sai] của xe. A khớp • B đón tại địa bàn nhưng xe không trong vùng (vẫn tính có mặt) • C xe đang ở vùng địa bàn khác • D biển số không có trong file Xe • E địa bàn đón chưa có file vùng / không xác định'],
       ['Tài xế của đơn','Theo Sap Profile Id trên Order (người thực chạy)'],
       ['Có đơn – không định vị','Có đơn tại địa bàn nhưng định vị < ngưỡng: tính có mặt tại địa bàn đơn, không tính tuân thủ'],
-      ['TX cần','Số xe khác nhau cần có mặt trong khung (chỉ tiêu GĐ / địa bàn / khung)'],
+      ['TX cần','Số xe khác nhau cần có mặt trong khung (chỉ tiêu GĐ / địa bàn / khung) – nhu cầu toàn thị trường'],
+      ['2 chuẩn đánh giá',`Chuẩn thị trường = 100% TX cần • Chuẩn điều phối 1102 = TX cần × ${Math.round(zoneRatio()*100)}% (làm tròn lên từng ô). Đạt khi % đáp ứng ≥ 100% của chuẩn`],
       ['% đáp ứng','Xe có mặt / TX cần (cộng theo ô địa bàn × khung khi chọn nhiều ô)'],
       ['So sánh','D-1 = ngày trước; WoW = lùi 7 ngày; Wo2W = lùi 14 ngày (lấy từ kho đã khóa hoặc file đang nạp)'],
       ['Nguồn','File vùng: '+(ds.files||zoneFilesData.filter(f=>f.days.has(day)).map(f=>f.name)).join('; ')]]}
@@ -3943,8 +4005,9 @@ async function exportZoneXlsx(){
 /* ---------- Khởi tạo V7 ---------- */
 (function initV7(){
   renderZoneNeed();renderZoneFiles();
+  {const r=v2Store('gsm_zone_ratio');if(r&&$('zoneRatio'))$('zoneRatio').value=r;$('zoneRatio')?.addEventListener('change',()=>v2Store('gsm_zone_ratio',$('zoneRatio').value))}
   $('zoneFiles').addEventListener('change',e=>{const fs=[...e.target.files];e.target.value='';if(fs.length)zoneAddFiles(fs)});
-  ['zoneDay','zoneArea','zoneKhung','zoneSrc','zoneMinVisit','zoneMinPresent','zoneTol','zoneStatusF','zoneTeamF'].forEach(id=>$(id)?.addEventListener('change',renderZone));
+  ['zoneDay','zoneArea','zoneKhung','zoneSrc','zoneMinVisit','zoneMinPresent','zoneTol','zoneStatusF','zoneTeamF','zoneRatio'].forEach(id=>$(id)?.addEventListener('change',renderZone));
   let t;$('zoneSearch')?.addEventListener('input',()=>{clearTimeout(t);t=setTimeout(renderZone,250)});
   const __v6render=render;render=function(){__v6render();try{renderZone()}catch(e){console.error(e)}};
   renderPerfLegends();
@@ -3993,7 +4056,7 @@ function renderZoneOrders(){
     row('trong đó hủy bởi tài xế',s=>fmt(s.XD))+
     row('<b>TỔNG ĐƠN (Nhóm 1 + Nhóm 2)</b>',s=>`<b>${fmt(s.total)}</b>`,'team-total-row')+
     row('<b>CR</b> <span class="small">= Hợp lệ / Tổng</span>',s=>Number.isFinite(s.cr)?perfPill('zoneCR',s.cr,pct1(s.cr)):'—','total-row')+
-    `</tbody></table></div><p class="small">Dung sai ±${ds.params.tol??10} phút quanh giờ vào/ra vùng. Địa bàn của đơn theo điểm đón. ${ds.outScope?`Đã loại ${fmt(ds.outScope)} đơn của xe ngoài phạm vi (RTO / không phải Xe vận doanh cấp 3).`:''}</p>`;
+    `</tbody></table></div><p class="small">Dung sai ±${ds.params.tol??10} phút quanh giờ vào/ra vùng. Địa bàn của đơn theo điểm đón. ${ds.outScope?`Đã loại ${fmt(ds.outScope)} đơn của xe ngoài phạm vi (Trạng thái cấp 3 khác "Xe vận doanh hằng ngày" / RTO).`:''}</p>`;
   /* Danh sách đơn */
   const sorted=[...list].sort((a,b)=>natCmp(a.team,b.team)||natCmp(a.group,b.group)||natCmp(a.p,b.p)||a.t.localeCompare(b.t));
   $('zoneOrdMeta').textContent=`| ${fmt(list.length)} / ${fmt(base.length)} đơn`;
