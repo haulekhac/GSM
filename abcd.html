@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chèn ảnh PNG lên thẻ</title>
+<style>
+:root{
+  --teal:#12877b; --teal-d:#0d6b61; --ink:#1f2933; --mut:#8a949e;
+  --bg:#f3f5f6; --card:#fff6f7; --line:#f1d6da; --white:#fff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Inter,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px}
+.app{display:grid;grid-template-columns:380px 1fr;gap:20px;max-width:1280px;margin:0 auto;padding:20px;align-items:start}
+@media(max-width:900px){.app{grid-template-columns:1fr}}
+h1{font-size:18px;margin:0 0 14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+.card.plain{background:#fff;border-color:#e3e8eb}
+.card h3{margin:0 0 10px;font-size:14px}
+.lbl{display:block;font-weight:700;margin-bottom:8px}
+.lbl2{font-weight:700;font-size:13px;white-space:nowrap}
+input[type=file]{width:100%;background:#fcfcfc;border:1px solid #e6e6e6;border-radius:8px;padding:8px;font:inherit}
+.meta{display:flex;justify-content:space-between;align-items:center;margin:8px 0;color:var(--mut);font-size:13px}
+.row{display:flex;align-items:center;gap:12px;margin-top:6px}
+.row input[type=range]{flex:1;accent-color:var(--teal);height:6px}
+.pct{width:42px;text-align:right;color:var(--mut);font-size:12px;font-family:monospace}
+.hint{color:var(--mut);font-size:12.5px;line-height:1.55;margin:8px 0 0}
+.slot{padding-bottom:14px;margin-bottom:14px;border-bottom:1px dashed var(--line)}
+.slot:last-of-type{border-bottom:0;margin-bottom:0;padding-bottom:0}
+.slot.active{outline:2px solid var(--teal);outline-offset:6px;border-radius:6px}
+.lnk{background:none;border:0;color:#c0392b;cursor:pointer;font:inherit;font-size:13px;padding:0}
+.lnk[hidden]{display:none}
+.btns{display:flex;gap:10px;flex-wrap:wrap}
+button.btn{background:var(--teal);color:#fff;border:0;border-radius:8px;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer}
+button.btn:hover{background:var(--teal-d)}
+button.btn.alt{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+button.btn:disabled{opacity:.45;cursor:not-allowed}
+.status{font-size:13px;color:var(--mut);margin-top:8px;min-height:18px}
+.status.err{color:#c0392b}
+
+.main{min-width:0}
+.scroller{background:#e6eaec;border-radius:12px;padding:12px;overflow:auto;max-height:calc(100vh - 40px)}
+.stage{position:relative;margin:0 auto;user-select:none;-webkit-user-select:none}
+.pg{position:absolute;left:0;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.18)}
+.plabel{position:absolute;left:0;font-size:12px;font-weight:700;color:#55616b;pointer-events:none}
+.empty{padding:70px 20px;text-align:center;color:var(--mut)}
+.ov{position:absolute;cursor:move;touch-action:none;z-index:5;outline:1px dashed transparent}
+.ov img{width:100%;height:100%;display:block;pointer-events:none}
+.ov.sel{outline:1.5px dashed var(--teal)}
+.ov .h{display:none;position:absolute;width:14px;height:14px;background:#fff;border:2px solid var(--teal);border-radius:50%}
+.ov.sel .h{display:block}
+.h.nw{left:-8px;top:-8px;cursor:nwse-resize}
+.h.ne{right:-8px;top:-8px;cursor:nesw-resize}
+.h.sw{left:-8px;bottom:-8px;cursor:nesw-resize}
+.h.se{right:-8px;bottom:-8px;cursor:nwse-resize}
+.docx-host{position:absolute;left:-99999px;top:0;width:794px;box-sizing:border-box;padding:72px 76px;background:#fff;color:#000;font:16px/1.5 "Times New Roman",Times,serif}
+.docx-host table{border-collapse:collapse;max-width:100%}
+.docx-host td,.docx-host th{border:1px solid #888;padding:4px 6px;vertical-align:top}
+.docx-host img{max-width:100%}
+.docx-host p{margin:0 0 8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside>
+    <h1>Chèn ảnh PNG lên thẻ</h1>
+
+    <div class="card plain">
+      <label class="lbl" for="docFile">Tài liệu nền (PDF hoặc Word .docx)</label>
+      <input type="file" id="docFile" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+      <div class="status" id="docStatus">Chưa tải tài liệu</div>
+      <p class="hint">Mỗi trang được chuyển thành một ảnh. Trang 1 là mặt trước, trang 2 là mặt sau.</p>
+    </div>
+
+    <div class="card" id="slotsCard">
+      <div id="slots"></div>
+      <p class="hint">Tải ảnh PNG nền trong suốt (tối đa 3 ảnh). Sau khi tải, kéo trực tiếp trên vùng xem trước cả mặt trước và mặt sau; có thể kéo qua lại giữa các thẻ và kéo các nút ở góc để phóng to/thu nhỏ. Ảnh sẽ được xuất đúng vị trí vào PDF. Chọn ảnh rồi dùng phím mũi tên để chỉnh từng pixel, phím Delete để xoá.</p>
+    </div>
+
+    <div class="card plain">
+      <div class="btns">
+        <button class="btn" id="btnPdf" disabled>Xuất PDF</button>
+        <button class="btn alt" id="btnPng" disabled>Tải ảnh PNG</button>
+      </div>
+      <div class="status" id="outStatus"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="scroller">
+      <div class="stage" id="stage">
+        <div class="empty" id="empty">Tải file PDF hoặc Word để xem trước tại đây.</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+(function(){
+  'use strict';
+  const $ = s => document.querySelector(s);
+  const DISPW = 600;     // chiều rộng hiển thị mỗi trang (px)
+  const GAP = 30;        // khoảng cách giữa các trang
+  const TOP0 = 24;       // lề trên của vùng xem trước
+  const stage = $('#stage');
+  const pages = [];      // {canvas, ptW, ptH, top, dispH}
+  let selected = null;
+
+  if (window.pdfjsLib) {
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  /* ---------- Ô tải ảnh PNG ---------- */
+  const slots = [0, 1, 2].map(i => {
+    const card = document.createElement('div');
+    card.className = 'slot';
+    card.innerHTML =
+      '<label class="lbl">Ảnh trên mặt trước ' + (i + 1) + '</label>' +
+      '<input type="file" accept="image/png">' +
+      '<div class="meta"><span class="st">Chưa tải</span><button type="button" class="lnk del" hidden>Xoá ảnh</button></div>' +
+      '<div class="row"><span class="lbl2">Độ mờ / đậm ảnh</span>' +
+      '<input type="range" min="5" max="100" value="100"><span class="pct">100%</span></div>';
+    $('#slots').appendChild(card);
+    const s = { i, card, img: null, name: '', opacity: 1, ov: null,
+      fin: card.querySelector('input[type=file]'),
+      st: card.querySelector('.st'),
+      del: card.querySelector('.del'),
+      range: card.querySelector('input[type=range]'),
+      pct: card.querySelector('.pct') };
+
+    s.fin.addEventListener('change', () => {
+      const f = s.fin.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type)) { s.st.textContent = 'File không phải ảnh'; return; }
+      const fr = new FileReader();
+      fr.onload = () => {
+        const im = new Image();
+        im.onload = () => {
+          removeOv(s);
+          s.img = im; s.name = f.name;
+          ensureOv(s);
+          updateSlotStatus(s);
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(f);
+    });
+    s.range.addEventListener('input', () => {
+      s.opacity = s.range.value / 100;
+      s.pct.textContent = s.range.value + '%';
+      if (s.ov) applyOv(s.ov);
+    });
+    s.del.addEventListener('click', () => clearSlot(s));
+    card.addEventListener('pointerdown', () => { if (s.ov) select(s.ov); });
+    return s;
+  });
+
+  function updateSlotStatus(s) {
+    if (!s.img) { s.st.textContent = 'Chưa tải'; s.del.hidden = true; return; }
+    s.st.textContent = s.name + (s.ov ? '' : ' (chờ tài liệu)');
+    s.del.hidden = false;
+  }
+  function clearSlot(s) {
+    removeOv(s);
+    s.img = null; s.name = ''; s.fin.value = '';
+    updateSlotStatus(s);
+  }
+
+  /* ---------- Lớp phủ ảnh ---------- */
+  function ensureOv(s) {
+    if (!s.img || s.ov || !pages.length) return;
+    const w = DISPW * 0.28;
+    const h = w * s.img.naturalHeight / s.img.naturalWidth;
+    const ov = { slot: s, x: 24 + s.i * 34, y: pages[0].top + 24 + s.i * 34, w, h, el: null };
+    const el = document.createElement('div');
+    el.className = 'ov';
+    el.innerHTML = '<img draggable="false">' +
+      ['nw', 'ne', 'sw', 'se'].map(k => '<i class="h ' + k + '" data-h="' + k + '"></i>').join('');
+    el.querySelector('img').src = s.img.src;
+    el.addEventListener('pointerdown', e => startDrag(e, ov));
+    stage.appendChild(el);
+    ov.el = el; s.ov = ov;
+    applyOv(ov);
+    select(ov);
+    updateSlotStatus(s);
+  }
+  function removeOv(s) {
+    if (s.ov) {
+      if (selected === s.ov) selected = null;
+      s.ov.el.remove(); s.ov = null;
+    }
+  }
+  function applyOv(ov) {
+    const st = ov.el.style;
+    st.left = ov.x + 'px'; st.top = ov.y + 'px';
+    st.width = ov.w + 'px'; st.height = ov.h + 'px';
+    ov.el.querySelector('img').style.opacity = ov.slot.opacity;
+  }
+  function select(ov) {
+    selected = ov;
+    slots.forEach(s => {
+      if (s.ov) s.ov.el.classList.toggle('sel', s.ov === ov);
+      s.card.classList.toggle('active', !!ov && s.ov === ov);
+    });
+  }
+  stage.addEventListener('pointerdown', e => { if (e.target === stage || e.target.classList.contains('pg')) select(null); });
+
+  function startDrag(e, ov) {
+    e.preventDefault();
+    e.stopPropagation();
+    select(ov);
+    const handle = e.target.dataset ? e.target.dataset.h : undefined;
+    const sx = e.clientX, sy = e.clientY;
+    const o = { x: ov.x, y: ov.y, w: ov.w, h: ov.h };
+    const ratio = o.h / o.w;
+    const move = ev => {
+      const dx = ev.clientX - sx, dy = ev.clientY - sy;
+      if (!handle) {
+        ov.x = o.x + dx; ov.y = o.y + dy;
+      } else {
+        let w = handle.indexOf('e') >= 0 ? o.w + dx : o.w - dx;
+        w = Math.max(24, w);
+        const h = w * ratio;
+        ov.w = w; ov.h = h;
+        ov.x = handle.indexOf('w') >= 0 ? o.x + o.w - w : o.x;
+        ov.y = handle.indexOf('n') >= 0 ? o.y + o.h - h : o.y;
+      }
+      applyOv(ov);
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
+
+  window.addEventListener('keydown', e => {
+    if (!selected) return;
+    const t = e.target.tagName;
+    if (t === 'INPUT' && e.target.type !== 'range' && e.target.type !== 'file') return;
+    const step = e.shiftKey ? 10 : 1;
+    let used = true;
+    if (e.key === 'ArrowLeft') selected.x -= step;
+    else if (e.key === 'ArrowRight') selected.x += step;
+    else if (e.key === 'ArrowUp') selected.y -= step;
+    else if (e.key === 'ArrowDown') selected.y += step;
+    else if (e.key === 'Delete') { clearSlot(selected.slot); used = true; e.preventDefault(); return; }
+    else used = false;
+    if (used) { e.preventDefault(); applyOv(selected); }
+  });
+
+  /* ---------- Bố cục các trang ---------- */
+  function labelFor(i) {
+    if (i === 0) return 'Thẻ 1 – Mặt trước';
+    if (i === 1) return 'Thẻ 2 – Mặt sau';
+    return 'Trang ' + (i + 1);
+  }
+  function layoutPages() {
+    stage.querySelectorAll('.pg,.plabel,.empty').forEach(n => n.remove());
+    let y = TOP0;
+    pages.forEach((p, i) => {
+      p.dispH = DISPW * p.canvas.height / p.canvas.width;
+      p.top = y;
+      const c = p.canvas;
+      c.className = 'pg';
+      c.style.top = y + 'px';
+      c.style.width = DISPW + 'px';
+      c.style.height = p.dispH + 'px';
+      stage.appendChild(c);
+      const lb = document.createElement('div');
+      lb.className = 'plabel';
+      lb.style.top = (y - 18) + 'px';
+      lb.textContent = labelFor(i);
+      stage.appendChild(lb);
+      y += p.dispH + GAP;
+    });
+    stage.style.width = DISPW + 'px';
+    stage.style.height = (y - GAP + TOP0) + 'px';
+    slots.forEach(ensureOv);
+    slots.forEach(updateSlotStatus);
+    $('#btnPdf').disabled = !pages.length;
+    $('#btnPng').disabled = !pages.length;
+  }
+
+  /* ---------- Đọc PDF ---------- */
+  async function loadPdf(buf, setMsg) {
+    const doc = await pdfjsLib.getDocument({ data: buf }).promise;
+    const out = [];
+    for (let n = 1; n <= doc.numPages; n++) {
+      setMsg('Đang đọc trang ' + n + '/' + doc.numPages + '…');
+      const page = await doc.getPage(n);
+      const v1 = page.getViewport({ scale: 1 });
+      const v = page.getViewport({ scale: 1500 / v1.width });
+      const c = document.createElement('canvas');
+      c.width = Math.round(v.width); c.height = Math.round(v.height);
+      const g = c.getContext('2d');
+      g.fillStyle = '#fff'; g.fillRect(0, 0, c.width, c.height);
+      await page.render({ canvasContext: g, viewport: v }).promise;
+      out.push({ canvas: c, ptW: v1.width, ptH: v1.height });
+    }
+    return out;
+  }
+
+  /* ---------- Đọc Word (.docx) ---------- */
+  async function loadDocx(buf, setMsg) {
+    setMsg('Đang chuyển Word sang ảnh…');
+    const res = await mammoth.convertToHtml({ arrayBuffer: buf });
+    const host = document.createElement('div');
+    host.className = 'docx-host';
+    host.innerHTML = res.value;
+    document.body.appendChild(host);
+    try {
+      await Promise.all([...host.querySelectorAll('img')].map(im =>
+        im.complete ? 1 : new Promise(r => { im.onload = im.onerror = r; })));
+      const scale = host.scrollHeight > 6500 ? 1.5 : 2;
+      const big = await html2canvas(host, { scale, backgroundColor: '#ffffff', useCORS: true });
+      const PW = Math.round(794 * scale), PH = Math.round(1123 * scale);
+      const n = Math.max(1, Math.ceil(big.height / PH));
+      const out = [];
+      for (let i = 0; i < n; i++) {
+        const c = document.createElement('canvas');
+        c.width = PW; c.height = PH;
+        const g = c.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, PW, PH);
+        g.drawImage(big, 0, i * PH, big.width, Math.min(PH, big.height - i * PH), 0, 0, big.width, Math.min(PH, big.height - i * PH));
+        out.push({ canvas: c, ptW: 595.28, ptH: 841.89 });
+      }
+      return out;
+    } finally {
+      host.remove();
+    }
+  }
+
+  $('#docFile').addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const st = $('#docStatus');
+    const setMsg = m => { st.className = 'status'; st.textContent = m; };
+    const ext = (f.name.split('.').pop() || '').toLowerCase();
+    try {
+      let list;
+      if (ext === 'doc') {
+        throw new Error('File .doc cũ chưa được hỗ trợ. Hãy mở bằng Word và lưu lại thành .docx.');
+      } else if (ext === 'pdf') {
+        setMsg('Đang đọc PDF…');
+        list = await loadPdf(await f.arrayBuffer(), setMsg);
+      } else if (ext === 'docx') {
+        list = await loadDocx(await f.arrayBuffer(), setMsg);
+      } else {
+        throw new Error('Chỉ hỗ trợ file PDF hoặc DOCX.');
+      }
+      pages.length = 0;
+      list.forEach(p => pages.push(p));
+      layoutPages();
+      setMsg(f.name + ' – ' + pages.length + ' trang');
+    } catch (err) {
+      console.error(err);
+      st.className = 'status err';
+      st.textContent = 'Lỗi: ' + (err.message || err);
+    }
+  });
+
+  /* ---------- Xuất file ---------- */
+  function composePage(i) {
+    const p = pages[i];
+    const c = document.createElement('canvas');
+    c.width = p.canvas.width; c.height = p.canvas.height;
+    const g = c.getContext('2d');
+    g.drawImage(p.canvas, 0, 0);
+    const k = p.canvas.width / DISPW;
+    slots.forEach(s => {
+      const ov = s.ov;
+      if (!ov) return;
+      g.save();
+      g.globalAlpha = s.opacity;
+      g.drawImage(s.img, ov.x * k, (ov.y - p.top) * k, ov.w * k, ov.h * k);
+      g.restore();
+    });
+    return c;
+  }
+  function out(msg, err) { const o = $('#outStatus'); o.className = 'status' + (err ? ' err' : ''); o.textContent = msg; }
+
+  $('#btnPdf').addEventListener('click', () => {
+    try {
+      if (!window.jspdf) throw new Error('Chưa tải được thư viện jsPDF (cần mạng).');
+      const { jsPDF } = window.jspdf;
+      let pdf = null;
+      pages.forEach((p, i) => {
+        const orient = p.ptW > p.ptH ? 'l' : 'p';
+        if (!pdf) pdf = new jsPDF({ unit: 'pt', format: [p.ptW, p.ptH], orientation: orient });
+        else pdf.addPage([p.ptW, p.ptH], orient);
+        const data = composePage(i).toDataURL('image/jpeg', 0.93);
+        pdf.addImage(data, 'JPEG', 0, 0, p.ptW, p.ptH);
+      });
+      pdf.save('ket-qua.pdf');
+      out('Đã xuất ket-qua.pdf');
+    } catch (err) { console.error(err); out('Lỗi: ' + (err.message || err), true); }
+  });
+
+  $('#btnPng').addEventListener('click', async () => {
+    try {
+      for (let i = 0; i < pages.length; i++) {
+        const c = composePage(i);
+        await new Promise(res => c.toBlob(b => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(b);
+          a.download = 'trang-' + (i + 1) + '.png';
+          document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+          res();
+        }, 'image/png'));
+      }
+      out('Đã tải ' + pages.length + ' ảnh PNG');
+    } catch (err) { console.error(err); out('Lỗi: ' + (err.message || err), true); }
+  });
+})();
+</script>
+</body>
+</html>
