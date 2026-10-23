@@ -48,6 +48,7 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 .q b{font-size:12px}.q p{margin:6px 0 0;font-size:11px;color:var(--mu)}
 .lg2{max-height:200px;overflow:auto;background:#10201f;color:#7ee0d4;border-radius:10px;padding:10px;font:11px "JetBrains Mono",ui-monospace,Consolas,monospace;line-height:1.7}
 .sec{display:none}.sec.on{display:block}
+#dt th,#dl th{cursor:default}#dt th:hover,#dl th:hover{color:#4b5f5c}
 #toast{position:fixed;right:20px;bottom:20px;background:#10201f;color:#fff;padding:11px 16px;border-radius:10px;font-size:12px;opacity:0;transform:translateY(8px);transition:.25s;z-index:99;pointer-events:none}#toast.s{opacity:1;transform:none}
 @media(max-width:800px){aside{display:none}main{padding:12px}}
 </style></head><body>
@@ -64,8 +65,15 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 <div class="fd"><label>Đội</label><select id="fDoi"></select></div><div class="fd"><label>Tổ</label><select id="fTo"></select></div>
 <div class="fd"><label>Dòng xe</label><select id="fDx"></select></div>
 <div class="fd"><label>Cảnh báo</label><select id="fSt"><option value="">Tất cả</option><option>Sắp đến mốc</option><option>Vừa quá mốc</option><option>Bình thường</option><option>Thiếu ODO</option></select></div>
+<div class="fd"><label>Kế hoạch BD</label><select id="fKh"><option value="">Tất cả</option><option>Trong kế hoạch</option><option>Chưa tới</option></select></div>
 <button class="btn p" id="bx"><span data-ic="dl"></span>Xuất Excel</button></div>
 <div class="tw"><table id="tb"></table></div><div class="pg"><span id="pi"></span><span><button class="btn" id="pp"><span data-ic="cl"></span>Trước</button> <button class="btn" id="pn">Sau<span data-ic="cr"></span></button></span></div></div>
+</section>
+
+<section class="sec" id="s-dash">
+<div class="kp" id="dk"></div>
+<div class="card"><h2>Rà soát theo đội</h2><div class="sub" id="dsub"></div><div class="tw"><table id="dt"></table></div></div>
+<div class="card"><h2>Xe cần bảo dưỡng nhưng chưa đặt lịch</h2><div class="sub">Sắp xếp theo số km còn lại tăng dần (tối đa 300 xe).</div><div class="tw"><table id="dl"></table></div></div>
 </section>
 
 <section class="sec" id="s-load">
@@ -73,7 +81,9 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 <div class="row"><div class="fd"><label>Cảnh báo khi còn ≤ (km)</label><input id="warn" type="number" value="1500" min="0"></div>
 <div class="fd"><label>Vừa quá mốc trong (km)</label><input id="over" type="number" value="1500" min="0"></div>
 <div class="fd"><label>Lệch ODO giữa nguồn &gt; (km)</label><input id="gap" type="number" value="3000" min="0"></div>
-<button class="btn p" id="bm"><span data-ic="zap"></span>Ghép dữ liệu &amp; tính mốc BD</button><button class="btn" id="br"><span data-ic="rs"></span>Reset</button></div></div>
+<div class="fd"><label>ODO kế hoạch BD thêm (km)</label><input id="plan" type="number" value="4000" min="0"></div>
+<button class="btn p" id="bm"><span data-ic="zap"></span>Ghép dữ liệu &amp; tính mốc BD</button><button class="btn" id="br"><span data-ic="rs"></span>Reset</button></div>
+<div class="sub" style="margin:10px 0 0">ODO kế hoạch = Max ODO hợp lý + ODO kế hoạch BD thêm. Ví dụ ODO hợp lý 3.000, kế hoạch thêm 4.000 thì ODO kế hoạch là 7.000. Xe có mốc BD tiếp theo ≤ ODO kế hoạch được xếp "Trong kế hoạch".</div></div>
 
 <div class="card"><h2>Đặt lịch nhanh</h2><div class="sub">Dán danh sách số khung (hoặc biển số), cách nhau bằng dấu phẩy, khoảng trắng hoặc xuống dòng, rồi chọn ngày. Các xe trong danh sách sẽ có ngày ở cột "Ngày đặt lịch". Dữ liệu được lưu trên trình duyệt.</div>
 <div class="fd"><label>Danh sách số khung / biển số</label><textarea id="bkList" rows="4" placeholder="RLLV4HDGXSH706824,RLNV5JSE7SH776018,..." style="width:100%;border:1px solid var(--ln);border-radius:9px;padding:8px 10px;background:#f7fbfa;font:11px 'JetBrains Mono',ui-monospace,Consolas,monospace"></textarea></div>
@@ -107,9 +117,9 @@ cal:'<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 1
 srch:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
 up:'<path d="m18 15-6-6-6 6"/>',dn:'<path d="m6 9 6 6 6-6"/>',cl:'<path d="m15 18-6-6 6-6"/>',cr:'<path d="m9 18 6-6-6-6"/>'};
 const svg=n=>`<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">${IC[n]}</svg>`;
-const TABS=[['main','Tổng hợp bảo dưỡng','a'],['load','Nạp dữ liệu','b'],['q','Chất lượng dữ liệu','c']];
+const TABS=[['main','Tổng hợp bảo dưỡng','a'],['dash','Dashboard rà soát BD','al'],['load','Nạp dữ liệu','b'],['q','Chất lượng dữ liệu','c']];
 $('nav').innerHTML=`<button id="tg">${svg('m')}<span class="lb">Thu gọn menu</span></button>`+TABS.map((t,i)=>`<button data-t="${t[0]}" class="${i?'':'on'}">${svg(t[2])}<span class="lb">${t[1]}</span></button>`).join('');
-function go(t){document.querySelectorAll('#nav [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));$('bcp').textContent=TABS.find(x=>x[0]===t)[1]}
+function go(t){document.querySelectorAll('#nav [data-t]').forEach(b=>b.classList.toggle('on',b.dataset.t===t));document.querySelectorAll('.sec').forEach(s=>s.classList.toggle('on',s.id==='s-'+t));$('bcp').textContent=TABS.find(x=>x[0]===t)[1];if(t==='dash')dash()}
 $('nav').onclick=e=>{const b=e.target.closest('button');if(!b)return;b.id==='tg'?$('sb').classList.toggle('c'):go(b.dataset.t)};
 $('clk').innerHTML=svg('cal')+new Date().toLocaleDateString('vi-VN');document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=svg(e.dataset.ic));
 const toast=m=>{const t=$('toast');t.textContent=m;t.classList.add('s');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('s'),3200)};
@@ -170,9 +180,7 @@ function applyBkList(){const ids=[...new Set($('bkList').value.split(/[\s,;]+/).
  log(msg)}
 
 /* ---------- đọc bảng ---------- */
-/* FIX: tìm cột theo từng từ khóa (đúng thứ tự ưu tiên): khớp nguyên ô -> khớp nguyên từ -> chứa chuỗi.
-   Bản cũ bỏ qua bước "chứa chuỗi" với từ khóa ngắn (odo, km, vin, ten, sdt, doi...) nên không tìm thấy
-   cột như "ODO lúc booking", "Số ODO", "Tên tài xế" -> ODO = 0 hoặc lấy nhầm cột cuối. */
+/* Tìm cột theo từng từ khóa (đúng thứ tự ưu tiên): khớp nguyên ô -> khớp nguyên từ -> chứa chuỗi. */
 const NOSUB=['to','ma'];
 const reEsc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 function col(h,kws){const n=h.map(nt);
@@ -212,7 +220,7 @@ function merge(){
  LOG=[];if(!raw.pool||!raw.pool.length)return toast('Vui lòng nạp File Pool xe trước'),go('load');
  const t=prep('pool'),h=t.h;const ix={vin:col(h,['so khung','vin']),bs:col(h,['bien so','bsx','bks']),dx:col(h,['dong xe','loai xe']),doi:col(h,['doi']),to:col(h,['to'])};
  if(ix.vin<0)ix.vin=0;if(ix.bs<0)ix.bs=1;if(ix.dx<0)ix.dx=2;
- const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,tx:0};data=[];
+ const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),plan=num($('plan').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,tx:0};data=[];
  t.body.forEach(r=>{const vin=String(r[ix.vin]||'').trim(),bs=String(r[ix.bs]||'').trim();if(!vin&&!bs)return;
   const keys=[ck(vin),ck(bs)].filter(Boolean),f=m=>{for(const k of keys){if(m.has(k))return m.get(k)}return null};
   const vd=f(M.vd),at=f(M.at),dv=f(M.dv),gc=f(M.gc),bk=f(M.bk);
@@ -222,10 +230,12 @@ function merge(){
   const pos=[o1,o2,o3,o4].filter(x=>x>0),lech=pos.length>1&&Math.max(...pos)-Math.min(...pos)>gap;
   const dx=String(r[ix.dx]||'').trim(),ms=milestones(dx),next=ms.find(m=>m>=max)||ms[ms.length-1],prev=[...ms].reverse().find(m=>m<max)||0,rem=max?next-max:null;
   let st='Bình thường';if(!max)st='Thiếu ODO';else if(rem<=warn)st='Sắp đến mốc';else if(prev>0&&max-prev<=over)st='Vừa quá mốc';
+  /* ODO kế hoạch = Max ODO hợp lý + ODO kế hoạch BD thêm; mốc tiếp theo <= ODO kế hoạch => nằm trong kế hoạch BD */
+  const kh=max?max+plan:0,inp=!max?'':(next<=kh?'Trong kế hoạch':'Chưa tới');
   const ma=vd&&vd.ma||'',ten=vd&&vd.ten||'',txi=M.tx.get(ck(ma))||M.tx.get(ck(ten));if(txi)hit.tx++;
-  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,next,rem,bko:bk?bk.o:0,bkt:bk?bk.t:'',bkf:bk?bk.dd:'',bkd:'',st,
+  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,kh,inp,next,rem,bko:bk?bk.o:0,bkt:bk?bk.t:'',bkf:bk?bk.dd:'',bkd:'',st,
    tx:ten||(txi&&txi.ten)||'',mtx:ma||(txi&&txi.ma)||'',sdt:(vd&&vd.sdt)||(txi&&txi.sdt)||'',pos:vd&&vd.pos||''})});
- setBkd();log(`Ghép xong ${data.length} xe từ Pool.`);
+ setBkd();log(`Ghép xong ${data.length} xe từ Pool. ODO kế hoạch = Max ODO + ${plan.toLocaleString('vi-VN')} km.`);
  const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['tx','Data tài xế']].map(([k,l])=>{
   const loaded=!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
  fillSel('fDoi','Đội',data.map(x=>x.doi));fillSel('fTo','Tổ',data.map(x=>x.to));fillSel('fDx','Dòng xe',data.map(x=>x.dx));
@@ -234,11 +244,11 @@ function fillSel(id,l,a){const u=[...new Set(a.filter(Boolean))].sort((x,y)=>x.l
 
 /* ---------- hiển thị ---------- */
 const BC={'Bình thường':'b0','Sắp đến mốc':'b1','Vừa quá mốc':'b2','Thiếu ODO':'b3'};
-const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['bkd','Ngày đặt lịch'],['st','Cảnh báo'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
-function kpis(){const c=s=>data.filter(x=>x.st===s).length,has=data.filter(x=>x.max>0).length,lech=data.filter(x=>x.lech).length;
- const KI=['car','clock','wr','ok','al','sw'];$('kp').innerHTML=[['Tổng số xe',data.length,'trong Pool',''],['Sắp đến mốc BD',c('Sắp đến mốc'),'cần đặt lịch','w'],['Vừa quá mốc',c('Vừa quá mốc'),'kiểm tra đã bảo dưỡng chưa','e'],['Có ODO',has,data.length?(has/data.length*100).toFixed(1)+'% Pool':'—',''],['Thiếu ODO',c('Thiếu ODO'),'không tìm thấy ở file nào','g'],['ODO lệch nguồn',lech,'cần đối soát','w']].map((k,i)=>`<div class="k ${k[3]}"><span class="ki">${svg(KI[i])}</span><i>${k[0]}</i><b>${Number(k[1]).toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('')}
-function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$('fDx').value,s=$('fSt').value;
- view=data.filter(r=>(!d||r.doi===d)&&(!t||r.to===t)&&(!x||r.dx===x)&&(!s||r.st===s)&&(!q||nt([r.vin,r.bs,r.tx,r.mtx,r.sdt].join(' ')).includes(q)));
+const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['kh','ODO kế hoạch','n'],['inp','Kế hoạch BD'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['bkd','Ngày đặt lịch'],['st','Cảnh báo'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
+function kpis(){const c=s=>data.filter(x=>x.st===s).length,has=data.filter(x=>x.max>0).length,lech=data.filter(x=>x.lech).length,kh=data.filter(x=>x.inp==='Trong kế hoạch').length;
+ const KI=['car','clock','wr','ok','al','sw','cal'];$('kp').innerHTML=[['Tổng số xe',data.length,'trong Pool',''],['Sắp đến mốc BD',c('Sắp đến mốc'),'cần đặt lịch','w'],['Vừa quá mốc',c('Vừa quá mốc'),'kiểm tra đã bảo dưỡng chưa','e'],['Có ODO',has,data.length?(has/data.length*100).toFixed(1)+'% Pool':'—',''],['Thiếu ODO',c('Thiếu ODO'),'không tìm thấy ở file nào','g'],['ODO lệch nguồn',lech,'cần đối soát','w'],['Trong kế hoạch BD',kh,'mốc tiếp theo ≤ ODO kế hoạch','']].map((k,i)=>`<div class="k ${k[3]}"><span class="ki">${svg(KI[i])}</span><i>${k[0]}</i><b>${Number(k[1]).toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('')}
+function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$('fDx').value,s=$('fSt').value,p=$('fKh').value;
+ view=data.filter(r=>(!d||r.doi===d)&&(!t||r.to===t)&&(!x||r.dx===x)&&(!s||r.st===s)&&(!p||r.inp===p)&&(!q||nt([r.vin,r.bs,r.tx,r.mtx,r.sdt].join(' ')).includes(q)));
  const k=sort.k;view.sort((a,b)=>{let u=a[k],v=b[k];if(u===null||u===''||u===undefined)return 1;if(v===null||v===''||v===undefined)return -1;return (typeof u==='number'?u-v:String(u).localeCompare(String(v),'vi',{numeric:true}))*sort.d});
  kpis();draw()}
 function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(page,tp);const rows=view.slice((page-1)*PS,page*PS);
@@ -246,12 +256,26 @@ function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(pag
  (rows.map(r=>'<tr>'+COLS.map(([k,,n])=>{let v=r[k];
   if(k==='st')v=`<span class="bd ${BC[v]}">${v}</span>`;else if(k==='rem')v=v===null?'—':fmt(v)==='—'?'0':fmt(v);else if(n)v=fmt(v);else if(k==='vin'||k==='mtx')v=`<span class="mono">${esc(v)}</span>`;else v=esc(v);
   if(k==='bkd')v=esc(fmtD(r.bkd));
+  if(k==='inp')v=r.inp?`<span class="bd ${r.inp==='Chưa tới'?'b0':'b1'}">${r.inp}</span>`:'';
   if(k==='max')v=`<b>${fmt(r.max)}</b>`;if(k==='src'&&r.lech)v+=' <span class="bd b1">lệch</span>';
   return `<td class="${n?'r':''}">${v}</td>`}).join('')+'</tr>').join('')||`<tr><td colspan="${COLS.length}" style="text-align:center;padding:36px;color:var(--mu)">${data.length?'Không có xe phù hợp bộ lọc.':'Chưa có dữ liệu. Vào mục Nạp dữ liệu để bắt đầu.'}</td></tr>`)+'</tbody>';
  $('pi').textContent=`${view.length.toLocaleString('vi-VN')} xe • Trang ${page}/${tp}`;$('pp').disabled=page<=1;$('pn').disabled=page>=tp}
+
+/* ---------- Dashboard rà soát xe bảo dưỡng ---------- */
+function dash(){
+ if(!data.length){$('dk').innerHTML='';$('dl').innerHTML='';$('dsub').textContent='';$('dt').innerHTML='<tbody><tr><td style="padding:30px;text-align:center;color:var(--mu)">Chưa có dữ liệu. Vào mục Nạp dữ liệu rồi bấm "Ghép dữ liệu & tính mốc BD".</td></tr></tbody>';return}
+ const bk=r=>!!(r.bkd||r.bkt),need=data.filter(r=>r.inp==='Trong kế hoạch'||r.st==='Vừa quá mốc'),S=new Set(need),nb=need.filter(r=>!bk(r)),qua=need.filter(r=>r.st==='Vừa quá mốc').length;
+ $('dsub').textContent=`ODO kế hoạch = Max ODO hợp lý + ${fmt(num($('plan').value))} km. Xe có mốc BD tiếp theo ≤ ODO kế hoạch, hoặc vừa quá mốc, được tính là cần BD. Xe "đã đặt lịch" khi có ngày đặt lịch hoặc tình trạng booking.`;
+ $('dk').innerHTML=[['Xe cần rà soát BD',need.length,'trong kế hoạch + vừa quá mốc','','car'],['Đã đặt lịch',need.length-nb.length,'trong số xe cần BD','','ok'],['Chưa đặt lịch',nb.length,'cần liên hệ đặt lịch','e','al'],['Vừa quá mốc',qua,'kiểm tra đã BD chưa','w','wr'],['ODO lệch nguồn',need.filter(r=>r.lech).length,'cần đối soát','g','sw']].map(k=>`<div class="k ${k[3]}"><span class="ki">${svg(k[4])}</span><i>${k[0]}</i><b>${k[1].toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('');
+ const g={};data.forEach(r=>{const d=r.doi||'(Chưa có đội)',o=g[d]=g[d]||{t:0,n:0,b:0};o.t++;if(S.has(r)){o.n++;if(bk(r))o.b++}});
+ const th=a=>'<thead><tr>'+a.map(x=>`<th class="${x[1]?'r':''}">${x[0]}</th>`).join('')+'</tr></thead>';
+ $('dt').innerHTML=th([['Đội'],['Tổng xe',1],['Cần BD',1],['Đã đặt lịch',1],['Chưa đặt lịch',1],['Tiến độ đặt lịch']])+'<tbody>'+Object.entries(g).sort((a,b)=>b[1].n-a[1].n).map(([d,o])=>`<tr><td>${esc(d)}</td><td class="r">${fmt(o.t)}</td><td class="r"><b>${fmt(o.n)}</b></td><td class="r">${fmt(o.b)}</td><td class="r">${fmt(o.n-o.b)}</td><td style="min-width:140px"><div class="bar" style="margin:0"><i style="width:${o.n?o.b/o.n*100:0}%"></i></div></td></tr>`).join('')+'</tbody>';
+ const L=[...nb].sort((a,b)=>(a.rem??1e9)-(b.rem??1e9)).slice(0,300);
+ $('dl').innerHTML=th([['Số khung'],['Biển số'],['Đội'],['Tổ'],['Max ODO',1],['Mốc BD tiếp',1],['Còn lại (km)',1],['ODO kế hoạch',1],['Cảnh báo'],['Tài xế'],['SĐT']])+'<tbody>'+(L.map(r=>`<tr><td class="mono">${esc(r.vin)}</td><td>${esc(r.bs)}</td><td>${esc(r.doi)}</td><td>${esc(r.to)}</td><td class="r">${fmt(r.max)}</td><td class="r">${fmt(r.next)}</td><td class="r">${r.rem===null?'—':fmt(r.rem)==='—'?'0':fmt(r.rem)}</td><td class="r">${fmt(r.kh)}</td><td><span class="bd ${BC[r.st]}">${r.st}</span></td><td>${esc(r.tx)}</td><td>${esc(r.sdt)}</td></tr>`).join('')||'<tr><td colspan="11" style="text-align:center;padding:28px;color:var(--mu)">Tất cả xe cần BD đã được đặt lịch.</td></tr>')+'</tbody>'}
+
 $('tb').onclick=e=>{const th=e.target.closest('th');if(!th)return;const k=th.dataset.k;sort=sort.k===k?{k,d:-sort.d}:{k,d:1};apply()};
 $('pp').onclick=()=>{page--;draw()};$('pn').onclick=()=>{page++;draw()};
-['fDoi','fTo','fDx','fSt'].forEach(i=>$(i).onchange=()=>{page=1;apply()});let qt;$('q').oninput=()=>{clearTimeout(qt);qt=setTimeout(()=>{page=1;apply()},200)};
+['fDoi','fTo','fDx','fSt','fKh'].forEach(i=>$(i).onchange=()=>{page=1;apply()});let qt;$('q').oninput=()=>{clearTimeout(qt);qt=setTimeout(()=>{page=1;apply()},200)};
 $('bm').onclick=merge;
 $('br').onclick=()=>{raw={};meta={};data=[];view=[];LOG=[];document.querySelectorAll('.fz').forEach((z,i)=>{z.classList.remove('ok');z.querySelector('input').value='';z.querySelector('span').textContent='Chọn hoặc kéo thả file'});
  $('qc').innerHTML='<p class="sub">Chưa ghép dữ liệu.</p>';$('lg').textContent='Chưa có nhật ký.';apply();toast('Đã reset')};
@@ -259,6 +283,7 @@ $('bx').onclick=()=>{if(!view.length)return toast('Không có dữ liệu để 
  const rows=a=>a.map(r=>Object.fromEntries(COLS.map(c=>[c[1],c[0]==='bkd'?fmtD(r.bkd):(r[c[0]]===null?'':r[c[0]])]))),wb=XLSX.utils.book_new();
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(view)),'TongHop');
  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(view.filter(r=>r.st==='Sắp đến mốc'||r.st==='Vừa quá mốc'))),'CanhBao');
+ XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows(view.filter(r=>r.inp==='Trong kế hoạch'||r.st==='Vừa quá mốc'))),'RaSoatBD');
  XLSX.writeFile(wb,'Tong_Hop_Bao_Duong_'+new Date().toISOString().slice(0,10)+'.xlsx')};
 $('bkDate').value=toISO(Date.now());
 $('bkApply').onclick=applyBkList;

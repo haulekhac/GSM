@@ -529,7 +529,7 @@ body.dark .sidebar-toggle{background:#16211e;border-color:var(--line);}
           <div class="field"><label>Quy tắc đối soát</label><div class="fake-select disabled">Completed / PendingConfirmation = Đã giao ca <span class="caret">▾</span></div></div>
         </div>
         <div class="action-row">
-          <button class="btn btn-primary" id="btn-process-tt" disabled onclick="processFilesTT()">Đối soát ngay</button>
+          <button class="btn btn-primary" id="btn-process-tt" disabled onclick="processFilesTT().catch(err=>console.error(err))">Đối soát ngay</button>
           <button class="btn btn-ghost" onclick="exportExcelTT()" id="btn-export-tt" disabled>⬇ Tải file kết quả (.xlsx)</button>
           <span class="hint" id="go-hint-tt">tải đủ 2 file để bắt đầu</span>
         </div>
@@ -1399,9 +1399,47 @@ function classifyStatusTT(s){
   return 'other';
 }
 
-function processFilesTT(){
+// Tạo các "khóa" để so khớp Mã SAP giữa các file (bỏ ký tự lạ, số 0 đầu, tiền tố 800/8000/80000)
+function sapKeysTT(s){
+  const d = String(s||'').replace(/\D/g,'');
+  if(!d) return [];
+  const keys = new Set([d]);
+  const nz = d.replace(/^0+/,'');
+  if(nz) keys.add(nz);
+  ['80000','8000','800'].forEach(p=>{
+    if(nz.startsWith(p) && nz.length - p.length >= 4){
+      keys.add(nz.slice(p.length).replace(/^0+/,''));
+    }
+  });
+  return [...keys].filter(Boolean);
+}
+
+async function processFilesTT(){
   const xeRows = sheetToRows(ttVehicleWB, ['Result','Sheet1']);
   const hoRows = sheetToRows(ttHandoverWB, ['Result','data off','Sheet1']);
+
+  // 0) Dữ liệu tài xế đã import ở "Báo cáo GMV" -> tra Họ & tên theo Mã SAP / Mã tài xế
+  let txRows = [];
+  try{ txRows = (await loadType('TaiXe')).rows; }catch(e){ txRows = []; }
+  const nameBySap = new Map();
+  const driverByPlate = new Map(), driverByVin = new Map();
+  txRows.forEach(r=>{
+    const sapTx = String(r['Mã SAP']||'').trim();
+    const nameTx = String(r['Họ & tên']||'').trim();
+    if(nameTx){
+      [sapTx, r['Mã tài xế']].forEach(code=>{
+        sapKeysTT(code).forEach(k=>{ if(!nameBySap.has(k)) nameBySap.set(k, nameTx); });
+      });
+    }
+    if(String(r['Trạng thái gán']||'').trim() !== 'VehicleAssigned') return;
+    const info = { sap: sapTx, name: nameTx };
+    const p = normPlateTT(r['Biển số']); if(p) driverByPlate.set(p, info);
+    const v = String(r['Số khung']||'').trim().toUpperCase(); if(v) driverByVin.set(v, info);
+  });
+  const lookupName = (sap)=>{
+    for(const k of sapKeysTT(sap)){ if(nameBySap.has(k)) return nameBySap.get(k); }
+    return '';
+  };
 
   // 1) Handover Report: gom theo BIỂN SỐ (và SỐ KHUNG nếu có), không phụ thuộc tài xế
   const byPlate = new Map(), byVin = new Map();
@@ -1432,13 +1470,15 @@ function processFilesTT(){
       if(sap || name){
         const dk = sap || name;
         if(!c.drivers.has(dk)) c.drivers.set(dk, {sap, name, ok:0});
-        if(kind==='ok') c.drivers.get(dk).ok++;
+        const d = c.drivers.get(dk);
+        if(!d.name && name) d.name = name;
+        if(kind==='ok') d.ok++;
       }
     });
   });
 
   // 2) File Xe: chỉ để đếm xe "Xe vận doanh" đã có tài xế; tra Handover theo biển số / số khung
-  rowsTT = []; let skipped = 0;
+  rowsTT = []; let skipped = 0, nameFromDriverFile = 0, nameStillBlank = 0;
   xeRows.forEach(r=>{
     const capHai = String(pick(r,['Trạng thái cấp 2'])).trim();
     if(capHai !== 'Xe vận doanh'){ skipped++; return; }
@@ -1459,12 +1499,34 @@ function processFilesTT(){
     const list = [...c.drivers.values()];
     const okList = list.filter(d=>d.ok > 0);
     const show = okList.length ? okList : list;
-    let sap = show.map(d=>d.sap).filter(Boolean).join(', ');
-    let hoTen = show.map(d=>d.name).filter(Boolean).join(', ');
-    if(!sap && !hoTen){ // xe không có dòng Handover nào -> tạm hiện tài xế theo file Xe
+
+    // Thiếu tên trong Handover -> tra theo Mã SAP trong dữ liệu tài xế
+    const people = show.map(d=>{
+      let nm = d.name;
+      if(!nm && d.sap){ nm = lookupName(d.sap); if(nm) nameFromDriverFile++; }
+      return { sap: d.sap, name: nm || '' };
+    });
+    let sap = people.map(p=>p.sap).filter(Boolean).join(', ');
+    let hoTen = people.map(p=>p.name).filter(Boolean).join(', ');
+
+    // Vẫn chưa có tên: thử tên trong file Xe nếu trùng Mã SAP
+    if(!hoTen && sap){
+      const maXe = extractMaNV(taiXe);
+      if(maXe && sapKeysTT(maXe).some(k=>sapKeysTT(sap).includes(k))){
+        hoTen = String(taiXe).replace(/\s*\([^()]+\)\s*$/, '').trim();
+      }
+    }
+    // Handover không có dòng nào (không có SAP): lấy tài xế đang gán xe theo biển số / số khung
+    if(!sap && !hoTen){
+      const d = driverByPlate.get(plateKey) || (vinKey && driverByVin.get(vinKey));
+      if(d){ sap = d.sap; hoTen = d.name; if(hoTen) nameFromDriverFile++; }
+    }
+    // Cuối cùng mới dùng tài xế trong file Xe
+    if(!sap && !hoTen){
       sap = extractMaNV(taiXe);
       hoTen = String(taiXe).replace(/\s*\([^()]+\)\s*$/, '').trim();
     }
+    if(!hoTen) nameStillBlank++;
 
     rowsTT.push({
       soKhung, dongXe: pick(r,['Dòng xe','Dong xe']), bienSo, depot: pick(r,['Depot']),
@@ -1486,18 +1548,24 @@ function processFilesTT(){
   document.getElementById('btn-export-tt').disabled = rowsTT.length===0;
 
   const note = document.getElementById('notice-status-tt');
+  const msgs = [];
+  let level = 'gold';
   if(!hoUsed){
-    note.className = 'notice warn'; note.style.display = 'block';
-    note.textContent = 'Không đọc được dòng nào từ Handover Report (cần có cột "Biển số"/"Biển kiểm soát" hoặc "Số khung"). Kiểm tra lại tên cột / sheet của file.';
+    level = 'warn';
+    msgs.push('Không đọc được dòng nào từ Handover Report (cần có cột "Biển số"/"Biển kiểm soát" hoặc "Số khung"). Kiểm tra lại tên cột / sheet của file.');
   } else if(otherStatuses.size){
-    note.className = 'notice gold'; note.style.display = 'block';
-    note.textContent = 'Handover có trạng thái chưa nhận diện (không tính là giao ca): ' +
-      [...otherStatuses.entries()].map(([k,v])=>`${k} (${v})`).join(', ');
-  } else {
-    note.style.display = 'none';
+    msgs.push('Handover có trạng thái chưa nhận diện (không tính là giao ca): ' +
+      [...otherStatuses.entries()].map(([k,v])=>`${k} (${v})`).join(', '));
   }
+  if(!txRows.length){
+    msgs.push('Chưa có dữ liệu Tài xế — vào Báo cáo GMV → Import Thông tin Tài xế để tự điền các ô Họ & tên còn trống.');
+  } else if(nameStillBlank){
+    msgs.push(`Còn ${nameStillBlank} xe chưa tra được Họ & tên (Mã SAP trong Handover không có trong file Tài xế). Kiểm tra xem hai file có dùng cùng kiểu Mã SAP không.`);
+  }
+  if(msgs.length){ note.className = 'notice ' + level; note.style.display = 'block'; note.innerHTML = msgs.map(esc).join('<br>'); }
+  else { note.style.display = 'none'; }
 
-  document.getElementById('foot-tt').textContent = `Đối soát lúc ${new Date().toLocaleString('vi-VN')} — ${rowsTT.length} xe vận doanh đã gán tài xế, ${skipped} xe bị loại · ${hoUsed.toLocaleString('vi-VN')} dòng Handover. Tra theo biển số/số khung, tài xế lấy từ Handover.`;
+  document.getElementById('foot-tt').textContent = `Đối soát lúc ${new Date().toLocaleString('vi-VN')} — ${rowsTT.length} xe vận doanh đã gán tài xế, ${skipped} xe bị loại · ${hoUsed.toLocaleString('vi-VN')} dòng Handover · ${nameFromDriverFile} tên được bổ sung từ dữ liệu Tài xế. Tra theo biển số/số khung.`;
   renderTableTT();
 }
 
