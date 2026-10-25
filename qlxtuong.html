@@ -289,7 +289,7 @@ $('bkDate').value=toISO(Date.now());
 $('bkApply').onclick=applyBkList;
 $('bkClear').onclick=()=>{BKD={};saveBkd();setBkd();apply();toast('Đã xóa ngày đặt lịch nhập tay')};
 $('bdb').onclick=()=>dbRestore(false);
-$('bdc').onclick=async()=>{await dbClear();listSaved();toast('Đã xóa file đã lưu')};
+$('bdc').onclick=async()=>{await dbClear();listSaved();toast('Đãgit status xóa file đã lưu')};
 dbRestore(true);
 apply();
 </script></body></html>
