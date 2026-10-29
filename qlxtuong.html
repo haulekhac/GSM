@@ -146,10 +146,70 @@ function slim(k,rows){rows=trim(rows);if(!/^wo/.test(k))return rows;if(!rows.len
  for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].some(c=>nt(c)==='so lenh sua chua')){hi=i;break}}
  if(!rows[hi])return rows;const n=rows[hi].map(nt),ix=WOK.map(x=>n.indexOf(x));return rows.slice(hi).map(r=>ix.map(i=>i>=0?r[i]:''))}
 const woSlot=()=>'wo1';
-function load(k,file){if(!file)return;const r=new FileReader();r.onerror=()=>toast('Không đọc được file');
- r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
-  raw[k]=slim(k,XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}));meta[k]=file.name;
-  const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${(raw[k].length).toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${raw[k].length} dòng`);dbSave(k,file.name,raw[k])}catch(x){toast('Lỗi đọc file: '+x.message)}};r.readAsArrayBuffer(file)}
+
+/* ---------- đọc nhanh file .xlsx rất lớn (Work orders ~100.000 dòng x 146 cột) ----------
+   Giải nén dạng stream, chỉ lấy các cột cần thiết, ưu tiên sheet "Data". */
+async function xlsxLite(file,wantNames,onProg){
+ if(typeof DecompressionStream==='undefined')return null;
+ const u16=(d,o)=>d.getUint16(o,true),u32=(d,o)=>d.getUint32(o,true);
+ const tail=Math.min(file.size,66000),tb=new DataView(await file.slice(file.size-tail).arrayBuffer());
+ let e=-1;for(let i=tb.byteLength-22;i>=0;i--){if(u32(tb,i)===0x06054b50){e=i;break}}
+ if(e<0)return null;const cnt=u16(tb,e+10),cdSize=u32(tb,e+12),cdOff=u32(tb,e+16);
+ if(cdOff===0xFFFFFFFF||cdSize===0xFFFFFFFF||cnt===0xFFFF)return null;
+ const cb=await file.slice(cdOff,cdOff+cdSize).arrayBuffer(),cd=new DataView(cb),td=new TextDecoder(),ent={};
+ for(let p=0,i=0;i<cnt&&p+46<=cb.byteLength;i++){const nl=u16(cd,p+28),el=u16(cd,p+30),cl=u16(cd,p+32);
+  ent[td.decode(new Uint8Array(cb,p+46,nl))]={m:u16(cd,p+10),cs:u32(cd,p+20),us:u32(cd,p+24),lo:u32(cd,p+42)};p+=46+nl+el+cl}
+ async function stream(name){const z=ent[name];if(!z)return null;
+  const lh=new DataView(await file.slice(z.lo,z.lo+30).arrayBuffer()),st=z.lo+30+u16(lh,26)+u16(lh,28);
+  let s=file.slice(st,st+z.cs).stream();if(z.m===8)s=s.pipeThrough(new DecompressionStream('deflate-raw'));else if(z.m!==0)return null;
+  return s.pipeThrough(new TextDecoderStream()).getReader()}
+ async function text(name){const r=await stream(name);if(!r)return '';let s='';for(;;){const x=await r.read();if(x.done)break;s+=x.value}return s}
+ const unesc=s=>s.indexOf('&')<0?s:s.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g,(m,g)=>g==='amp'?'&':g==='lt'?'<':g==='gt'?'>':g==='quot'?'"':g==='apos'?"'":String.fromCodePoint(g[1]==='x'?parseInt(g.slice(2),16):+g.slice(1)));
+ const wbx=await text('xl/workbook.xml'),rel=await text('xl/_rels/workbook.xml.rels');
+ const sheets=[...wbx.matchAll(/<sheet\b[^>]*>/g)].map(m=>({n:unesc((m[0].match(/name="([^"]*)"/)||[])[1]||''),r:(m[0].match(/r:id="([^"]*)"/)||[])[1]}));
+ if(!sheets.length)return null;const sh=sheets.find(s=>s.n.trim().toLowerCase()==='data')||sheets[0];
+ let tg=null;for(const m of rel.matchAll(/<Relationship\b[^>]*>/g)){if(/Id="([^"]*)"/.exec(m[0])[1]===sh.r){tg=/Target="([^"]*)"/.exec(m[0])[1];break}}
+ if(!tg)return null;tg=tg.replace(/^\/?(xl\/)?/,'xl/');if(!ent[tg])return null;
+ const sst=[];if(ent['xl/sharedStrings.xml']){const r=await stream('xl/sharedStrings.xml');let b='';
+  for(;;){const x=await r.read();if(x.done)break;b+=x.value;let a=0,j;
+   while((j=b.indexOf('</si>',a))>=0){const si=b.slice(a,j);a=j+5;
+    if(si.indexOf('<t')<0){sst.push('');continue}
+    const s=si.replace(/<rPh\b[\s\S]*?<\/rPh>/g,'');let t='';for(const m of s.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g))t+=m[1];sst.push(unesc(t))}
+   b=b.slice(a)}}
+ const colN=s=>{let n=0;for(let i=0;i<s.length;i++)n=n*26+s.charCodeAt(i)-64;return n};
+ const r=await stream(tg);let b='',out=[],pick=null,hdr=null,done=false,nrow=0;
+ const cre=/<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+ const rowVals=rs=>{const o=new Map();cre.lastIndex=0;let m;while((m=cre.exec(rs))){const c=colN(m[1]);if(pick&&!pick.has(c))continue;
+   if(m[3]===undefined||m[3]==='')continue;const t=(/\bt="(\w+)"/.exec(m[2])||[])[1],body=m[3];let v;
+   if(t==='inlineStr'){v='';for(const q of body.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g))v+=q[1];v=unesc(v)}
+   else{const q=/<v>([\s\S]*?)<\/v>/.exec(body);if(!q)continue;v=t==='s'?(sst[+q[1]]??''):t==='str'?unesc(q[1]):(t==='b'||t==='e')?q[1]:(isFinite(q[1])?Number(q[1]):q[1])}
+   o.set(c,v)}return o};
+ while(!done){const x=await r.read();if(x.done)break;b+=x.value;let a=0,j;
+  while((j=b.indexOf('</row>',a))>=0){const i0=b.indexOf('<row',a);const rs=i0>=0&&i0<j?b.slice(i0,j):'';a=j+6;if(!rs)continue;
+   if(!hdr){const all=rowVals(rs),idx=wantNames.map(w=>{for(const [c,v] of all)if(nt(v)===w)return c;return -1});
+    if(idx[0]<0){done=true;break}/* không phải file Work orders */
+    pick=new Set(idx.filter(c=>c>0));hdr=idx;out.push(idx.map(c=>c>0?String(all.get(c)??''):''));continue}
+   const o=rowVals(rs);if(!o.size)continue;out.push(hdr.map(c=>c>0&&o.has(c)?o.get(c):''));
+   if(++nrow%5000===0&&onProg){onProg(nrow);await new Promise(z=>setTimeout(z,0))}}
+  b=b.slice(a)}
+ return hdr?out:null}
+
+/* đọc 1 file: Work orders .xlsx dùng bộ đọc nhanh, còn lại dùng SheetJS (ưu tiên sheet "Data") */
+async function ingest(file,k){
+ const msg=t=>{if(k&&$('z-'+k))$('z-'+k).querySelector('span').textContent=t};
+ try{let rows=null;
+  if(/\.xlsx$/i.test(file.name)&&(k?/^wo/.test(k):file.size>2e7)){msg('Đang đọc file lớn…');
+   try{const r=await xlsxLite(file,WOK,n=>msg(`Đang đọc… ${n.toLocaleString('vi-VN')} dòng`));if(r){rows=r;k=k||woSlot()}}
+   catch(x){log(`Đọc nhanh lỗi (${x.message}), chuyển sang cách thường`)}}
+  if(!rows){const wb=XLSX.read(new Uint8Array(await file.arrayBuffer()),{type:'array',cellDates:true}),
+    sn=wb.SheetNames.find(n=>n.trim().toLowerCase()==='data')||wb.SheetNames[0];
+   rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{header:1,defval:'',raw:true});
+   if(!k){k=detect(file.name,rows);if(!k){log(`Không nhận dạng được file: ${file.name} - hãy tải vào đúng ô bên dưới`);toast(`Không nhận dạng được ${file.name}`);return}}}
+  const rs=slim(k,rows);raw[k]=rs;meta[k]=file.name;
+  const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${rs.length.toLocaleString('vi-VN')} dòng`;
+  log(`Đã đọc [${k}] ${file.name}: ${rs.length} dòng`);dbSave(k,file.name,rs)
+ }catch(x){log(`Lỗi đọc file ${file.name}: ${x.message}`);toast('Lỗi đọc file: '+x.message)}}
+const load=(k,file)=>file&&ingest(file,k);
 /* tải nhiều file từ máy, tự nhận dạng loại file */
 function detect(name,rows){const n=nt(name);
  if(/service.?booking|car.?booking/.test(n)||rows.slice(0,5).some(r=>r.some(c=>['ma dat lich','odo at booking'].includes(nt(c)))))return 'cb';
@@ -159,11 +219,8 @@ function detect(name,rows){const n=nt(name);
  let hi=0;for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].filter(c=>String(c).trim()!=='').length>=2){hi=i;break}}
  const h=(rows[hi]||[]).map(nt).join('|');
  if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
-function loadAuto(file){const r=new FileReader();r.onerror=()=>log(`Không đọc được file ${file.name}`);
- r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}),k=detect(file.name,rows);
-  if(!k){log(`Không nhận dạng được file: ${file.name} - hãy tải vào đúng ô bên dưới`);toast(`Không nhận dạng được ${file.name}`);return}
-   const rs=slim(k,rows);raw[k]=rs;meta[k]=file.name;const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${rs.length.toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${rs.length} dòng (tự nhận dạng)`);dbSave(k,file.name,rs)}catch(x){log(`Lỗi đọc file ${file.name}: ${x.message}`)}};r.readAsArrayBuffer(file)}
-$('multi').onchange=e=>{[...e.target.files].forEach(loadAuto);e.target.value=''};
+const loadAuto=file=>ingest(file,null);
+$('multi').onchange=async e=>{const fs=[...e.target.files];e.target.value='';for(const f of fs)await loadAuto(f)};
 document.querySelectorAll('.fz').forEach(z=>{const k=z.querySelector('input').dataset.k;
  z.querySelector('input').onchange=e=>load(k,e.target.files[0]);
  z.ondragover=e=>{e.preventDefault();z.classList.add('dr')};z.ondragleave=()=>z.classList.remove('dr');
