@@ -136,28 +136,29 @@ const fmt=n=>n>0?Number(n).toLocaleString('vi-VN'):'—';
 function num(x){if(typeof x==='number')return isFinite(x)?x:0;let s=String(x??'').replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');else s=s.replace(/,/g,'');return Number(s)||0}
 function dt(x){if(x instanceof Date)return x.getTime();if(typeof x==='number')return x;const s=String(x||'').trim();let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);if(m)return new Date(+m[3],m[2]-1,+m[1]).getTime();const d=new Date(s);return isNaN(d)?0:d.getTime()}
 
-const FILES=[['pool','1 · File Pool xe',1],['vd','2 · File Xe vận doanh'],['bk','3 · File Car booking (Mã đặt lịch, ODO, Tình trạng)'],['dv','4 · File ODO định vị'],['at','5 · File giao ca An toàn (AT)'],['gc','6 · File giao ca trực tiếp (GC TT)'],['tx','7 · File data tài xế'],['wo1','8 · File Work orders - Lệnh SC (1)'],['wo2','9 · File Work orders - Lệnh SC (2)']];
+const FILES=[['pool','1 · File Pool xe',1],['vd','2 · File Xe vận doanh'],['bk','3 · File Xe đã đặt lịch'],['dv','4 · File ODO định vị'],['at','5 · File giao ca An toàn (AT)'],['gc','6 · File giao ca trực tiếp (GC TT)'],['tx','7 · File data tài xế'],['wo1','8 · File Work orders (Số lệnh SC, Yêu cầu KH)'],['cb','9 · File Car booking (Mã đặt lịch, ODO, Tình trạng)']];
 let raw={},meta={},data=[],view=[],page=1,sort={k:'rem',d:1},LOG=[];const PS=100;
 const log=m=>{LOG.push(`[${new Date().toLocaleTimeString('vi-VN')}] ${m}`);$('lg').innerHTML=LOG.map(esc).join('<br>');$('lg').scrollTop=1e9};
 $('up').innerHTML=FILES.map(f=>`<label class="fz" id="z-${f[0]}"><b>${svg('file')}<em style="font-style:normal">${f[1]}${f[2]?' <i class="req">*</i>':''}</em></b><span>Chọn hoặc kéo thả file</span><input type="file" accept=".xlsx,.xls,.csv" data-k="${f[0]}"></label>`).join('');
 const WOK=['so lenh sua chua','bien so','so khung','km hien tai','trang thai','loai dich vu','yeu cau khach hang','ngay tao'];
-const trim=rows=>rows.filter(r=>r&&r.some(c=>String(c).trim()!==''));
+const trim=rows=>rows.filter(r=>r&&r.some(c=>String(c).trim()!==''));/* bỏ dòng trống (file xuất thường có ~100.000 dòng trắng) */
 function slim(k,rows){rows=trim(rows);if(!/^wo/.test(k))return rows;let hi=0;
  for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].some(c=>nt(c)==='so lenh sua chua')){hi=i;break}}
  const n=rows[hi].map(nt),ix=WOK.map(x=>n.indexOf(x));return rows.slice(hi).map(r=>ix.map(i=>i>=0?r[i]:''))}
-const woSlot=()=>!raw.wo1?'wo1':!raw.wo2?'wo2':'wo2';
+const woSlot=()=>'wo1';
 function load(k,file){if(!file)return;const r=new FileReader();r.onerror=()=>toast('Không đọc được file');
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
   raw[k]=slim(k,XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}));meta[k]=file.name;
   const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${(raw[k].length).toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${raw[k].length} dòng`);dbSave(k,file.name,raw[k])}catch(x){toast('Lỗi đọc file: '+x.message)}};r.readAsArrayBuffer(file)}
 /* tải nhiều file từ máy, tự nhận dạng loại file */
 function detect(name,rows){const n=nt(name);
+ if(/service.?booking|car.?booking/.test(n)||rows.slice(0,5).some(r=>r.some(c=>['ma dat lich','odo at booking'].includes(nt(c)))))return 'cb';
   if(/work.?order|lenh ?sua ?chua|\blsc\b/.test(n)||rows.slice(0,5).some(r=>r.some(c=>nt(c)==='so lenh sua chua')))return woSlot();
  if(/pool/.test(n))return 'pool';if(/van ?doanh|\bvd\b/.test(n))return 'vd';if(/dat ?lich|booking/.test(n))return 'bk';if(/dinh ?vi|gps/.test(n))return 'dv';
  if(/an ?toan|\bat\b/.test(n))return 'at';if(/gc ?tt|truc ?tiep|giao ca/.test(n))return 'gc';if(/tai ?xe|driver/.test(n))return 'tx';
  let hi=0;for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].filter(c=>String(c).trim()!=='').length>=2){hi=i;break}}
  const h=(rows[hi]||[]).map(nt).join('|');
- if(/ma dat lich|odo at booking/.test(h))return 'bk';if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
+ if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
 function loadAuto(file){const r=new FileReader();r.onerror=()=>log(`Không đọc được file ${file.name}`);
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}),k=detect(file.name,rows);
   if(!k){log(`Không nhận dạng được file: ${file.name} - hãy tải vào đúng ô bên dưới`);toast(`Không nhận dạng được ${file.name}`);return}
@@ -186,10 +187,11 @@ const fmtD=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m
 const toISO=ms=>{if(!ms)return '';const d=new Date(ms);return isNaN(d)?'':`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
 /* Trạng thái booking: tiếng Anh (hệ thống) -> tiếng Việt */
 const BKVI={'open':'Mới tạo','waitingforbooking':'Chờ đặt lịch','scheduled':'Đã lên lịch','arrived':'Đã đến xưởng','inservice':'Đang sửa chữa','completed':'Hoàn thành','cancelled':'Đã hủy'};
+const viSt=s=>BKVI[String(s).trim().toLowerCase()]||String(s).trim();
 const CANC='Đã hủy';
 const BKC={'Mới tạo':'b3','Chờ đặt lịch':'b1','Đã lên lịch':'b0','Đã đến xưởng':'b0','Đang sửa chữa':'b1','Hoàn thành':'b0','Đã hủy':'b2'};
 $('fBt').innerHTML='<option value="">Tất cả</option>'+[...Object.values(BKVI),'Chưa có booking'].map(x=>`<option>${x}</option>`).join('');
-/* hasBk: có lịch do nhập tay, hoặc có booking trong file chưa bị hủy */
+/* hasBk: có lịch nhập tay, hoặc có booking chưa bị hủy */
 const setBkd=()=>data.forEach(r=>{const man=BKD[ck(r.vin)]||BKD[ck(r.bs)];r.bkd=man||r.bkf||'';r.hasBk=!!(man||(r.bkt&&r.bkt!==CANC))});
 function applyBkList(){const ids=[...new Set($('bkList').value.split(/[\s,;]+/).map(ck).filter(Boolean))],d=$('bkDate').value;
  if(!ids.length)return toast('Chưa nhập số khung / biển số');if(!d)return toast('Chưa chọn ngày đặt lịch');
@@ -223,17 +225,18 @@ function maps(){
  if(t){let tk=col(t.h,['tong km']),lk=col(t.h,['km odo cuoi cung','odo cuoi','cuoi cung','last km']);if(tk<0)tk=5;if(lk<0)lk=6;
   dv=build('dv',r=>{const a=num(r[tk]),b=num(r[lk]);return{o:a||b}})}
  const vd=build('vd',(r,h)=>{const g=ks=>cell(r,col(h,ks));return{o:num(g(ODO)),ten:String(g(['ten tai xe','ho ten','ho va ten','tai xe','driver'])).trim(),ma:String(g(['ma tai xe','ma tx','ma nv'])).trim(),sdt:String(g(['sdt','dien thoai','phone'])).trim(),pos:String(g(['vi tri do','vi tri','parking'])).trim()}});
- /* mỗi số khung lấy booking mới nhất theo Ngày đặt lịch; ưu tiên booking chưa hủy */
- const bk=build('bk',(r,h)=>{const ts=dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen','ngay']))),rt=String(cell(r,col(h,['tinh trang','trang thai']))).trim(),t=BKVI[rt.toLowerCase()]||rt;
+ const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo','booking']))),t:viSt(cell(r,col(h,['tinh trang','trang thai']))),dd:toISO(dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen','ngay']))))}));
+ /* Car booking: mỗi số khung lấy booking mới nhất theo Ngày đặt lịch (ưu tiên booking chưa hủy) */
+ const cb=build('cb',(r,h)=>{const ts=dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen']))),t=viSt(cell(r,col(h,['tinh trang','trang thai'])));
   return{o:num(cell(r,col(h,['odo at booking','odo','booking']))),m:String(cell(r,col(h,['ma dat lich','ma booking']))).trim(),t,dd:toISO(ts),d:(t===CANC?0:1e13)+ts}});
  const tx=new Map(),tt=prep('tx');if(tt){let ci=col(tt.h,['ma tai xe','ma tx','ma nv','ma','code']);if(ci<0)ci=0;const ni=col(tt.h,['ho ten','ten','name']),pi=col(tt.h,['sdt','dien thoai','phone']);
   tt.body.forEach(r=>{const o={ten:String(cell(r,ni)).trim(),ma:String(cell(r,ci)).trim(),sdt:String(cell(r,pi)).trim()};[ck(o.ma),ck(o.ten)].forEach(k=>{if(k)tx.set(k,o)})})}
-  const wo=new Map(),wv=new Map();['wo1','wo2'].forEach(k=>{const t=prep(k);if(!t)return;const h=t.h,
+  const wo=new Map(),wv=new Map();['wo1'].forEach(k=>{const t=prep(k);if(!t)return;const h=t.h,
   i={so:col(h,['so lenh sua chua']),km:col(h,['km hien tai']),st:col(h,['trang thai']),lo:col(h,['loai dich vu']),yc:col(h,['yeu cau khach hang']),ng:col(h,['ngay tao'])};
   t.body.forEach(r=>{const o={so:String(cell(r,i.so)).trim(),km:num(cell(r,i.km)),st:String(cell(r,i.st)).trim(),lo:String(cell(r,i.lo)).trim(),yc:String(cell(r,i.yc)),d:dt(cell(r,i.ng))};
    if(t.kv>=0){const kk=ck(r[t.kv]);if(kk){const old=wv.get(kk);if(!old||o.d>=old.d)wv.set(kk,o)}}
    [t.kv,t.kb].forEach(c=>{if(c<0)return;const key=ck(r[c]);if(!key)return;(wo.get(key)||wo.set(key,[]).get(key)).push(o)})})});
- return{dv,at:latest('at'),gc:latest('gc'),vd,bk,tx,wo,wv,woOn:!!(raw.wo1||raw.wo2)}}
+ return{dv,at:latest('at'),gc:latest('gc'),vd,bk,cb,tx,wo,wv,woOn:!!raw.wo1}}
 
 /* ---------- mốc bảo dưỡng ---------- */
 function milestones(dx){const a=[];if(/limogreen/i.test(dx))a.push(6000);for(let m=15000;m<=600000;m+=15000)a.push(m);return a}
@@ -246,11 +249,11 @@ function merge(){
  LOG=[];if(!raw.pool||!raw.pool.length)return toast('Vui lòng nạp File Pool xe trước'),go('load');
  const t=prep('pool'),h=t.h;const ix={vin:col(h,['so khung','vin']),bs:col(h,['bien so','bsx','bks']),dx:col(h,['dong xe','loai xe']),doi:col(h,['doi']),to:col(h,['to'])};
  if(ix.vin<0)ix.vin=0;if(ix.bs<0)ix.bs=1;if(ix.dx<0)ix.dx=2;
- const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),plan=num($('plan').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,tx:0,wo:0};data=[];
+ const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),plan=num($('plan').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,cb:0,tx:0,wo:0};data=[];
  t.body.forEach(r=>{const vin=String(r[ix.vin]||'').trim(),bs=String(r[ix.bs]||'').trim();if(!vin&&!bs)return;
   const keys=[ck(vin),ck(bs)].filter(Boolean),f=m=>{for(const k of keys){if(m.has(k))return m.get(k)}return null};
-  const vd=f(M.vd),at=f(M.at),dv=f(M.dv),gc=f(M.gc),bk=f(M.bk);
-  [['vd',vd],['at',at],['dv',dv],['gc',gc],['bk',bk]].forEach(([k,v])=>{if(v)hit[k]++});
+  const vd=f(M.vd),at=f(M.at),dv=f(M.dv),gc=f(M.gc),bk0=f(M.bk),cb=f(M.cb),bk=cb||bk0;
+  [['vd',vd],['at',at],['dv',dv],['gc',gc],['bk',bk0],['cb',cb]].forEach(([k,v])=>{if(v)hit[k]++});
   const o1=vd?vd.o:0,o2=at?at.o:0,o3=dv?dv.o:0,o4=gc?gc.o:0,max=smartMax([o1,o2,o3,o4]);
   const srcs=[['Vận doanh',o1],['AT',o2],['Định vị',o3],['GC TT',o4]],src=max?srcs.find(s=>s[1]===max)[0]:'';
   const pos=[o1,o2,o3,o4].filter(x=>x>0),lech=pos.length>1&&Math.max(...pos)-Math.min(...pos)>gap;
@@ -271,11 +274,11 @@ function merge(){
   const kh=max?max+plan:0,inp=!max?'':(next<=kh?'Trong kế hoạch':'Chưa tới');
   const wv=M.wv.get(ck(vin))||null;
   const ma=vd&&vd.ma||'',ten=vd&&vd.ten||'',txi=M.tx.get(ck(ma))||M.tx.get(ck(ten));if(txi)hit.tx++;
-  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,kh,inp,next,rem,bko:bk?bk.o:0,bkm:bk?bk.m:'',bkt:bk?bk.t:'',wolast:wv?wv.so:'',wyc:wv?String(wv.yc).trim():'',bkf:bk?bk.dd:'',bkd:'',st,wom,wos,woso,wokm,
+  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,kh,inp,next,rem,bko:bk?bk.o:0,bkm:cb?cb.m:'',bkt:bk?bk.t:'',wolast:wv?wv.so:'',wyc:wv?String(wv.yc).trim():'',bkf:bk?bk.dd:'',bkd:'',st,wom,wos,woso,wokm,
    tx:ten||(txi&&txi.ten)||'',mtx:ma||(txi&&txi.ma)||'',sdt:(vd&&vd.sdt)||(txi&&txi.sdt)||'',pos:vd&&vd.pos||''})});
  setBkd();log(`Ghép xong ${data.length} xe từ Pool. ODO kế hoạch = Max ODO + ${plan.toLocaleString('vi-VN')} km.`);
-  const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['tx','Data tài xế'],['wo','Lệnh sửa chữa']].map(([k,l])=>{
-  const loaded=k==='wo'?!!(raw.wo1||raw.wo2):!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
+  const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['cb','Car booking'],['tx','Data tài xế'],['wo','Work orders']].map(([k,l])=>{
+  const loaded=k==='wo'?!!raw.wo1:!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
  fillSel('fDoi','Đội',data.map(x=>x.doi));fillSel('fTo','Tổ',data.map(x=>x.to));fillSel('fDx','Dòng xe',data.map(x=>x.dx));
  page=1;apply();go('main');toast(`Đã ghép ${data.length} xe`)}
 function fillSel(id,l,a){const u=[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,'vi',{numeric:true}));$(id).innerHTML=`<option value="">Tất cả ${l}</option>`+u.map(x=>`<option>${esc(x)}</option>`).join('')}
