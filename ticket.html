@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ticket Insight Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f1f5f4;--cd:#fff;--tx:#17302d;--mu:#6b7f7c;--ln:#dde8e6;--t:#0ea99d;--t2:#0b8f85;--t0:#e3f6f3;--wr:#d97706;--er:#dc2626;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1716;--cd:#16231f;--tx:#e4f0ee;--mu:#8da5a1;--ln:#26403b;--t0:#12332f;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.55 "Be Vietnam Pro",system-ui,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+header{background:linear-gradient(100deg,#0b2f2c,#0a6f68 60%,#0ea99d);color:#fff;padding:18px 28px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.12)}header h1{margin:0;font-size:18px;font-weight:700;letter-spacing:.01em}header small{opacity:.8;font-size:12px}.logo{width:40px;height:40px;border-radius:11px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);display:grid;place-items:center}.logo svg{width:22px;height:22px}
+main{max-width:1280px;margin:0 auto;padding:16px}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:14px;padding:16px 18px;margin-bottom:14px}.card{box-shadow:0 1px 3px rgba(10,60,55,.06)}.card h2{margin:0 0 12px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding-left:9px;border-left:3px solid var(--t)}.card h2 small{text-transform:none;letter-spacing:0}
+#drop{display:block;position:relative;border:2px dashed var(--t);border-radius:20px;background:radial-gradient(circle at 50% 0,var(--t0),transparent 75%),var(--cd);text-align:center;padding:36px 20px 30px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+#drop:hover,#drop.dr{transform:translateY(-2px);box-shadow:0 10px 28px rgba(14,169,157,.22);border-color:var(--t2)}#drop.dr{background:var(--t0)}
+#drop .ui{width:68px;height:68px;margin:0 auto 14px;border-radius:50%;background:linear-gradient(135deg,#10b5a8,#0a8f85);display:grid;place-items:center;box-shadow:0 6px 16px rgba(14,169,157,.4);animation:fl 2.6s ease-in-out infinite}
+#drop .ui svg{width:30px;height:30px}@keyframes fl{50%{transform:translateY(-6px)}}
+#drop .ut{display:block;font-size:17px;font-weight:700}#drop .us{display:block;color:var(--mu);margin:4px 0 16px}
+#drop .ub{display:inline-block;background:var(--t);color:#fff;font-weight:600;padding:10px 26px;border-radius:99px;box-shadow:0 4px 12px rgba(14,169,157,.35);transition:.15s}#drop:hover .ub{background:var(--t2);padding:10px 32px}
+#drop .un{display:block;margin-top:14px;font-size:11px;color:var(--mu)}
+#pg{height:6px;background:var(--ln);border-radius:9px;margin-top:14px;overflow:hidden;display:none}#pg i{display:block;height:100%;width:0;background:var(--t);transition:width .2s}#msg{margin-top:8px;color:var(--mu);font-size:12px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.f label{display:block;font-size:10px;font-weight:700;color:var(--mu);margin-bottom:3px;text-transform:uppercase}
+select,input,button{font:inherit;color:var(--tx);background:var(--cd);border:1px solid var(--ln);border-radius:9px;height:34px;padding:0 10px}button{cursor:pointer;font-weight:600}button.p{background:var(--t);border-color:var(--t);color:#fff}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}.k{background:var(--cd);border:1px solid var(--ln);border-top:3px solid var(--t);border-radius:12px;padding:12px 14px}.k.w{border-top-color:var(--wr)}.k.e{border-top-color:var(--er)}
+.k i{display:block;font-style:normal;font-size:10px;font-weight:700;color:var(--mu);text-transform:uppercase}.k b{font-size:24px;display:block}.k s{text-decoration:none;font-size:11px;color:var(--mu)}
+.ins{margin:0;padding-left:18px}.k,.hb{cursor:pointer}.k{transition:transform .15s,box-shadow .15s}.k:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(14,169,157,.2)}.hb:hover i{background:var(--t2)}.hb:hover span{color:var(--t2);font-weight:600}.hb div{overflow:hidden;min-width:0}.ins li{margin:5px 0}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
+.tw{overflow:auto;max-height:480px;border:1px solid var(--ln);border-radius:10px}table{border-collapse:collapse;width:100%;font-size:12px}
+th{position:sticky;top:0;background:var(--t0);padding:7px 9px;text-align:left;font-size:10.5px;text-transform:uppercase;white-space:nowrap}td{padding:6px 9px;border-top:1px solid var(--ln);white-space:nowrap}td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.h{cursor:pointer}td.h:hover{outline:2px solid var(--t);outline-offset:-2px}tr.tt td{font-weight:700;background:var(--t0)}
+.hb{display:flex;align-items:center;gap:8px;margin:4px 0}.hb span{width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}.hb div{flex:1;background:var(--ln);border-radius:6px;height:14px}.hb i{display:block;height:100%;border-radius:6px;background:var(--t)}.hb em{font-style:normal;width:56px;text-align:right;font-weight:600}
+.tr{display:flex;align-items:flex-end;gap:10px;height:160px}.tr div{flex:1;text-align:center;font-size:11px}.tr i{display:block;background:var(--t);border-radius:6px 6px 0 0;margin:0 auto;width:70%}
+#md{position:fixed;inset:0;background:#0008;display:none;align-items:center;justify-content:center;z-index:9;padding:16px}#md .card{width:min(1100px,100%);max-height:90vh;overflow:auto;margin:0}
+</style></head><body>
+<header><div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 3 3 5-7"/></svg></div><div><h1>Ticket Insight Studio</h1><small>Tải file → tự gộp các sheet tuần, loại trùng, tra Đội/Tổ, tính KPI &amp; pivot</small></div></header>
+<main>
+<div class="card"><label id="drop"><span class="ui"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="m7 9 5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg></span><span class="ut">Thả file ticket vào đây nhé</span><span class="us">Kéo file Excel (.xlsx) thả vào khung này, hoặc bấm nút bên dưới</span><span class="ub">Chọn file từ máy</span><span class="un">Đọc được file lớn (40MB trở lên). Dữ liệu xử lý ngay trên máy bạn, không gửi đi đâu.</span><input id="file" type="file" accept=".xlsx" hidden></label><div id="pg"><i></i></div><div id="msg"></div></div>
+<div id="app" style="display:none">
+<div class="card"><div class="bar" id="flt"></div></div>
+<div class="kp" id="kp"></div>
+<div class="card"><h2>Phát hiện tự động</h2><ul class="ins" id="ins"></ul></div>
+<div class="card"><h2>Pivot tương tác <small style="color:var(--mu);font-weight:400">· bấm vào ô số để xem danh sách case</small></h2>
+<div class="bar" style="margin-bottom:10px"><div class="f"><label>Hàng</label><select id="pr"></select></div><div class="f"><label>Cột</label><select id="pc"></select></div><div class="f"><label>Giá trị</label><select id="pv"><option value="c">Số case</option><option value="d">Số tài xế khác nhau</option></select></div>
+<div class="f"><label>Mẫu nhanh</label><select id="ps"></select></div><button id="px" class="p">Xuất Excel</button></div><div class="tw"><table id="pt"></table></div></div>
+<div class="g2"><div class="card"><h2>Xu hướng theo tuần</h2><div class="tr" id="trend"></div></div><div class="card"><h2>Tuổi ticket (đang mở)</h2><div id="age"></div></div>
+<div class="card"><h2>Top danh mục khiếu nại</h2><div id="topc"></div></div><div class="card"><h2>Top Đội / Depot</h2><div id="topd"></div></div></div>
+<div class="card"><h2>Tài xế bị phản ánh lặp lại (≥3 case)</h2><div class="tw"><table id="rep"></table></div></div>
+</div></main>
+<div id="md"><div class="card"><div class="bar" style="justify-content:space-between;margin-bottom:8px"><h2 id="mt" style="margin:0"></h2><span><button id="mx" class="p">Xuất Excel</button> <button id="mc">Đóng</button></span></div><div class="tw"><table id="mtb"></table></div></div></div>
+<script>
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m])),N=n=>Number(n).toLocaleString('vi-VN');
+const nt=x=>String(x??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/gi,'d').toLowerCase().trim();
+const WANT=['Case Number','Case Owner: Full Name','Category Group','Category','Sub Category','ContactType','Type','Case Origin','Status','FCR Status','Depot of Order','Date/Time Opened','Driver Name','Driver Staff No','Đội','Tổ','Callback Requested','Tuần','Mã SAP'];
+/* ---- đọc xlsx lớn dạng stream, nhiều sheet, chỉ lấy cột cần ---- */
+async function readX(file,prog){
+ if(typeof DecompressionStream==='undefined')throw Error('Trình duyệt chưa hỗ trợ, hãy dùng Chrome/Edge/Firefox bản mới');
+ const u16=(d,o)=>d.getUint16(o,true),u32=(d,o)=>d.getUint32(o,true),tail=Math.min(file.size,66000),tb=new DataView(await file.slice(file.size-tail).arrayBuffer());
+ let e=-1;for(let i=tb.byteLength-22;i>=0;i--)if(u32(tb,i)===0x06054b50){e=i;break}
+ if(e<0)throw Error('Không đọc được cấu trúc file xlsx');const cnt=u16(tb,e+10),cs=u32(tb,e+12),co=u32(tb,e+16);
+ const cb=await file.slice(co,co+cs).arrayBuffer(),cd=new DataView(cb),td=new TextDecoder(),ent={};
+ for(let p=0,i=0;i<cnt;i++){const nl=u16(cd,p+28),el=u16(cd,p+30),cl=u16(cd,p+32);ent[td.decode(new Uint8Array(cb,p+46,nl))]={m:u16(cd,p+10),c:u32(cd,p+20),o:u32(cd,p+42)};p+=46+nl+el+cl}
+ async function st(n){const z=ent[n];if(!z)return null;const lh=new DataView(await file.slice(z.o,z.o+30).arrayBuffer()),s0=z.o+30+u16(lh,26)+u16(lh,28);let s=file.slice(s0,s0+z.c).stream();if(z.m===8)s=s.pipeThrough(new DecompressionStream('deflate-raw'));return s.pipeThrough(new TextDecoderStream()).getReader()}
+ const tx=async n=>{const r=await st(n);let s='';if(!r)return s;for(;;){const x=await r.read();if(x.done)return s;s+=x.value}};
+ const un=s=>s.indexOf('&')<0?s:s.replace(/&(#x[0-9a-fA-F]+|#\d+|amp|lt|gt|quot|apos);/g,(m,g)=>g==='amp'?'&':g==='lt'?'<':g==='gt'?'>':g==='quot'?'"':g==='apos'?"'":String.fromCodePoint(g[1]==='x'?parseInt(g.slice(2),16):+g.slice(1)));
+ const wb=await tx('xl/workbook.xml'),rl=await tx('xl/_rels/workbook.xml.rels'),rm={};
+ for(const m of rl.matchAll(/<Relationship\b[^>]*>/g)){rm[/Id="([^"]*)"/.exec(m[0])[1]]=/Target="([^"]*)"/.exec(m[0])[1]}
+ const shs=[...wb.matchAll(/<sheet\b[^>]*>/g)].map(m=>({n:un(/name="([^"]*)"/.exec(m[0])[1]),t:'xl/'+rm[/r:id="([^"]*)"/.exec(m[0])[1]].replace(/^\/?(xl\/)?/,'')}));
+ const sst=[];{const r=await st('xl/sharedStrings.xml');let b='';if(r)for(;;){const x=await r.read();if(x.done)break;b+=x.value;let a=0,j;while((j=b.indexOf('</si>',a))>=0){const si=b.slice(a,j).replace(/<rPh\b[\s\S]*?<\/rPh>/g,'');a=j+5;let t='';for(const m of si.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g))t+=m[1];sst.push(un(t))}b=b.slice(a)}}
+ const cn=s=>{let n=0;for(let i=0;i<s.length;i++)n=n*26+s.charCodeAt(i)-64;return n},out=[],cre=/<c r="([A-Z]+)\d+"([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g;
+ for(let si=0;si<shs.length;si++){const sh=shs[si],r=await st(sh.t);if(!r)continue;let b='',hm=null,rows=[],skip=false,k=0;
+  const vals=rs=>{const o=[];cre.lastIndex=0;let m;while((m=cre.exec(rs))){if(!m[3])continue;const c=cn(m[1]);if(hm&&!hm.has(c))continue;const t=(/\bt="(\w+)"/.exec(m[2])||[])[1],q=/<v>([\s\S]*?)<\/v>/.exec(m[3]);let v;
+    if(t==='inlineStr'){v='';for(const z of m[3].matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g))v+=z[1];v=un(v)}else if(!q)continue;else v=t==='s'?(sst[+q[1]]??''):t==='str'?un(q[1]):q[1];o.push([c,v])}return o};
+  while(!skip){const x=await r.read();if(x.done)break;b+=x.value;let a=0,j;
+   while((j=b.indexOf('</row>',a))>=0){const i0=b.indexOf('<row',a),rs=i0>=0&&i0<j?b.slice(i0,j):'';a=j+6;if(!rs)continue;
+    if(!hm){const o=vals(rs);if(o.length<2)continue;hm=new Map();o.forEach(([c,v])=>{if(WANT.includes(String(v).trim()))hm.set(c,String(v).trim())});if(!hm.size||!(hm.has(0)||[...hm.values()].some(v=>v==='Case Number'||v==='Mã SAP'))){skip=true;break}continue}
+    const rec={};for(const [c,v] of vals(rs))rec[hm.get(c)]=v;rows.push(rec);if(++k%20000===0){prog(si/shs.length,`${sh.n}: ${N(k)} dòng…`);await new Promise(z=>setTimeout(z))}}
+   b=b.slice(a)}
+  prog((si+1)/shs.length,`Đã đọc sheet ${sh.n}`);if(rows.length)out.push({n:sh.n,rows})}
+ return out}
+/* ---- xử lý dữ liệu ---- */
+let D=[],REF=0,V=[];
+const pd=s=>{const m=/(\d+)\/(\d+)\/(\d{4})(?:,?\s*(\d+):(\d+)\s*(AM|PM)?)?/i.exec(s||'');if(!m)return 0;let h=+(m[4]||0);if(m[6]){h=h%12+(/pm/i.test(m[6])?12:0)}return new Date(+m[3],m[1]-1,m[2],h,+(m[5]||0)).getTime()};
+const cl=v=>{v=String(v??'').trim();return v==='None'||v==='#N/A'?'':v};
+const CLOSED=/^(solved|closed|đã đóng)$/i;
+function process(sheets){const map=new Map(),ds=new Map();
+ sheets.forEach(s=>{if(s.rows[0]&&s.rows[0]['Mã SAP']!==undefined){s.rows.forEach(r=>ds.set(String(r['Mã SAP']).trim(),[cl(r['Đội']),cl(r['Tổ'])]))}});
+ sheets.forEach(s=>s.rows.forEach(r=>{const id=cl(r['Case Number']);if(!id)return;const o=map.get(id)||{};for(const k in r){const v=cl(r[k]);if(v&&!o[k])o[k]=v}map.set(id,o)}));
+ D=[...map.entries()].map(([id,o])=>{const t=pd(o['Date/Time Opened']),dl=ds.get(o['Driver Staff No']||'');const d=new Date(t);
+  return{id,own:o['Case Owner: Full Name']||'',grp:o['Category Group']||'(Trống)',cat:o.Category||'(Trống)',sub:o['Sub Category']||'(Trống)',ct:o.ContactType||'(Không rõ)',ty:o.Type||'(Không rõ)',org:o['Case Origin']||'',st:o.Status||'(Trống)',fcr:o['FCR Status']||'',dep:o['Depot of Order']||'(Trống)',t,
+   drv:o['Driver Name']||'',stf:o['Driver Staff No']||'',doi:o['Đội']||(dl&&dl[0])||'(Chưa xác định)',to:o['Tổ']||(dl&&dl[1])||'(Chưa xác định)',cb:/^(true|1)$/i.test(o['Callback Requested']||'')?1:0,tuan:o['Tuần']||'(Trống)',ngay:t?`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`:''}});
+ REF=Math.max(...D.map(r=>r.t));return D.length}
+const bucket=a=>a<1?'< 1 ngày':a<3?'1-3 ngày':a<7?'3-7 ngày':a<14?'7-14 ngày':'> 14 ngày',BO=['< 1 ngày','1-3 ngày','3-7 ngày','7-14 ngày','> 14 ngày'];
+const age=r=>r.t?Math.max(0,(REF-r.t)/864e5):0;
+const DIM={tuan:['Tuần'],ngay:['Ngày'],ty:['Loại hình (Type)'],ct:['Đối tượng (ContactType)'],grp:['Nhóm khiếu nại'],cat:['Danh mục'],sub:['Danh mục con'],st:['Trạng thái'],org:['Kênh tiếp nhận'],dep:['Depot'],doi:['Đội'],to:['Tổ'],fcr:['FCR'],own:['Người xử lý'],tuoi:['Nhóm tuổi ticket']};
+const dv=(k,r)=>k==='tuoi'?bucket(age(r)):(r[k]||'(Trống)');
+const PRE=[['Mẫu nhanh…'],['Đối tượng × Loại hình','ct','ty'],['Nhóm khiếu nại × Loại hình','grp','ty'],['Đội × Nhóm khiếu nại','doi','grp'],['Trạng thái × Nhóm tuổi','st','tuoi'],['Danh mục × Tuần','cat','tuan'],['Depot × Trạng thái','dep','st']];
+const opts=o=>Object.entries(o).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('');
+$('pr').innerHTML=opts(DIM);$('pc').innerHTML=opts(DIM);$('ps').innerHTML=PRE.map((p,i)=>`<option value="${i}">${p[0]}</option>`).join('');
+/* ---- bộ lọc + KPI + phân tích ---- */
+const FL=[['ty','Loại hình'],['ct','Đối tượng'],['grp','Nhóm khiếu nại'],['st','Trạng thái'],['tuan','Tuần'],['dep','Depot'],['doi','Đội'],['to','Tổ']];let sel={},openOnly=true;
+function buildFilters(){$('flt').innerHTML=FL.map(([k,l])=>`<div class="f"><label>${l}</label><select data-k="${k}"><option value="">Tất cả</option>${[...new Set(D.map(r=>r[k]))].sort().map(v=>`<option>${esc(v)}</option>`).join('')}</select></div>`).join('')+
+ `<div class="f"><label>Phạm vi</label><select id="oo"><option value="1">Chỉ ca đang mở</option><option value="0">Tất cả ca</option></select></div><div class="f"><label>Ngày chốt</label><input type="date" id="ref"></div>`;
+ $('ref').value=new Date(REF-new Date(REF).getTimezoneOffset()*6e4).toISOString().slice(0,10);
+ $('flt').onchange=e=>{if(e.target.id==='oo')openOnly=e.target.value==='1';else if(e.target.id==='ref'){const t=new Date($('ref').value+'T23:59:59').getTime();if(t)REF=t}else sel[e.target.dataset.k]=e.target.value;run()}}
+function run(){V=D.filter(r=>FL.every(([k])=>!sel[k]||r[k]===sel[k])&&(!openOnly||!CLOSED.test(r.st)));kpi();insights();pivot();charts();rep()}
+const cnt=(a,f)=>{const m={};a.forEach(r=>{const k=f(r);m[k]=(m[k]||0)+1});return Object.entries(m).sort((x,y)=>y[1]-x[1])};
+function kpi(){const o=V.filter(r=>!CLOSED.test(r.st)),old=o.filter(r=>age(r)>=7).length,f=V.filter(r=>r.fcr==='FCR').length,fd=V.filter(r=>r.fcr).length;
+ KS=[()=>V,()=>o,()=>o.filter(r=>age(r)>=7),()=>V.filter(r=>/khiếu nại/i.test(r.grp)),()=>V.filter(r=>r.fcr),()=>V.filter(r=>r.cb),()=>V.filter(r=>r.stf)];
+ $('kp').innerHTML=[['Tổng case',N(V.length),'sau lọc'],['Đang mở',N(o.length),Math.round(o.length/(V.length||1)*100)+'% tổng','w'],['Quá 7 ngày',N(old),'cần ưu tiên xử lý','e'],['Khiếu nại',N(V.filter(r=>/khiếu nại/i.test(r.grp)).length),'nhóm có "Khiếu nại"'],['Tỷ lệ FCR',fd?(f/fd*100).toFixed(1)+'%':'—','trên ca có đánh giá'],['Yêu cầu gọi lại',N(V.reduce((s,r)=>s+r.cb,0)),'Callback requested','w'],['Tài xế liên quan',N(new Set(V.filter(r=>r.stf).map(r=>r.stf)).size),'mã nhân viên khác nhau']].map((k,i)=>`<div class="k ${k[3]||''}" data-i="${i}" title="Bấm để xem danh sách case"><i>${k[0]}</i><b>${k[1]}</b><s>${k[2]}</s></div>`).join('')}
+function insights(){const L=[],o=V.filter(r=>!CLOSED.test(r.st));if(!V.length)return $('ins').innerHTML='<li>Không có dữ liệu phù hợp bộ lọc.</li>';
+ const tp=cnt(V,r=>r.cat)[0],dp=cnt(V,r=>r.dep)[0],dq=cnt(V.filter(r=>r.doi!=='(Chưa xác định)'),r=>r.doi)[0],tuans=[...new Set(V.map(r=>r.tuan))].sort(),oldest=o.filter(r=>age(r)>14).length;
+ L.push(`Danh mục nhiều nhất: <b>${esc(tp[0])}</b> với ${N(tp[1])} case (${(tp[1]/V.length*100).toFixed(1)}%).`);
+ if(dp)L.push(`Depot tập trung nhiều case nhất: <b>${esc(dp[0])}</b> (${N(dp[1])} case).`);
+ if(dq)L.push(`Đội có nhiều case nhất: <b>${esc(dq[0])}</b> (${N(dq[1])} case).`);
+ if(oldest)L.push(`<b>${N(oldest)}</b> case đang mở đã quá 14 ngày, nên rà soát và đóng hoặc đẩy tiếp.`);
+ const w=cnt(o,r=>r.st)[0];if(w)L.push(`Trạng thái đang mở đông nhất: <b>${esc(w[0])}</b> (${N(w[1])} case).`);
+ const rp=cnt(V.filter(r=>r.stf),r=>r.stf).filter(x=>x[1]>=3).length;if(rp)L.push(`<b>${N(rp)}</b> tài xế bị phản ánh từ 3 lần trở lên, xem bảng cuối trang.`);
+ if(tuans.length>1){const a=V.filter(r=>r.tuan===tuans[tuans.length-1]).length,b=V.filter(r=>r.tuan===tuans[tuans.length-2]).length;if(b)L.push(`Tuần <b>${esc(tuans[tuans.length-1])}</b> có ${N(a)} case, ${a>=b?'tăng':'giảm'} <b>${Math.abs((a-b)/b*100).toFixed(1)}%</b> so với tuần ${esc(tuans[tuans.length-2])} (${N(b)} case, theo bộ lọc hiện tại).`)}
+ $('ins').innerHTML=L.map(x=>`<li>${x}</li>`).join('')}
+/* ---- pivot ---- */
+let PV=null;
+function pivot(){const rk=$('pr').value,ck=$('pc').value,val=$('pv').value,m=new Map(),cs={},rs={};
+ V.forEach(r=>{const a=dv(rk,r),b=dv(ck,r),k=a+'\u0001'+b;let c=m.get(k);if(!c)m.set(k,c={n:0,s:new Set()});c.n++;if(r.stf)c.s.add(r.stf);});
+ const g=c=>c?(val==='c'?c.n:c.s.size):0,sortA=(k,a)=>k==='tuoi'?a.sort((x,y)=>BO.indexOf(x)-BO.indexOf(y)):a;
+ V.forEach(r=>{const a=dv(rk,r),b=dv(ck,r);rs[a]=(rs[a]||0)+1;cs[b]=(cs[b]||0)+1});
+ let R=sortA(rk,Object.keys(rs).sort((x,y)=>rs[y]-rs[x])).slice(0,60),C=sortA(ck,Object.keys(cs).sort((x,y)=>cs[y]-cs[x])).slice(0,14);
+ if(rk==='tuan'||rk==='ngay')R.sort();if(ck==='tuan'||ck==='ngay')C.sort();
+ let mx=1;R.forEach(a=>C.forEach(b=>mx=Math.max(mx,g(m.get(a+'\u0001'+b)))));
+ const tot=(f)=>{const s=new Set();let n=0;V.forEach(r=>{if(f(r)){n++;if(r.stf)s.add(r.stf)}});return val==='c'?n:s.size};
+ let h=`<thead><tr><th>${DIM[rk][0]} \\ ${DIM[ck][0]}</th>${C.map(c=>`<th>${esc(c)}</th>`).join('')}<th>Tổng</th></tr></thead><tbody>`;
+ R.forEach(a=>{h+=`<tr><td>${esc(a)}</td>`+C.map(b=>{const v=g(m.get(a+'\u0001'+b));return `<td class="n ${v?'h':''}" data-a="${esc(a)}" data-b="${esc(b)}" style="background:rgba(14,169,157,${v?(.08+.5*v/mx).toFixed(2):0})">${v?N(v):''}</td>`}).join('')+`<td class="n h" data-a="${esc(a)}" style="font-weight:700">${N(tot(r=>dv(rk,r)===a))}</td></tr>`});
+ h+=`<tr class="tt"><td>Tổng</td>${C.map(b=>`<td class="n h" data-b="${esc(b)}">${N(tot(r=>dv(ck,r)===b))}</td>`).join('')}<td class="n">${N(val==='c'?V.length:new Set(V.filter(r=>r.stf).map(r=>r.stf)).size)}</td></tr></tbody>`;
+ $('pt').innerHTML=h;PV={R,C,m,g,rk,ck}}
+$('pt').onclick=e=>{const td=e.target.closest('td.h');if(!td)return;const a=td.dataset.a,b=td.dataset.b,rk=$('pr').value,ck=$('pc').value;
+ drill(`${a??'Tất cả'} · ${b??'Tất cả'}`,V.filter(r=>(a===undefined||dv(rk,r)===a)&&(b===undefined||dv(ck,r)===b)))};
+['pr','pc','pv'].forEach(i=>$(i).onchange=pivot);
+$('ps').onchange=()=>{const p=PRE[$('ps').value];if(p[1]){$('pr').value=p[1];$('pc').value=p[2];pivot()}};
+$('px').onclick=()=>{const{R,C,g,m}=PV,a=[[DIM[PV.rk][0],...C]];R.forEach(r=>a.push([r,...C.map(c=>g(m.get(r+'\u0001'+c))||'')]));const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(a),'Pivot');XLSX.writeFile(wb,'pivot_ticket.xlsx')};
+/* ---- biểu đồ ---- */
+const hb=(a,id)=>{const mx=Math.max(1,...a.map(x=>x[1]));$(id).innerHTML=a.map(([k,v])=>`<div class="hb" data-c="${id}" data-k="${esc(k)}" title="Bấm để xem danh sách case"><span>${esc(k)}</span><div><i style="width:${v/mx*100}%"></i></div><em>${N(v)}</em></div>`).join('')||'—'};
+function charts(){const t=cnt(V,r=>r.tuan).sort((a,b)=>a[0]>b[0]?1:-1),mx=Math.max(1,...t.map(x=>x[1]));
+ $('trend').innerHTML=t.map(([k,v])=>`<div><b>${N(v)}</b><i style="height:${v/mx*115}px"></i>${esc(k)}</div>`).join('');
+ const o=V.filter(r=>!CLOSED.test(r.st)),ag=cnt(o,r=>bucket(age(r))).sort((a,b)=>BO.indexOf(a[0])-BO.indexOf(b[0]));hb(ag,'age');
+ hb(cnt(V,r=>r.cat).slice(0,8),'topc');hb(cnt(V,r=>r.doi!=='(Chưa xác định)'?r.doi:r.dep).slice(0,8),'topd')}
+function rep(){const m={};V.filter(r=>r.stf).forEach(r=>{const o=m[r.stf]=m[r.stf]||{n:0,nm:r.drv,doi:r.doi,c:{}};o.n++;o.c[r.cat]=(o.c[r.cat]||0)+1});
+ const a=Object.entries(m).filter(([,o])=>o.n>=3).sort((x,y)=>y[1].n-x[1].n).slice(0,50);
+ $('rep').innerHTML='<thead><tr><th>Mã NV</th><th>Tài xế</th><th>Đội</th><th>Số case</th><th>Danh mục chính</th></tr></thead><tbody>'+(a.map(([k,o])=>`<tr><td>${esc(k)}</td><td>${esc(o.nm)}</td><td>${esc(o.doi)}</td><td class="n"><b>${o.n}</b></td><td>${esc(Object.entries(o.c).sort((x,y)=>y[1]-x[1])[0][0])}</td></tr>`).join('')||'<tr><td colspan="5">Không có tài xế nào lặp từ 3 lần.</td></tr>')+'</tbody>'}
+/* ---- drill-down ---- */
+let DR=[];
+function drill(t,a){DR=a;$('mt').textContent=`${t} · ${N(a.length)} case`;
+ $('mtb').innerHTML='<thead><tr><th>Case</th><th>Mở lúc</th><th>Tuổi (ngày)</th><th>Trạng thái</th><th>Danh mục</th><th>Danh mục con</th><th>Tài xế</th><th>Đội</th><th>Depot</th><th>Người xử lý</th></tr></thead><tbody>'+a.slice(0,300).map(r=>`<tr><td>${r.id}</td><td>${r.t?new Date(r.t).toLocaleString('vi-VN'):''}</td><td class="n">${age(r).toFixed(1)}</td><td>${esc(r.st)}</td><td>${esc(r.cat)}</td><td>${esc(r.sub)}</td><td>${esc(r.drv)}</td><td>${esc(r.doi)}</td><td>${esc(r.dep)}</td><td>${esc(r.own)}</td></tr>`).join('')+'</tbody>';$('md').style.display='flex'}
+$('mc').onclick=()=>$('md').style.display='none';
+$('mx').onclick=()=>{const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(DR.map(r=>({'Case':r.id,'Mở lúc':r.t?new Date(r.t).toLocaleString('vi-VN'):'','Tuổi (ngày)':+age(r).toFixed(1),'Trạng thái':r.st,'Nhóm':r.grp,'Danh mục':r.cat,'Danh mục con':r.sub,'Loại hình':r.ty,'Đối tượng':r.ct,'Tài xế':r.drv,'Mã NV':r.stf,'Đội':r.doi,'Tổ':r.to,'Depot':r.dep,'Người xử lý':r.own,'Tuần':r.tuan}))),'ChiTiet');XLSX.writeFile(wb,'chi_tiet_case.xlsx')};
+/* ---- upload ---- */
+async function go(f){if(!f)return;$('pg').style.display='block';$('app').style.display='none';
+ const p=(x,m)=>{$('pg').firstChild.style.width=Math.round(x*100)+'%';$('msg').textContent=m};
+ try{p(0,'Đang mở file…');const sh=await readX(f,p),n=process(sh);sel={};openOnly=true;buildFilters();$('app').style.display='block';run();
+  $('msg').textContent=`Hoàn tất: ${f.name}: gộp ${sh.length} sheet, ${N(n)} case duy nhất (đã loại trùng giữa các sheet tuần).`;$('pg').style.display='none'}
+ catch(x){$('msg').textContent='Lỗi: '+x.message}}
+$('file').onchange=e=>go(e.target.files[0]);
+['dragover','dragenter'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.add('dr')}));
+['dragleave','drop'].forEach(t=>$('drop').addEventListener(t,e=>{e.preventDefault();$('drop').classList.remove('dr')}));
+$('drop').addEventListener('drop',e=>go(e.dataTransfer.files[0]));
+var KS=[];
+$('kp').onclick=e=>{const c=e.target.closest('.k');if(c)drill(c.querySelector('i').textContent,KS[c.dataset.i]())};
+document.addEventListener('click',e=>{const h=e.target.closest('.hb');if(!h)return;const id=h.dataset.c,k=h.dataset.k;let a;
+ if(id==='age')a=V.filter(r=>!CLOSED.test(r.st)&&bucket(age(r))===k);else if(id==='topc')a=V.filter(r=>r.cat===k);else a=V.filter(r=>(r.doi!=='(Chưa xác định)'?r.doi:r.dep)===k);drill(k,a)});
+</script></body></html>
