@@ -142,9 +142,9 @@ const log=m=>{LOG.push(`[${new Date().toLocaleTimeString('vi-VN')}] ${m}`);$('lg
 $('up').innerHTML=FILES.map(f=>`<label class="fz" id="z-${f[0]}"><b>${svg('file')}<em style="font-style:normal">${f[1]}${f[2]?' <i class="req">*</i>':''}</em></b><span>Chọn hoặc kéo thả file</span><input type="file" accept=".xlsx,.xls,.csv" data-k="${f[0]}"></label>`).join('');
 const WOK=['so lenh sua chua','bien so','so khung','km hien tai','trang thai','loai dich vu','yeu cau khach hang','ngay tao'];
 const trim=rows=>rows.filter(r=>r&&r.some(c=>String(c).trim()!==''));/* bỏ dòng trống (file xuất thường có ~100.000 dòng trắng) */
-function slim(k,rows){rows=trim(rows);if(!/^wo/.test(k))return rows;let hi=0;
+function slim(k,rows){rows=trim(rows);if(!/^wo/.test(k))return rows;if(!rows.length)return rows;let hi=0;
  for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].some(c=>nt(c)==='so lenh sua chua')){hi=i;break}}
- const n=rows[hi].map(nt),ix=WOK.map(x=>n.indexOf(x));return rows.slice(hi).map(r=>ix.map(i=>i>=0?r[i]:''))}
+ if(!rows[hi])return rows;const n=rows[hi].map(nt),ix=WOK.map(x=>n.indexOf(x));return rows.slice(hi).map(r=>ix.map(i=>i>=0?r[i]:''))}
 const woSlot=()=>'wo1';
 function load(k,file){if(!file)return;const r=new FileReader();r.onerror=()=>toast('Không đọc được file');
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
