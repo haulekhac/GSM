@@ -50,6 +50,8 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 .sec{display:none}.sec.on{display:block}
 #dt th,#dl th{cursor:default}#dt th:hover,#dl th:hover{color:#4b5f5c}
 #toast{position:fixed;right:20px;bottom:20px;background:#10201f;color:#fff;padding:11px 16px;border-radius:10px;font-size:12px;opacity:0;transform:translateY(8px);transition:.25s;z-index:99;pointer-events:none}#toast.s{opacity:1;transform:none}
+/* ô dài (yêu cầu khách hàng) */
+.tr{display:inline-block;max-width:260px;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 @media(max-width:800px){aside{display:none}main{padding:12px}}
 </style></head><body>
 <header class="hd"><div class="lg">GC</div><div><b>HỆ THỐNG QUẢN LÝ GREEN PORTAL</b><small>QUẢN LÝ BẢO DƯỠNG ĐỘI XE</small></div><div class="sp"></div><span class="chip" id="clk"></span></header>
@@ -61,11 +63,13 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 <section class="sec on" id="s-main">
 <div class="kp" id="kp"></div>
 <div class="card"><div class="row" style="margin:0 0 12px">
-<div class="fd" style="flex:1;min-width:200px"><label>Tìm kiếm</label><div style="position:relative"><span class="si" data-ic="srch"></span><input id="q" placeholder="Số khung, biển số, tài xế, mã TX" style="width:100%"></div></div>
+<div class="fd" style="flex:1;min-width:200px"><label>Tìm kiếm</label><div style="position:relative"><span class="si" data-ic="srch"></span><input id="q" placeholder="Số khung, biển số, tài xế, mã TX, mã đặt lịch, số lệnh SC" style="width:100%"></div></div>
 <div class="fd"><label>Đội</label><select id="fDoi"></select></div><div class="fd"><label>Tổ</label><select id="fTo"></select></div>
 <div class="fd"><label>Dòng xe</label><select id="fDx"></select></div>
 <div class="fd"><label>Cảnh báo</label><select id="fSt"><option value="">Tất cả</option><option>Sắp đến mốc</option><option>Vừa quá mốc</option><option>Bình thường</option><option>Thiếu ODO</option></select></div>
+<div class="fd"><label>BD mốc cũ</label><select id="fWo"><option value="">Tất cả</option><option>Đã BD</option><option>Chưa BD</option><option>Không có lệnh SC</option></select></div>
 <div class="fd"><label>Kế hoạch BD</label><select id="fKh"><option value="">Tất cả</option><option>Trong kế hoạch</option><option>Chưa tới</option></select></div>
+<div class="fd"><label>Tình trạng booking</label><select id="fBt"></select></div>
 <button class="btn p" id="bx"><span data-ic="dl"></span>Xuất Excel</button></div>
 <div class="tw"><table id="tb"></table></div><div class="pg"><span id="pi"></span><span><button class="btn" id="pp"><span data-ic="cl"></span>Trước</button> <button class="btn" id="pn">Sau<span data-ic="cr"></span></button></span></div></div>
 </section>
@@ -82,6 +86,8 @@ th:hover{color:var(--t2)}td{padding:9px 11px;border-bottom:1px solid #f0f5f4;whi
 <div class="fd"><label>Vừa quá mốc trong (km)</label><input id="over" type="number" value="1500" min="0"></div>
 <div class="fd"><label>Lệch ODO giữa nguồn &gt; (km)</label><input id="gap" type="number" value="3000" min="0"></div>
 <div class="fd"><label>ODO kế hoạch BD thêm (km)</label><input id="plan" type="number" value="4000" min="0"></div>
+<div class="fd"><label>Dung sai BD trước mốc (km)</label><input id="tol" type="number" value="2000" min="0"></div>
+<div class="fd"><label>Lệnh SC được tính là BD</label><select id="woMode"><option value="all">Mọi lệnh sửa chữa</option><option value="kw">Chỉ lệnh có nội dung bảo dưỡng</option></select></div>
 <button class="btn p" id="bm"><span data-ic="zap"></span>Ghép dữ liệu &amp; tính mốc BD</button><button class="btn" id="br"><span data-ic="rs"></span>Reset</button></div>
 <div class="sub" style="margin:10px 0 0">ODO kế hoạch = Max ODO hợp lý + ODO kế hoạch BD thêm. Ví dụ ODO hợp lý 3.000, kế hoạch thêm 4.000 thì ODO kế hoạch là 7.000. Xe có mốc BD tiếp theo ≤ ODO kế hoạch được xếp "Trong kế hoạch".</div></div>
 
@@ -130,25 +136,32 @@ const fmt=n=>n>0?Number(n).toLocaleString('vi-VN'):'—';
 function num(x){if(typeof x==='number')return isFinite(x)?x:0;let s=String(x??'').replace(/\s/g,'');if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');else s=s.replace(/,/g,'');return Number(s)||0}
 function dt(x){if(x instanceof Date)return x.getTime();if(typeof x==='number')return x;const s=String(x||'').trim();let m=s.match(/^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);if(m)return new Date(+m[3],m[2]-1,+m[1]).getTime();const d=new Date(s);return isNaN(d)?0:d.getTime()}
 
-const FILES=[['pool','1 · File Pool xe',1],['vd','2 · File Xe vận doanh'],['bk','3 · File Xe đã đặt lịch'],['dv','4 · File ODO định vị'],['at','5 · File giao ca An toàn (AT)'],['gc','6 · File giao ca trực tiếp (GC TT)'],['tx','7 · File data tài xế']];
+const FILES=[['pool','1 · File Pool xe',1],['vd','2 · File Xe vận doanh'],['bk','3 · File Car booking (Mã đặt lịch, ODO, Tình trạng)'],['dv','4 · File ODO định vị'],['at','5 · File giao ca An toàn (AT)'],['gc','6 · File giao ca trực tiếp (GC TT)'],['tx','7 · File data tài xế'],['wo1','8 · File Work orders - Lệnh SC (1)'],['wo2','9 · File Work orders - Lệnh SC (2)']];
 let raw={},meta={},data=[],view=[],page=1,sort={k:'rem',d:1},LOG=[];const PS=100;
 const log=m=>{LOG.push(`[${new Date().toLocaleTimeString('vi-VN')}] ${m}`);$('lg').innerHTML=LOG.map(esc).join('<br>');$('lg').scrollTop=1e9};
 $('up').innerHTML=FILES.map(f=>`<label class="fz" id="z-${f[0]}"><b>${svg('file')}<em style="font-style:normal">${f[1]}${f[2]?' <i class="req">*</i>':''}</em></b><span>Chọn hoặc kéo thả file</span><input type="file" accept=".xlsx,.xls,.csv" data-k="${f[0]}"></label>`).join('');
+const WOK=['so lenh sua chua','bien so','so khung','km hien tai','trang thai','loai dich vu','yeu cau khach hang','ngay tao'];
+const trim=rows=>rows.filter(r=>r&&r.some(c=>String(c).trim()!==''));
+function slim(k,rows){rows=trim(rows);if(!/^wo/.test(k))return rows;let hi=0;
+ for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].some(c=>nt(c)==='so lenh sua chua')){hi=i;break}}
+ const n=rows[hi].map(nt),ix=WOK.map(x=>n.indexOf(x));return rows.slice(hi).map(r=>ix.map(i=>i>=0?r[i]:''))}
+const woSlot=()=>!raw.wo1?'wo1':!raw.wo2?'wo2':'wo2';
 function load(k,file){if(!file)return;const r=new FileReader();r.onerror=()=>toast('Không đọc được file');
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
-  raw[k]=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true});meta[k]=file.name;
+  raw[k]=slim(k,XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}));meta[k]=file.name;
   const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${(raw[k].length).toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${raw[k].length} dòng`);dbSave(k,file.name,raw[k])}catch(x){toast('Lỗi đọc file: '+x.message)}};r.readAsArrayBuffer(file)}
 /* tải nhiều file từ máy, tự nhận dạng loại file */
 function detect(name,rows){const n=nt(name);
+  if(/work.?order|lenh ?sua ?chua|\blsc\b/.test(n)||rows.slice(0,5).some(r=>r.some(c=>nt(c)==='so lenh sua chua')))return woSlot();
  if(/pool/.test(n))return 'pool';if(/van ?doanh|\bvd\b/.test(n))return 'vd';if(/dat ?lich|booking/.test(n))return 'bk';if(/dinh ?vi|gps/.test(n))return 'dv';
  if(/an ?toan|\bat\b/.test(n))return 'at';if(/gc ?tt|truc ?tiep|giao ca/.test(n))return 'gc';if(/tai ?xe|driver/.test(n))return 'tx';
  let hi=0;for(let i=0;i<Math.min(rows.length,20);i++){if(rows[i].filter(c=>String(c).trim()!=='').length>=2){hi=i;break}}
  const h=(rows[hi]||[]).map(nt).join('|');
- if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
+ if(/ma dat lich|odo at booking/.test(h))return 'bk';if(/tong km/.test(h))return 'dv';if(/ho ten|ma tai xe/.test(h)&&!/so khung|vin|bien so/.test(h))return 'tx';if(/tinh trang|trang thai/.test(h))return 'bk';if(/dong xe/.test(h))return 'pool';return null}
 function loadAuto(file){const r=new FileReader();r.onerror=()=>log(`Không đọc được file ${file.name}`);
  r.onload=e=>{try{const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true}),rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:'',raw:true}),k=detect(file.name,rows);
   if(!k){log(`Không nhận dạng được file: ${file.name} - hãy tải vào đúng ô bên dưới`);toast(`Không nhận dạng được ${file.name}`);return}
-  raw[k]=rows;meta[k]=file.name;const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${rows.length.toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${rows.length} dòng (tự nhận dạng)`);dbSave(k,file.name,rows)}catch(x){log(`Lỗi đọc file ${file.name}: ${x.message}`)}};r.readAsArrayBuffer(file)}
+   const rs=slim(k,rows);raw[k]=rs;meta[k]=file.name;const z=$('z-'+k);z.classList.add('ok');z.querySelector('span').textContent=`${file.name} • ${rs.length.toLocaleString('vi-VN')} dòng`;log(`Đã đọc [${k}] ${file.name}: ${rs.length} dòng (tự nhận dạng)`);dbSave(k,file.name,rs)}catch(x){log(`Lỗi đọc file ${file.name}: ${x.message}`)}};r.readAsArrayBuffer(file)}
 $('multi').onchange=e=>{[...e.target.files].forEach(loadAuto);e.target.value=''};
 document.querySelectorAll('.fz').forEach(z=>{const k=z.querySelector('input').dataset.k;
  z.querySelector('input').onchange=e=>load(k,e.target.files[0]);
@@ -171,7 +184,13 @@ let BKD={};try{BKD=JSON.parse(localStorage.getItem('gp_bkd')||'{}')}catch(e){}
 const saveBkd=()=>{try{localStorage.setItem('gp_bkd',JSON.stringify(BKD))}catch(e){}};
 const fmtD=s=>{const m=String(s||'').match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}/${m[2]}/${m[1]}`:''};
 const toISO=ms=>{if(!ms)return '';const d=new Date(ms);return isNaN(d)?'':`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
-const setBkd=()=>data.forEach(r=>{r.bkd=BKD[ck(r.vin)]||BKD[ck(r.bs)]||r.bkf||''});
+/* Trạng thái booking: tiếng Anh (hệ thống) -> tiếng Việt */
+const BKVI={'open':'Mới tạo','waitingforbooking':'Chờ đặt lịch','scheduled':'Đã lên lịch','arrived':'Đã đến xưởng','inservice':'Đang sửa chữa','completed':'Hoàn thành','cancelled':'Đã hủy'};
+const CANC='Đã hủy';
+const BKC={'Mới tạo':'b3','Chờ đặt lịch':'b1','Đã lên lịch':'b0','Đã đến xưởng':'b0','Đang sửa chữa':'b1','Hoàn thành':'b0','Đã hủy':'b2'};
+$('fBt').innerHTML='<option value="">Tất cả</option>'+[...Object.values(BKVI),'Chưa có booking'].map(x=>`<option>${x}</option>`).join('');
+/* hasBk: có lịch do nhập tay, hoặc có booking trong file chưa bị hủy */
+const setBkd=()=>data.forEach(r=>{const man=BKD[ck(r.vin)]||BKD[ck(r.bs)];r.bkd=man||r.bkf||'';r.hasBk=!!(man||(r.bkt&&r.bkt!==CANC))});
 function applyBkList(){const ids=[...new Set($('bkList').value.split(/[\s,;]+/).map(ck).filter(Boolean))],d=$('bkDate').value;
  if(!ids.length)return toast('Chưa nhập số khung / biển số');if(!d)return toast('Chưa chọn ngày đặt lịch');
  ids.forEach(k=>BKD[k]=d);saveBkd();let msg=`Đặt lịch ${fmtD(d)}: ${ids.length} mã đã nhập`;
@@ -204,10 +223,17 @@ function maps(){
  if(t){let tk=col(t.h,['tong km']),lk=col(t.h,['km odo cuoi cung','odo cuoi','cuoi cung','last km']);if(tk<0)tk=5;if(lk<0)lk=6;
   dv=build('dv',r=>{const a=num(r[tk]),b=num(r[lk]);return{o:a||b}})}
  const vd=build('vd',(r,h)=>{const g=ks=>cell(r,col(h,ks));return{o:num(g(ODO)),ten:String(g(['ten tai xe','ho ten','ho va ten','tai xe','driver'])).trim(),ma:String(g(['ma tai xe','ma tx','ma nv'])).trim(),sdt:String(g(['sdt','dien thoai','phone'])).trim(),pos:String(g(['vi tri do','vi tri','parking'])).trim()}});
- const bk=build('bk',(r,h)=>({o:num(cell(r,col(h,['odo','booking']))),t:String(cell(r,col(h,['tinh trang','trang thai']))).trim(),dd:toISO(dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen','ngay']))))}));
+ /* mỗi số khung lấy booking mới nhất theo Ngày đặt lịch; ưu tiên booking chưa hủy */
+ const bk=build('bk',(r,h)=>{const ts=dt(cell(r,col(h,['ngay dat lich','ngay dat','ngay booking','ngay hen','ngay']))),rt=String(cell(r,col(h,['tinh trang','trang thai']))).trim(),t=BKVI[rt.toLowerCase()]||rt;
+  return{o:num(cell(r,col(h,['odo at booking','odo','booking']))),m:String(cell(r,col(h,['ma dat lich','ma booking']))).trim(),t,dd:toISO(ts),d:(t===CANC?0:1e13)+ts}});
  const tx=new Map(),tt=prep('tx');if(tt){let ci=col(tt.h,['ma tai xe','ma tx','ma nv','ma','code']);if(ci<0)ci=0;const ni=col(tt.h,['ho ten','ten','name']),pi=col(tt.h,['sdt','dien thoai','phone']);
   tt.body.forEach(r=>{const o={ten:String(cell(r,ni)).trim(),ma:String(cell(r,ci)).trim(),sdt:String(cell(r,pi)).trim()};[ck(o.ma),ck(o.ten)].forEach(k=>{if(k)tx.set(k,o)})})}
- return{dv,at:latest('at'),gc:latest('gc'),vd,bk,tx}}
+  const wo=new Map(),wv=new Map();['wo1','wo2'].forEach(k=>{const t=prep(k);if(!t)return;const h=t.h,
+  i={so:col(h,['so lenh sua chua']),km:col(h,['km hien tai']),st:col(h,['trang thai']),lo:col(h,['loai dich vu']),yc:col(h,['yeu cau khach hang']),ng:col(h,['ngay tao'])};
+  t.body.forEach(r=>{const o={so:String(cell(r,i.so)).trim(),km:num(cell(r,i.km)),st:String(cell(r,i.st)).trim(),lo:String(cell(r,i.lo)).trim(),yc:String(cell(r,i.yc)),d:dt(cell(r,i.ng))};
+   if(t.kv>=0){const kk=ck(r[t.kv]);if(kk){const old=wv.get(kk);if(!old||o.d>=old.d)wv.set(kk,o)}}
+   [t.kv,t.kb].forEach(c=>{if(c<0)return;const key=ck(r[c]);if(!key)return;(wo.get(key)||wo.set(key,[]).get(key)).push(o)})})});
+ return{dv,at:latest('at'),gc:latest('gc'),vd,bk,tx,wo,wv,woOn:!!(raw.wo1||raw.wo2)}}
 
 /* ---------- mốc bảo dưỡng ---------- */
 function milestones(dx){const a=[];if(/limogreen/i.test(dx))a.push(6000);for(let m=15000;m<=600000;m+=15000)a.push(m);return a}
@@ -220,7 +246,7 @@ function merge(){
  LOG=[];if(!raw.pool||!raw.pool.length)return toast('Vui lòng nạp File Pool xe trước'),go('load');
  const t=prep('pool'),h=t.h;const ix={vin:col(h,['so khung','vin']),bs:col(h,['bien so','bsx','bks']),dx:col(h,['dong xe','loai xe']),doi:col(h,['doi']),to:col(h,['to'])};
  if(ix.vin<0)ix.vin=0;if(ix.bs<0)ix.bs=1;if(ix.dx<0)ix.dx=2;
- const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),plan=num($('plan').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,tx:0};data=[];
+ const M=maps(),warn=num($('warn').value),over=num($('over').value),gap=num($('gap').value),plan=num($('plan').value),hit={vd:0,at:0,dv:0,gc:0,bk:0,tx:0,wo:0};data=[];
  t.body.forEach(r=>{const vin=String(r[ix.vin]||'').trim(),bs=String(r[ix.bs]||'').trim();if(!vin&&!bs)return;
   const keys=[ck(vin),ck(bs)].filter(Boolean),f=m=>{for(const k of keys){if(m.has(k))return m.get(k)}return null};
   const vd=f(M.vd),at=f(M.at),dv=f(M.dv),gc=f(M.gc),bk=f(M.bk);
@@ -231,24 +257,36 @@ function merge(){
   const dx=String(r[ix.dx]||'').trim(),ms=milestones(dx),next=ms.find(m=>m>=max)||ms[ms.length-1],prev=[...ms].reverse().find(m=>m<max)||0,rem=max?next-max:null;
   let st='Bình thường';if(!max)st='Thiếu ODO';else if(rem<=warn)st='Sắp đến mốc';else if(prev>0&&max-prev<=over)st='Vừa quá mốc';
   /* ODO kế hoạch = Max ODO hợp lý + ODO kế hoạch BD thêm; mốc tiếp theo <= ODO kế hoạch => nằm trong kế hoạch BD */
+    let wom='',wos='',woso='',wokm=0;
+  if(M.woOn){const tol=num($('tol').value),mode=$('woMode').value,KW=/bao duong|\bbd|dinh k|cap [123]/,sn=new Set(),wl=[];
+   keys.forEach(k=>(M.wo.get(k)||[]).forEach(o=>{if(!sn.has(o.so)){sn.add(o.so);wl.push(o)}}));if(wl.length)hit.wo++;
+   const ok=wl.filter(o=>o.km>0&&o.km<300000&&!/huy|nhap|bao gia/.test(nt(o.st))&&nt(o.lo)!=='pdi'&&(mode!=='kw'||KW.test(nt(o.yc))));
+   const P=prev.toLocaleString('vi-VN');
+   if(!max){}
+   else if(prev===0){wom='Chưa tới mốc đầu'}
+   else if(!ok.length){wos='Không có lệnh SC';wom=wos}
+   else{const h=ok.filter(o=>o.km>=prev-tol).sort((a,b)=>a.km-b.km)[0];
+    if(h){wos='Đã BD';wom='Đã BD mốc '+P;woso=h.so;wokm=h.km}
+    else{const l=[...ok].sort((a,b)=>b.km-a.km)[0];wos='Chưa BD';wom='Chưa BD mốc '+P;woso=l.so;wokm=l.km}}}
   const kh=max?max+plan:0,inp=!max?'':(next<=kh?'Trong kế hoạch':'Chưa tới');
+  const wv=M.wv.get(ck(vin))||null;
   const ma=vd&&vd.ma||'',ten=vd&&vd.ten||'',txi=M.tx.get(ck(ma))||M.tx.get(ck(ten));if(txi)hit.tx++;
-  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,kh,inp,next,rem,bko:bk?bk.o:0,bkt:bk?bk.t:'',bkf:bk?bk.dd:'',bkd:'',st,
+  data.push({vin:vin||bs,dx,bs,doi:ix.doi>=0?String(r[ix.doi]||'').trim():'',to:ix.to>=0?String(r[ix.to]||'').trim():'',o1,o2,o3,o4,max,src,lech,kh,inp,next,rem,bko:bk?bk.o:0,bkm:bk?bk.m:'',bkt:bk?bk.t:'',wolast:wv?wv.so:'',wyc:wv?String(wv.yc).trim():'',bkf:bk?bk.dd:'',bkd:'',st,wom,wos,woso,wokm,
    tx:ten||(txi&&txi.ten)||'',mtx:ma||(txi&&txi.ma)||'',sdt:(vd&&vd.sdt)||(txi&&txi.sdt)||'',pos:vd&&vd.pos||''})});
  setBkd();log(`Ghép xong ${data.length} xe từ Pool. ODO kế hoạch = Max ODO + ${plan.toLocaleString('vi-VN')} km.`);
- const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['tx','Data tài xế']].map(([k,l])=>{
-  const loaded=!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
+  const n=data.length||1;$('qc').innerHTML=[['vd','Xe vận doanh'],['at','Giao ca AT'],['dv','ODO định vị'],['gc','Giao ca GC TT'],['bk','Xe đã đặt lịch'],['tx','Data tài xế'],['wo','Lệnh sửa chữa']].map(([k,l])=>{
+  const loaded=k==='wo'?!!(raw.wo1||raw.wo2):!!raw[k],p=hit[k]/n*100;return `<div class="q"><b>${l}</b><p>${loaded?`${hit[k].toLocaleString('vi-VN')} / ${data.length.toLocaleString('vi-VN')} xe khớp (${p.toFixed(1)}%)`:'Chưa nạp file'}</p><div class="bar"><i style="width:${loaded?p:0}%"></i></div></div>`}).join('');
  fillSel('fDoi','Đội',data.map(x=>x.doi));fillSel('fTo','Tổ',data.map(x=>x.to));fillSel('fDx','Dòng xe',data.map(x=>x.dx));
  page=1;apply();go('main');toast(`Đã ghép ${data.length} xe`)}
 function fillSel(id,l,a){const u=[...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,'vi',{numeric:true}));$(id).innerHTML=`<option value="">Tất cả ${l}</option>`+u.map(x=>`<option>${esc(x)}</option>`).join('')}
 
 /* ---------- hiển thị ---------- */
 const BC={'Bình thường':'b0','Sắp đến mốc':'b1','Vừa quá mốc':'b2','Thiếu ODO':'b3'};
-const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['kh','ODO kế hoạch','n'],['inp','Kế hoạch BD'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['bkd','Ngày đặt lịch'],['st','Cảnh báo'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
+const COLS=[['vin','Số khung'],['dx','Dòng xe'],['bs','Biển số'],['doi','Đội'],['to','Tổ'],['o1','ODO vận doanh','n'],['o2','ODO giao ca AT','n'],['o3','ODO định vị','n'],['o4','ODO GC TT','n'],['max','Max ODO hợp lý','n'],['src','Nguồn ODO'],['kh','ODO kế hoạch','n'],['inp','Kế hoạch BD'],['next','Mốc BD tiếp theo','n'],['rem','Còn lại (km)','n'],['bkm','Mã đặt lịch'],['bko','ODO lúc booking','n'],['bkt','Tình trạng booking'],['bkd','Ngày đặt lịch'],['st','Cảnh báo'],['wom','BD mốc cũ'],['woso','Số lệnh SC (theo mốc BD)'],['wokm','Km theo lệnh SC','n'],['wolast','Số lệnh SC gần nhất'],['wyc','Yêu cầu khách hàng'],['tx','Tên tài xế'],['mtx','Mã TX'],['sdt','SĐT'],['pos','Vị trí đỗ']];
 function kpis(){const c=s=>data.filter(x=>x.st===s).length,has=data.filter(x=>x.max>0).length,lech=data.filter(x=>x.lech).length,kh=data.filter(x=>x.inp==='Trong kế hoạch').length;
  const KI=['car','clock','wr','ok','al','sw','cal'];$('kp').innerHTML=[['Tổng số xe',data.length,'trong Pool',''],['Sắp đến mốc BD',c('Sắp đến mốc'),'cần đặt lịch','w'],['Vừa quá mốc',c('Vừa quá mốc'),'kiểm tra đã bảo dưỡng chưa','e'],['Có ODO',has,data.length?(has/data.length*100).toFixed(1)+'% Pool':'—',''],['Thiếu ODO',c('Thiếu ODO'),'không tìm thấy ở file nào','g'],['ODO lệch nguồn',lech,'cần đối soát','w'],['Trong kế hoạch BD',kh,'mốc tiếp theo ≤ ODO kế hoạch','']].map((k,i)=>`<div class="k ${k[3]}"><span class="ki">${svg(KI[i])}</span><i>${k[0]}</i><b>${Number(k[1]).toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('')}
-function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$('fDx').value,s=$('fSt').value,p=$('fKh').value;
- view=data.filter(r=>(!d||r.doi===d)&&(!t||r.to===t)&&(!x||r.dx===x)&&(!s||r.st===s)&&(!p||r.inp===p)&&(!q||nt([r.vin,r.bs,r.tx,r.mtx,r.sdt].join(' ')).includes(q)));
+function apply(){const q=nt($('q').value),d=$('fDoi').value,t=$('fTo').value,x=$('fDx').value,s=$('fSt').value,p=$('fKh').value,w=$('fWo').value,b=$('fBt').value;
+ view=data.filter(r=>(!d||r.doi===d)&&(!t||r.to===t)&&(!x||r.dx===x)&&(!s||r.st===s)&&(!p||r.inp===p)&&(!w||r.wos===w)&&(!b||(b==='Chưa có booking'?!r.bkt:r.bkt===b))&&(!q||nt([r.vin,r.bs,r.tx,r.mtx,r.sdt,r.bkm,r.wolast,r.wyc].join(' ')).includes(q)));
  const k=sort.k;view.sort((a,b)=>{let u=a[k],v=b[k];if(u===null||u===''||u===undefined)return 1;if(v===null||v===''||v===undefined)return -1;return (typeof u==='number'?u-v:String(u).localeCompare(String(v),'vi',{numeric:true}))*sort.d});
  kpis();draw()}
 function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(page,tp);const rows=view.slice((page-1)*PS,page*PS);
@@ -256,16 +294,20 @@ function draw(){const tp=Math.max(1,Math.ceil(view.length/PS));page=Math.min(pag
  (rows.map(r=>'<tr>'+COLS.map(([k,,n])=>{let v=r[k];
   if(k==='st')v=`<span class="bd ${BC[v]}">${v}</span>`;else if(k==='rem')v=v===null?'—':fmt(v)==='—'?'0':fmt(v);else if(n)v=fmt(v);else if(k==='vin'||k==='mtx')v=`<span class="mono">${esc(v)}</span>`;else v=esc(v);
   if(k==='bkd')v=esc(fmtD(r.bkd));
+  if(k==='bkt')v=r.bkt?`<span class="bd ${BKC[r.bkt]||'b3'}">${esc(r.bkt)}</span>`:'';
+  if(k==='bkm'||k==='wolast')v=`<span class="mono">${esc(r[k])}</span>`;
+  if(k==='wyc')v=`<span class="tr" title="${esc(r.wyc)}">${esc(r.wyc)}</span>`;
   if(k==='inp')v=r.inp?`<span class="bd ${r.inp==='Chưa tới'?'b0':'b1'}">${r.inp}</span>`:'';
   if(k==='max')v=`<b>${fmt(r.max)}</b>`;if(k==='src'&&r.lech)v+=' <span class="bd b1">lệch</span>';
+  if(k==='wom')v=r.wos?`<span class="bd ${r.wos==='Đã BD'?'b0':r.wos==='Chưa BD'?'b2':'b3'}">${esc(r.wom)}</span>`:esc(r.wom||'');
   return `<td class="${n?'r':''}">${v}</td>`}).join('')+'</tr>').join('')||`<tr><td colspan="${COLS.length}" style="text-align:center;padding:36px;color:var(--mu)">${data.length?'Không có xe phù hợp bộ lọc.':'Chưa có dữ liệu. Vào mục Nạp dữ liệu để bắt đầu.'}</td></tr>`)+'</tbody>';
  $('pi').textContent=`${view.length.toLocaleString('vi-VN')} xe • Trang ${page}/${tp}`;$('pp').disabled=page<=1;$('pn').disabled=page>=tp}
 
 /* ---------- Dashboard rà soát xe bảo dưỡng ---------- */
 function dash(){
  if(!data.length){$('dk').innerHTML='';$('dl').innerHTML='';$('dsub').textContent='';$('dt').innerHTML='<tbody><tr><td style="padding:30px;text-align:center;color:var(--mu)">Chưa có dữ liệu. Vào mục Nạp dữ liệu rồi bấm "Ghép dữ liệu & tính mốc BD".</td></tr></tbody>';return}
- const bk=r=>!!(r.bkd||r.bkt),need=data.filter(r=>r.inp==='Trong kế hoạch'||r.st==='Vừa quá mốc'),S=new Set(need),nb=need.filter(r=>!bk(r)),qua=need.filter(r=>r.st==='Vừa quá mốc').length;
- $('dsub').textContent=`ODO kế hoạch = Max ODO hợp lý + ${fmt(num($('plan').value))} km. Xe có mốc BD tiếp theo ≤ ODO kế hoạch, hoặc vừa quá mốc, được tính là cần BD. Xe "đã đặt lịch" khi có ngày đặt lịch hoặc tình trạng booking.`;
+ const bk=r=>!!r.hasBk,need=data.filter(r=>r.inp==='Trong kế hoạch'||(r.st==='Vừa quá mốc'&&r.wos!=='Đã BD')),S=new Set(need),nb=need.filter(r=>!bk(r)),qua=need.filter(r=>r.st==='Vừa quá mốc').length;
+ $('dsub').textContent=`ODO kế hoạch = Max ODO hợp lý + ${fmt(num($('plan').value))} km. Xe có mốc BD tiếp theo ≤ ODO kế hoạch, hoặc vừa quá mốc, được tính là cần BD. Xe "đã đặt lịch" khi có ngày đặt lịch nhập tay hoặc có booking chưa bị hủy.`;
  $('dk').innerHTML=[['Xe cần rà soát BD',need.length,'trong kế hoạch + vừa quá mốc','','car'],['Đã đặt lịch',need.length-nb.length,'trong số xe cần BD','','ok'],['Chưa đặt lịch',nb.length,'cần liên hệ đặt lịch','e','al'],['Vừa quá mốc',qua,'kiểm tra đã BD chưa','w','wr'],['ODO lệch nguồn',need.filter(r=>r.lech).length,'cần đối soát','g','sw']].map(k=>`<div class="k ${k[3]}"><span class="ki">${svg(k[4])}</span><i>${k[0]}</i><b>${k[1].toLocaleString('vi-VN')}</b><s>${k[2]}</s></div>`).join('');
  const g={};data.forEach(r=>{const d=r.doi||'(Chưa có đội)',o=g[d]=g[d]||{t:0,n:0,b:0};o.t++;if(S.has(r)){o.n++;if(bk(r))o.b++}});
  const th=a=>'<thead><tr>'+a.map(x=>`<th class="${x[1]?'r':''}">${x[0]}</th>`).join('')+'</tr></thead>';
@@ -275,7 +317,7 @@ function dash(){
 
 $('tb').onclick=e=>{const th=e.target.closest('th');if(!th)return;const k=th.dataset.k;sort=sort.k===k?{k,d:-sort.d}:{k,d:1};apply()};
 $('pp').onclick=()=>{page--;draw()};$('pn').onclick=()=>{page++;draw()};
-['fDoi','fTo','fDx','fSt','fKh'].forEach(i=>$(i).onchange=()=>{page=1;apply()});let qt;$('q').oninput=()=>{clearTimeout(qt);qt=setTimeout(()=>{page=1;apply()},200)};
+['fDoi','fTo','fDx','fSt','fKh','fWo','fBt'].forEach(i=>$(i).onchange=()=>{page=1;apply()});let qt;$('q').oninput=()=>{clearTimeout(qt);qt=setTimeout(()=>{page=1;apply()},200)};
 $('bm').onclick=merge;
 $('br').onclick=()=>{raw={};meta={};data=[];view=[];LOG=[];document.querySelectorAll('.fz').forEach((z,i)=>{z.classList.remove('ok');z.querySelector('input').value='';z.querySelector('span').textContent='Chọn hoặc kéo thả file'});
  $('qc').innerHTML='<p class="sub">Chưa ghép dữ liệu.</p>';$('lg').textContent='Chưa có nhật ký.';apply();toast('Đã reset')};
@@ -289,7 +331,7 @@ $('bkDate').value=toISO(Date.now());
 $('bkApply').onclick=applyBkList;
 $('bkClear').onclick=()=>{BKD={};saveBkd();setBkd();apply();toast('Đã xóa ngày đặt lịch nhập tay')};
 $('bdb').onclick=()=>dbRestore(false);
-$('bdc').onclick=async()=>{await dbClear();listSaved();toast('Đãgit status xóa file đã lưu')};
+$('bdc').onclick=async()=>{await dbClear();listSaved();toast('Đã xóa file đã lưu')};
 dbRestore(true);
 apply();
 </script></body></html>
