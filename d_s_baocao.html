@@ -1,0 +1,550 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Báo cáo D/S Ratio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Layout: báo cáo một cột. Đầu trang có tên báo cáo và tab khu vực; tiếp theo là số tổng, ô tùy chỉnh ngưỡng,
+   thẻ biểu đồ thanh ngang giống ảnh mẫu (D/S Ratio theo quận), cuối cùng là bảng chi tiết. */
+:root {
+  --bg: #f3f5f5;
+  --surface: #ffffff;
+  --ink: #11201e;
+  --ink2: #46544f;
+  --muted: #74827e;
+  --grid: #e3e9e7;
+  --axis: #c1cdc9;
+  --border: rgba(17, 32, 30, 0.10);
+  --hover: rgba(15, 122, 102, 0.07);
+  --seg-bg: #e5eae9;
+  --accent: #0f7a66;
+  --crit: #dc3131;  --crit-ink: #b01f1f;  --crit-bg: #fde6e6;  --crit-on: #ffffff;
+  --warn: #e88a00;  --warn-ink: #8f5400;  --warn-bg: #fdefcc;  --warn-on: #1a1200;
+  --ok:   #1ba588;  --ok-ink:   #0b6e5a;  --ok-bg:   #d6f4ea;  --ok-on:   #03211a;
+  --tip-bg: #11201e;
+  --tip-fg: #f3f5f5;
+  --font: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --lab: 172px;
+  --pr: 20px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e1514;
+    --surface: #162120;
+    --ink: #e8f0ee;
+    --ink2: #b4c3bf;
+    --muted: #8a9a96;
+    --grid: #243230;
+    --axis: #3a4b48;
+    --border: rgba(255, 255, 255, 0.10);
+    --hover: rgba(79, 209, 182, 0.10);
+    --seg-bg: #1d2b29;
+    --accent: #4fd1b6;
+    --crit: #e65a5a;  --crit-ink: #ff9d9d;  --crit-bg: #3a1d1f;  --crit-on: #1a0505;
+    --warn: #eb9a24;  --warn-ink: #f4c26a;  --warn-bg: #392c12;  --warn-on: #1a1200;
+    --ok:   #2ab898;  --ok-ink:   #6fe0c3;  --ok-bg:   #12372f;  --ok-on:   #03211a;
+    --tip-bg: #e8f0ee;
+    --tip-fg: #0e1514;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e1514;
+  --surface: #162120;
+  --ink: #e8f0ee;
+  --ink2: #b4c3bf;
+  --muted: #8a9a96;
+  --grid: #243230;
+  --axis: #3a4b48;
+  --border: rgba(255, 255, 255, 0.10);
+  --hover: rgba(79, 209, 182, 0.10);
+  --seg-bg: #1d2b29;
+  --accent: #4fd1b6;
+  --crit: #e65a5a;  --crit-ink: #ff9d9d;  --crit-bg: #3a1d1f;  --crit-on: #1a0505;
+  --warn: #eb9a24;  --warn-ink: #f4c26a;  --warn-bg: #392c12;  --warn-on: #1a1200;
+  --ok:   #2ab898;  --ok-ink:   #6fe0c3;  --ok-bg:   #12372f;  --ok-on:   #03211a;
+  --tip-bg: #e8f0ee;
+  --tip-fg: #0e1514;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 24px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 16px; }
+.wrap > * { min-width: 0; }
+
+/* Header */
+.head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 14px 24px; }
+h1 { margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
+.src { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; border-radius: 10px; background: var(--seg-bg); border: 1px solid var(--border); }
+.seg button {
+  border: 0; background: transparent; color: var(--ink2); font: inherit; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px; cursor: pointer; white-space: nowrap;
+}
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.14); }
+button:focus-visible, input:focus-visible, .row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* KPI */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; display: grid; gap: 2px; align-content: start; }
+.kpi .k { font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.kpi .v { font-size: 26px; font-weight: 700; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpi .s { font-size: 12px; color: var(--muted); }
+.kpi.wide { grid-column: span 2; }
+.counts { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+@media (max-width: 520px) { .kpi.wide { grid-column: span 1; } }
+
+/* Controls */
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 22px; color: var(--ink2); font-size: 13px; }
+.controls label { display: inline-flex; align-items: center; gap: 8px; }
+.controls input[type="number"] {
+  width: 64px; font: inherit; font-variant-numeric: tabular-nums; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--border); border-radius: 8px; padding: 6px 8px;
+}
+.controls .seg button { padding: 5px 11px; font-size: 12.5px; }
+.ax { display: inline-flex; align-items: center; gap: 8px; }
+
+/* Pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 999px; font-size: 12.5px; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.pill.crit { background: var(--crit-bg); color: var(--crit-ink); }
+.pill.warn { background: var(--warn-bg); color: var(--warn-ink); }
+.pill.ok   { background: var(--ok-bg);   color: var(--ok-ink); }
+.pill.sm { padding: 3px 10px; font-size: 12px; }
+
+/* Chart card */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 20px 14px; }
+.card-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start; gap: 10px 16px; margin-bottom: 14px; }
+.card-head h2 { margin: 0; font-size: 16px; font-weight: 700; line-height: 1.3; }
+.card-head .sub { margin: 2px 0 0; color: var(--muted); font-size: 12.5px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.chart { position: relative; padding: 0 var(--pr) 30px 0; }
+.grid { position: absolute; left: var(--lab); right: var(--pr); top: 0; bottom: 30px; pointer-events: none; }
+.gl { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--grid); }
+.gl.base { background: var(--axis); }
+.rows { position: relative; z-index: 1; }
+.row { display: grid; grid-template-columns: var(--lab) minmax(0, 1fr); align-items: center; min-height: 34px; border-radius: 6px; }
+.row:hover { background: var(--hover); }
+.name { text-align: right; padding-right: 14px; font-size: 13px; color: var(--ink2); line-height: 1.2; }
+.track { position: relative; height: 34px; }
+.bar { position: absolute; left: 0; top: 50%; height: 20px; transform: translateY(-50%); border-radius: 0 4px 4px 0; display: flex; align-items: center; justify-content: flex-end; }
+.val { position: absolute; top: 50%; transform: translateY(-50%); font-size: 12.5px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.val.in { position: static; transform: none; padding-right: 8px; }
+.axis { position: absolute; left: var(--lab); right: var(--pr); bottom: 0; height: 24px; }
+.tick { position: absolute; top: 6px; transform: translateX(-50%); font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.note { margin: 6px 0 0; font-size: 12.5px; color: var(--muted); }
+
+/* Table */
+.tcard { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px 20px 8px; }
+.tcard h2 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+.tscroll { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; min-width: 440px; }
+th, td { padding: 9px 10px; text-align: right; border-bottom: 1px solid var(--grid); font-size: 13px; }
+th { color: var(--muted); font-weight: 600; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase; }
+th:first-child, td:first-child { text-align: left; padding-left: 0; }
+th:last-child, td:last-child { text-align: left; padding-right: 0; }
+tfoot td { font-weight: 700; border-bottom: 0; }
+tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
+
+/* Loader */
+.loader { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.loader summary { cursor: pointer; padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; list-style: none; }
+.loader summary::-webkit-details-marker { display: none; }
+.loader summary::before { content: "+"; display: inline-block; width: 14px; color: var(--accent); font-weight: 700; }
+.loader[open] summary::before { content: "−"; }
+.loader .ttl { font-weight: 700; font-size: 14px; }
+.loader .status { color: var(--muted); font-size: 12.5px; }
+.lbody { padding: 0 16px 16px; display: grid; gap: 8px; }
+.lbody > * { min-width: 0; }
+.hint { margin: 0; color: var(--ink2); font-size: 13px; max-width: 70ch; }
+.lbl { font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px; }
+.loader textarea, .loader .wide-in {
+  width: 100%; font: inherit; font-size: 13px; color: var(--ink); background: var(--bg);
+  border: 1px solid var(--border); border-radius: 8px; padding: 9px 10px;
+}
+.loader textarea { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12.5px; line-height: 1.5; resize: vertical; min-height: 120px; }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.btn { font: inherit; font-weight: 600; font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer; background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+.btn.primary { background: var(--accent); color: var(--surface); border-color: transparent; }
+.loadmsg { margin: 0; font-size: 12.5px; color: var(--ok-ink); min-height: 1.4em; }
+.loadmsg.bad { color: var(--crit-ink); }
+
+/* Tooltip */
+.tip { position: fixed; z-index: 30; pointer-events: none; background: var(--tip-bg); color: var(--tip-fg); border-radius: 8px; padding: 9px 11px; font-size: 12.5px; line-height: 1.5; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22); max-width: 260px; }
+.tip b { display: block; font-size: 13px; margin-bottom: 2px; }
+.tip .t { opacity: 0.75; }
+
+@media (max-width: 560px) {
+  :root { --lab: 104px; --pr: 16px; }
+  .card, .tcard { padding-left: 14px; padding-right: 14px; }
+  .name { font-size: 12px; padding-right: 10px; }
+  .row, .track { min-height: 38px; }
+  .track { height: 38px; }
+  h1 { font-size: 20px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+      <h1>Báo cáo D/S Ratio</h1>
+      <p class="src">Demand là nhu cầu, Supply là số xe đáp ứng, D/S = Demand ÷ Supply · Nguồn: Superset, Heatmap D/S</p>
+    </div>
+    <div class="seg" role="group" aria-label="Khu vực">
+      <button type="button" id="tab-hcm" data-view="hcm" aria-pressed="true">TP. Hồ Chí Minh</button>
+      <button type="button" id="tab-bd" data-view="bd" aria-pressed="false">Bình Dương</button>
+    </div>
+  </header>
+
+  <section class="kpis" id="kpis" aria-label="Tổng quan"></section>
+
+  <div class="controls" aria-label="Tùy chỉnh">
+    <label for="warn">Căng thẳng từ <input type="number" id="warn" value="70" min="1" max="500" step="1" inputmode="numeric"> %</label>
+    <label for="crit">Thiếu xe nặng từ <input type="number" id="crit" value="100" min="2" max="500" step="1" inputmode="numeric"> %</label>
+    <span class="ax">Trục
+      <span class="seg" role="group" aria-label="Thang trục">
+        <button type="button" id="ax-auto" data-ax="auto" aria-pressed="true">Tự động</button>
+        <button type="button" id="ax-fixed" data-ax="fixed" aria-pressed="false">0–150%</button>
+      </span>
+    </span>
+  </div>
+
+  <details class="loader" id="loader">
+    <summary><span class="ttl" id="lt">Nạp dữ liệu</span><span class="status" id="srcstat"></span></summary>
+    <div class="lbody">
+      <p class="hint">Mỗi khu vực nạp riêng: dữ liệu dán hoặc chọn ở đây chỉ thay cho tab đang mở, tab còn lại giữ nguyên. Dán bảng Heatmap D/S từ Superset (tên quận/huyện, Demand, Supply, cách nhau bằng tab, dấu phẩy hoặc khoảng trắng) hoặc chọn file CSV/TSV/TXT. Dòng tiêu đề và dòng Summary được bỏ qua.</p>
+      <label class="lbl" for="paste">Dữ liệu</label>
+      <textarea id="paste" rows="9" spellcheck="false"></textarea>
+      <div class="actions">
+        <button type="button" id="apply" class="btn primary">Áp dụng</button>
+        <button type="button" id="pick" class="btn">Chọn file</button>
+        <button type="button" id="reset" class="btn">Dùng lại dữ liệu mẫu</button>
+        <input type="file" id="file" accept=".csv,.tsv,.txt,text/*" hidden>
+      </div>
+      <p id="loadmsg" class="loadmsg" aria-live="polite"></p>
+    </div>
+  </details>
+
+  <section class="card" id="chartcard" aria-label="Biểu đồ D/S Ratio theo quận"></section>
+
+  <section class="tcard" aria-label="Bảng chi tiết">
+    <h2>Chi tiết theo quận/huyện</h2>
+    <div class="tscroll" id="table"></div>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function () {
+  var SAMPLE_HCM = [
+    ['Thành phố Thủ Đức', 55, 398], ['Quận 1', 42, 242], ['Quận Bình Tân', 32, 162],
+    ['Quận Bình Thạnh', 25, 95], ['Quận Tân Phú', 21, 88], ['Quận Gò Vấp', 21, 143],
+    ['Quận 7', 17, 109], ['Quận Tân Bình', 17, 179], ['Huyện Bình Chánh', 17, 137],
+    ['Quận 5', 15, 64], ['Quận 10', 10, 47], ['Quận 6', 8, 44], ['Quận 12', 8, 135],
+    ['Huyện Hóc Môn', 7, 77], ['Quận 3', 6, 28], ['Quận 4', 5, 19], ['Huyện Củ Chi', 5, 61],
+    ['Huyện Nhà Bè', 3, 35], ['Quận Phú Nhuận', 3, 27], ['Huyện Cần Giờ', 1, 15],
+    ['Quận 8', 0, 44], ['Quận 11', 0, 22]
+  ];
+  var SAMPLE_BD = [['Thành phố Dĩ An', 5, 0]];
+  var SAMPLES = { hcm: SAMPLE_HCM, bd: SAMPLE_BD };
+  var DATA = {
+    hcm: { label: 'TP. Hồ Chí Minh', rows: SAMPLE_HCM.slice() },
+    bd: { label: 'Bình Dương', rows: SAMPLE_BD.slice() }
+  };
+  var source = {
+    hcm: { kind: 'sample', n: SAMPLE_HCM.length, skipped: 0 },
+    bd: { kind: 'sample', n: SAMPLE_BD.length, skipped: 0 }
+  };
+  function toText(rows) { return rows.map(function (r) { return r.join('\t'); }).join('\n'); }
+  var pasteText = { hcm: toText(SAMPLE_HCM), bd: toText(SAMPLE_BD) };
+  var lastView = null;
+
+  function parseRows(text) {
+    var out = [], idx = {}, skipped = 0;
+    text.split(/\r?\n/).forEach(function (line) {
+      line = line.trim();
+      if (!line) return;
+      var m = line.match(/^([^\d\s].*?)[\t,;\s]+(\d[\d.,]*)[\t,;\s]+(\d[\d.,]*)$/);
+      if (!m) { if (/^[^\d\s]/.test(line) && /\d/.test(line)) skipped++; return; }
+      var name = m[1].replace(/^["']+|["']+$/g, '').trim();
+      var d = parseInt(m[2].replace(/[.,]/g, ''), 10), s = parseInt(m[3].replace(/[.,]/g, ''), 10);
+      if (!name || isNaN(d) || isNaN(s)) { skipped++; return; }
+      if (idx[name] !== undefined) out[idx[name]] = [name, d, s];
+      else { idx[name] = out.length; out.push([name, d, s]); }
+    });
+    return { rows: out, skipped: skipped };
+  }
+  var HASH = { hcm: 'hcm', bd: 'binh-duong' };
+  var STATUS = { crit: 'Thiếu xe nặng', warn: 'Căng thẳng', ok: 'Ổn định' };
+  var state = { view: 'hcm', warn: 70, crit: 100, axis: 'auto' };
+  var current = [];
+
+  var $ = function (s) { return document.querySelector(s); };
+  var nf = new Intl.NumberFormat('vi-VN');
+  function f1(n) { return n.toLocaleString('vi-VN', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%'; }
+  function key(r) { return r === Infinity ? 1e9 : Math.round(r * 1e6) / 1e6; }
+
+  function thresholds() {
+    var w = Math.max(1, Math.round(state.warn) || 70);
+    var c = Math.max(w + 1, Math.round(state.crit) || 100);
+    return { warn: w, crit: c };
+  }
+
+  function build() {
+    var t = thresholds();
+    var rows = DATA[state.view].rows.map(function (x) {
+      var d = x[1], s = x[2];
+      var r = s > 0 ? d / s * 100 : (d > 0 ? Infinity : 0);
+      var st = r >= t.crit ? 'crit' : (r >= t.warn ? 'warn' : 'ok');
+      return { name: x[0], d: d, s: s, r: r, st: st };
+    });
+    rows.sort(function (a, b) {
+      var ua = a.r === Infinity ? 1 : 0, ub = b.r === Infinity ? 1 : 0;
+      if (ua !== ub) return ua - ub;
+      return b.d - a.d;
+    });
+    return rows;
+  }
+
+  function axisFor(rows) {
+    if (state.axis === 'fixed') return { max: 150, step: 25 };
+    var fin = rows.filter(function (x) { return x.r !== Infinity; }).map(function (x) { return x.r; });
+    var m = fin.length ? Math.max.apply(null, fin) : 0;
+    if (m <= 0) return { max: 100, step: 25 };
+    var top = m * 1.18, steps = [5, 10, 20, 25, 50, 100, 200];
+    for (var i = 0; i < steps.length; i++) {
+      if (top / steps[i] <= 6) return { max: Math.ceil(top / steps[i]) * steps[i], step: steps[i] };
+    }
+    return { max: 500, step: 100 };
+  }
+
+  function legendHtml(t) {
+    var mid = (t.crit - 1 === t.warn) ? (t.warn + '%') : (t.warn + '–' + (t.crit - 1) + '%');
+    return '<span class="pill crit">≥ ' + t.crit + '% ' + STATUS.crit + '</span>' +
+           '<span class="pill warn">' + mid + ' ' + STATUS.warn + '</span>' +
+           '<span class="pill ok">&lt; ' + t.warn + '% ' + STATUS.ok + '</span>';
+  }
+
+  function renderKpis(rows) {
+    var D = 0, S = 0, cnt = { crit: 0, warn: 0, ok: 0 };
+    rows.forEach(function (x) { D += x.d; S += x.s; cnt[x.st]++; });
+    var tot = S > 0 ? f1(D / S * 100) : (rows.length ? '∞' : '—');
+    var totSub = S > 0 ? (nf.format(D) + ' / ' + nf.format(S)) : (rows.length ? 'Supply = 0' : 'Chưa có dữ liệu');
+    $('#kpis').innerHTML =
+      '<div class="kpi"><span class="k">Demand</span><span class="v">' + nf.format(D) + '</span><span class="s">Tổng nhu cầu</span></div>' +
+      '<div class="kpi"><span class="k">Supply</span><span class="v">' + nf.format(S) + '</span><span class="s">Tổng xe đáp ứng</span></div>' +
+      '<div class="kpi"><span class="k">D/S tổng</span><span class="v">' + tot + '</span><span class="s">' + totSub + '</span></div>' +
+      '<div class="kpi wide"><span class="k">Số khu vực theo mức</span><div class="counts">' +
+        '<span class="pill sm crit">' + cnt.crit + ' ' + STATUS.crit + '</span>' +
+        '<span class="pill sm warn">' + cnt.warn + ' ' + STATUS.warn + '</span>' +
+        '<span class="pill sm ok">' + cnt.ok + ' ' + STATUS.ok + '</span></div></div>';
+    return { D: D, S: S, cnt: cnt };
+  }
+
+  function noteText(rows, sums) {
+    var parts = [];
+    if (rows.length) {
+      var hi = rows.reduce(function (m, x) { return x.d > m.d ? x : m; }, rows[0]);
+      if (hi.d > 0) parts.push('Demand cao nhất: ' + hi.name + ' (' + nf.format(hi.d) + ').');
+    }
+    var inf = rows.filter(function (x) { return x.r === Infinity; });
+    var fin = rows.filter(function (x) { return x.r !== Infinity; });
+    if (inf.length) {
+      parts.push(inf.map(function (x) { return x.name; }).join(', ') + ' có Demand ' +
+        inf.map(function (x) { return x.d; }).join(', ') + ' nhưng Supply = 0 nên không tính được tỷ lệ, xếp vào mức ' + STATUS.crit + '.');
+    }
+    if (fin.length) {
+      var mx = Math.max.apply(null, fin.map(function (x) { return key(x.r); }));
+      var top = fin.filter(function (x) { return key(x.r) === mx; });
+      parts.push('D/S cao nhất: ' + top.map(function (x) { return x.name; }).join(', ') + ' (' + Math.round(top[0].r) + '%).');
+    }
+    if (sums.cnt.crit + sums.cnt.warn === 0 && !inf.length) {
+      parts.push('Với ngưỡng hiện tại, cả ' + rows.length + ' khu vực đều ở mức ' + STATUS.ok + '.');
+    }
+    return parts.join(' ');
+  }
+
+  function renderChart(rows, sums) {
+    if (!rows.length) {
+      $('#chartcard').innerHTML = '<div class="card-head"><div><h2>D/S Ratio (%) Breakdown by District</h2><p class="sub">' +
+        DATA[state.view].label + '</p></div></div><p class="note">Chưa có dữ liệu cho khu vực này. Kiểm tra dữ liệu đã nạp hoặc danh sách khu vực thuộc Bình Dương.</p>';
+      return;
+    }
+    var t = thresholds(), ax = axisFor(rows);
+    var ticks = [];
+    for (var v = 0; v <= ax.max + 1e-9; v += ax.step) ticks.push(v);
+    var grid = ticks.map(function (v) {
+      return '<i class="gl' + (v === 0 ? ' base' : '') + '" style="left:' + (v / ax.max * 100) + '%"></i>';
+    }).join('');
+    var axis = ticks.map(function (v) {
+      return '<span class="tick" style="left:' + (v / ax.max * 100) + '%">' + v + '%</span>';
+    }).join('');
+    var rowsHtml = rows.map(function (x, i) {
+      var inf = x.r === Infinity;
+      var pct = inf ? 100 : Math.min(100, x.r / ax.max * 100);
+      var label = inf ? '∞ (Supply = 0)' : Math.round(x.r) + '%';
+      var inside = pct > 86;
+      var bar = (x.r > 0)
+        ? '<i class="bar" style="width:' + pct + '%;min-width:2px;background:var(--' + x.st + ')">' +
+            (inside ? '<b class="val in" style="color:var(--' + x.st + '-on)">' + label + '</b>' : '') + '</i>'
+        : '';
+      var out = inside ? '' : '<b class="val" style="left:calc(' + pct + '% + 8px);color:var(--' + x.st + '-ink)">' + label + '</b>';
+      var aria = x.name + ': D/S ' + (inf ? 'không xác định' : f1(x.r)) + ', ' + STATUS[x.st] + ', Demand ' + x.d + ', Supply ' + x.s;
+      return '<div class="row" tabindex="0" role="listitem" data-i="' + i + '" aria-label="' + aria + '">' +
+             '<span class="name">' + x.name + '</span><div class="track">' + bar + out + '</div></div>';
+    }).join('');
+    var n = rows.length;
+    $('#chartcard').innerHTML =
+      '<div class="card-head"><div><h2>D/S Ratio (%) Breakdown by District</h2>' +
+      '<p class="sub">' + DATA[state.view].label + ' · ' + n + ' quận/huyện, sắp xếp theo Demand giảm dần' + (rows.some(function (x) { return x.r === Infinity; }) ? ', khu vực có Supply = 0 xếp cuối' : '') + '</p></div>' +
+      '<div class="legend">' + legendHtml(t) + '</div></div>' +
+      '<div class="chart"><div class="grid">' + grid + '</div><div class="rows" role="list">' + rowsHtml + '</div>' +
+      '<div class="axis">' + axis + '</div></div>' +
+      '<p class="note">' + noteText(rows, sums) + '</p>';
+  }
+
+  function renderTable(rows, sums) {
+    var body = rows.map(function (x) {
+      var inf = x.r === Infinity;
+      return '<tr><td>' + x.name + '</td><td>' + nf.format(x.d) + '</td><td>' + nf.format(x.s) + '</td><td>' +
+             (inf ? '∞' : f1(x.r)) + '</td><td><span class="pill sm ' + x.st + '">' + STATUS[x.st] + '</span></td></tr>';
+    }).join('');
+    var tot = sums.S > 0 ? f1(sums.D / sums.S * 100) : (rows.length ? '∞' : '—');
+    $('#table').innerHTML =
+      '<table><thead><tr><th>Quận/Huyện</th><th>Demand</th><th>Supply</th><th>D/S</th><th>Trạng thái</th></tr></thead>' +
+      '<tbody>' + body + '</tbody>' +
+      '<tfoot><tr><td>Tổng ' + DATA[state.view].label + '</td><td>' + nf.format(sums.D) + '</td><td>' + nf.format(sums.S) +
+      '</td><td>' + tot + '</td><td></td></tr></tfoot></table>';
+  }
+
+  function render() {
+    current = build();
+    var sums = renderKpis(current);
+    renderChart(current, sums);
+    renderTable(current, sums);
+    updateStatus();
+    document.querySelectorAll('[data-view]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.view === state.view));
+    });
+    document.querySelectorAll('[data-ax]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.ax === state.axis));
+    });
+  }
+
+  /* Tooltip */
+  var tip = $('#tip');
+  function placeTip(x, y) {
+    var w = tip.offsetWidth, h = tip.offsetHeight, l = x + 14, tp = y + 14;
+    if (l + w > innerWidth - 8) l = x - w - 14;
+    if (l < 8) l = 8;
+    if (tp + h > innerHeight - 8) tp = y - h - 14;
+    if (tp < 8) tp = 8;
+    tip.style.left = l + 'px';
+    tip.style.top = tp + 'px';
+  }
+  function showTip(row, x, y) {
+    var r = current[+row.dataset.i];
+    if (!r) return;
+    var inf = r.r === Infinity;
+    tip.innerHTML = '<b>' + r.name + '</b><span class="t">Demand ' + nf.format(r.d) + ' · Supply ' + nf.format(r.s) + '</span><br>' +
+      'D/S ' + (inf ? 'không xác định' : f1(r.r)) + ' · ' + STATUS[r.st];
+    tip.hidden = false;
+    placeTip(x, y);
+  }
+  var card = $('#chartcard');
+  card.addEventListener('pointermove', function (e) {
+    var row = e.target.closest ? e.target.closest('.row') : null;
+    if (row) showTip(row, e.clientX, e.clientY); else tip.hidden = true;
+  });
+  card.addEventListener('pointerleave', function () { tip.hidden = true; });
+  card.addEventListener('focusin', function (e) {
+    var row = e.target.closest ? e.target.closest('.row') : null;
+    if (!row) return;
+    var b = row.getBoundingClientRect();
+    showTip(row, b.left + b.width / 2, b.top);
+  });
+  card.addEventListener('focusout', function () { tip.hidden = true; });
+
+  /* Nạp dữ liệu: mỗi khu vực nạp riêng */
+  function updateStatus() {
+    var v = state.view, s = source[v];
+    $('#lt').textContent = 'Nạp dữ liệu cho ' + DATA[v].label;
+    $('#srcstat').textContent = s.kind === 'sample'
+      ? 'Đang dùng dữ liệu mẫu (' + s.n + ' dòng)'
+      : 'Đã nạp ' + s.n + ' dòng' + (s.skipped ? ', bỏ qua ' + s.skipped : '');
+    if (lastView !== v) {
+      $('#paste').value = pasteText[v];
+      $('#loadmsg').textContent = '';
+      lastView = v;
+    }
+  }
+  function msg(text, bad) {
+    var el = $('#loadmsg');
+    el.textContent = text;
+    el.className = 'loadmsg' + (bad ? ' bad' : '');
+  }
+  function applyText(text) {
+    var v = state.view, res = parseRows(text);
+    if (!res.rows.length) {
+      msg('Không đọc được dòng nào. Mỗi dòng cần có tên quận/huyện, rồi Demand, rồi Supply.', true);
+      return;
+    }
+    DATA[v].rows = res.rows;
+    source[v] = { kind: 'loaded', n: res.rows.length, skipped: res.skipped };
+    pasteText[v] = text;
+    render();
+    msg('Đã áp dụng ' + res.rows.length + ' dòng cho ' + DATA[v].label + '.' +
+        (res.skipped ? ' Bỏ qua ' + res.skipped + ' dòng không đọc được.' : ''), false);
+  }
+  $('#paste').addEventListener('input', function () { pasteText[state.view] = $('#paste').value; });
+  $('#apply').addEventListener('click', function () { applyText($('#paste').value); });
+  $('#pick').addEventListener('click', function () { $('#file').click(); });
+  $('#file').addEventListener('change', function (e) {
+    var f = e.target.files && e.target.files[0];
+    if (!f) return;
+    var rd = new FileReader();
+    rd.onload = function () { $('#paste').value = String(rd.result); applyText(String(rd.result)); };
+    rd.onerror = function () { msg('Không mở được file này.', true); };
+    rd.readAsText(f, 'utf-8');
+    e.target.value = '';
+  });
+  $('#reset').addEventListener('click', function () {
+    var v = state.view;
+    DATA[v].rows = SAMPLES[v].slice();
+    source[v] = { kind: 'sample', n: SAMPLES[v].length, skipped: 0 };
+    pasteText[v] = toText(SAMPLES[v]);
+    $('#paste').value = pasteText[v];
+    render();
+    msg('Đã quay lại dữ liệu mẫu của ' + DATA[v].label + '.', false);
+  });
+
+  /* Controls */
+  $('#warn').addEventListener('input', function (e) { state.warn = parseFloat(e.target.value); render(); });
+  $('#crit').addEventListener('input', function (e) { state.crit = parseFloat(e.target.value); render(); });
+  document.querySelectorAll('[data-ax]').forEach(function (b) {
+    b.addEventListener('click', function () { state.axis = b.dataset.ax; render(); });
+  });
+  document.querySelectorAll('[data-view]').forEach(function (b) {
+    b.addEventListener('click', function () { location.hash = HASH[b.dataset.view]; });
+  });
+  function syncHash() {
+    state.view = location.hash === '#binh-duong' ? 'bd' : 'hcm';
+    render();
+  }
+  window.addEventListener('hashchange', syncHash);
+  syncHash();
+})();
+</script>
+
+</body></html>
