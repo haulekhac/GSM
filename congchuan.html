@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSM · Tính ngày công tài xế</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#e9f3f1;--panel:#fff;--ink:#14302d;--muted:#5d7571;--line:#d9e6e3;--t:#0f9d94;--t2:#0b7f78;--tsoft:#e3f4f2;--head:#0e9f98;--hov:#f2faf9;--ok:#0a7a55;--no:#c0392b;--grid:#cfdcd9;--thd:#eef6f5;--warn:#fff4d6;--warnk:#7a5a00}
+@media (prefers-color-scheme:dark){:root{--bg:#0f1a19;--panel:#17231f;--ink:#e3f0ed;--muted:#8fa8a3;--line:#27403b;--tsoft:#1b3a36;--hov:#1d2e2a;--ok:#5fd6a6;--no:#ff9a8a;--grid:#2f4742;--thd:#1e312d;--t:#2fc4b9;--warn:#3b3010;--warnk:#f0cf70}}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{font-family:'Be Vietnam Pro',system-ui,'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;display:flex;flex-direction:column}
+header{background:linear-gradient(90deg,#0b8f89,#14aaa0);color:#fff;display:flex;align-items:center;gap:12px;padding:10px 20px;flex:none}
+.logo{width:36px;height:36px;border-radius:9px;background:#fff;color:#0b8f89;font-weight:800;font-size:11px;display:grid;place-items:center}
+header h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.01em}
+header small{display:block;font-size:11px;opacity:.9;font-weight:500}
+.sp{flex:1}
+.hb{background:rgba(255,255,255,.18);border:0;color:#fff;font:inherit;font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:9px;cursor:pointer;display:flex;gap:6px;align-items:center}
+.hb:hover{background:rgba(255,255,255,.28)}
+.body{flex:1;display:flex;min-height:0}
+aside{width:260px;flex:none;padding:14px 10px;overflow-y:auto}
+.search{display:flex;gap:8px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px 12px;margin-bottom:10px;color:var(--muted)}
+.search input{border:0;outline:0;background:none;font:inherit;color:var(--ink);width:100%}
+.grp{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);padding:12px 10px 6px;text-transform:uppercase}
+.nav{display:flex;gap:11px;align-items:center;padding:9px 10px;border-radius:8px;cursor:pointer;color:var(--ink);font-size:14px}
+.nav:hover{background:var(--hov)}.nav.on{background:var(--tsoft);color:var(--t2);font-weight:600}
+svg.i{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+main{flex:1;min-width:0;overflow:auto;padding:6px 18px 24px 8px}
+.crumb{font-size:12.5px;color:var(--muted);margin:8px 0 10px 4px}.crumb b{color:var(--ink);font-weight:600}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:26px 28px;min-height:calc(100% - 40px)}
+.panel h2{margin:0 0 4px;font-size:24px;font-weight:700;letter-spacing:-.01em}
+.lead{color:var(--muted);margin:0 0 18px}
+.sec{font-size:12.5px;font-weight:700;letter-spacing:.06em;color:var(--t2);text-transform:uppercase;margin:20px 0 10px}
+.cards{display:flex;gap:14px;flex-wrap:wrap}
+.card{flex:1 1 300px;max-width:420px;display:flex;gap:14px;align-items:flex-start;border:1px solid var(--line);border-radius:12px;padding:16px;cursor:pointer;background:var(--panel)}
+.card:hover{border-color:var(--t);background:var(--hov)}
+.card.ok{border-color:var(--t);background:var(--tsoft)}
+.ico{width:40px;height:40px;border-radius:10px;background:var(--tsoft);color:var(--t2);display:grid;place-items:center;flex:none}
+.card b{display:block;font-size:14.5px;font-weight:600}.card span{font-size:12.5px;color:var(--muted)}
+.card input{display:none}
+.bar{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;padding:12px 14px;background:var(--thd);border-radius:10px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;font-weight:500}
+input[type=text],input[type=date]{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:170px}
+input:focus{outline:2px solid var(--t);outline-offset:-1px}
+.btn{font:inherit;font-weight:600;border:0;border-radius:8px;padding:9px 18px;background:var(--t);color:#fff;cursor:pointer}
+.btn:hover{background:var(--t2)}.btn.g{background:var(--panel);color:var(--ink);border:1px solid var(--line)}.btn:disabled{opacity:.4;cursor:not-allowed}
+.msg{padding:9px 12px;border-radius:8px;background:var(--warn);color:var(--warnk);margin:0 0 12px;font-size:13px}
+.rule{font-size:12px;color:var(--muted);margin-top:14px}
+.sc{overflow-x:auto;margin-bottom:16px}
+table.x{border-collapse:collapse;min-width:100%}
+.x th,.x td{border:1px solid var(--grid);padding:6px 12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.x th{background:var(--thd);font-weight:600}
+.x th:first-child,.x td:first-child,.x .l{text-align:left}
+.x .nm b{font-weight:600}.x .nm small{color:var(--muted);display:block;font-size:11.5px}
+.x tr.cg td{font-size:12.5px}
+.d{color:var(--ok);font-weight:600}.k{color:var(--no);font-weight:600}.n{color:var(--muted)}
+.sum{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.st{background:var(--tsoft);border-radius:10px;padding:8px 16px;min-width:130px}.st b{display:block;font-size:20px}.st span{font-size:12px;color:var(--muted)}
+@media(max-width:800px){aside{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">GSM</div>
+  <div><h1>HỆ THỐNG VẬN HÀNH GSM</h1><small>TÍNH NGÀY CÔNG TÀI XẾ</small></div>
+  <div class="sp"></div>
+  <button class="hb" id="reload"><svg class="i" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7M21 4v5h-5"/></svg>Tải lại</button>
+  <button class="hb" id="home"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Trang chủ</button>
+</header>
+<div class="body">
+<aside>
+  <div class="search"><svg class="i" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4-4"/></svg><input id="sq" placeholder="Tìm công cụ…"></div>
+  <div class="nav on" data-p="home"><svg class="i" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>Trang chủ</div>
+  <div class="grp">Chấm công</div>
+  <div class="nav" data-p="team"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg>Tra cứu theo Tổ</div>
+  <div class="nav" data-p="sap"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>Chi tiết theo Mã SAP</div>
+</aside>
+<main>
+  <div class="crumb">GSM Portal / <b id="crumb">Trang chủ</b></div>
+  <div class="panel">
+
+  <section id="p-home">
+    <h2>Tính ngày công tài xế</h2>
+    <p class="lead">Chạy ngoại tuyến trên trình duyệt, dữ liệu không gửi đi đâu. Tải 2 file Excel rồi chọn công cụ.</p>
+    <div class="sec">Dữ liệu đầu vào</div>
+    <div class="cards">
+      <label class="card" id="cAtt"><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg></div><div><b>File chấm công</b><span id="iAtt">statistic_attendance_tracking · bấm hoặc kéo thả .xlsx</span></div><input type="file" accept=".xlsx,.xls" id="fAtt"></label>
+      <label class="card" id="cDrv"><div class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></div><div><b>File tài xế (driver)</b><span id="iDrv">Lấy cột Tổ · bấm hoặc kéo thả .xlsx</span></div><input type="file" accept=".xlsx,.xls" id="fDrv"></label>
+    </div>
+    <div class="sec">Công cụ</div>
+    <div class="cards">
+      <div class="card" data-p="team"><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-8M22 20H2"/></svg></div><div><b>Tra cứu theo Tổ</b><span>Doanh số và công của cả tổ theo ngày</span></div></div>
+      <div class="card" data-p="sap"><div class="ico"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></div><div><b>Chi tiết theo Mã SAP</b><span>Tỉ lệ nhận, huỷ, đáp ứng, km, công từng ngày</span></div></div>
+    </div>
+    <div class="rule">Quy tắc: <b>Đủ công</b> khi tổng công ≥ 1 (Công chính + đào tạo + công tác + nghỉ hưởng lương + nghỉ BHXH), ngược lại là <b>Không công</b>.</div>
+  </section>
+
+  <section id="p-team" hidden>
+    <h2>Tra cứu theo Tổ</h2><p class="lead">Nhập mã Tổ (hoặc Đội) để xem doanh số và công của từng tài xế.</p>
+    <div class="bar" data-bar>
+      <div><label>Tổ / Đội</label><input type="text" id="qT" list="teams" placeholder="BDU.DOIXE01.01" autocomplete="off"></div>
+      <div><label>Từ ngày</label><input type="date" class="dF"></div><div><label>Đến ngày</label><input type="date" class="dT"></div>
+      <label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--ink);font-size:13px"><input type="checkbox" id="showAll" style="min-width:0">Hiện cả tài xế không có dữ liệu</label><button class="btn" id="gT">Tra cứu</button><button class="btn g" id="xT" disabled>Xuất Excel</button>
+    </div><datalist id="teams"></datalist><div id="oT"></div>
+  </section>
+
+  <section id="p-sap" hidden>
+    <h2>Chi tiết theo Mã SAP</h2><p class="lead">Nhập Mã SAP để xem doanh số và chi tiết từng ngày.</p>
+    <div class="bar" data-bar>
+      <div><label>Mã SAP</label><input type="text" id="qS" placeholder="6172962" autocomplete="off"></div>
+      <div><label>Từ ngày</label><input type="date" class="dF"></div><div><label>Đến ngày</label><input type="date" class="dT"></div>
+      <button class="btn" id="gS">Tra cứu</button><button class="btn g" id="xS" disabled>Xuất Excel</button>
+    </div><div id="oS"></div>
+  </section>
+
+  </div>
+</main>
+</div>
+
+<script>
+(function(){
+'use strict';
+var att=[],drv=[],bySap=new Map(),all=[],lastT=null,lastS=null;
+var $=function(i){return document.getElementById(i)};
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function num(v){var n=parseFloat(String(v==null?'':v).replace(',','.'));return isNaN(n)?0:n}
+function fmt(n){return Math.round(n).toLocaleString('en-US')}
+function dec(v){var n=parseFloat(v);return isNaN(n)?'':String(Math.round(n*100)/100)}
+function raw(v){return v}
+function p2(n){return n<10?'0'+n:''+n}
+function nd(v){if(typeof v==='number'){var d=new Date(Math.round((v-25569)*864e5));return p2(d.getUTCDate())+'/'+p2(d.getUTCMonth()+1)+'/'+d.getUTCFullYear()}return String(v==null?'':v).trim().slice(0,10)}
+function key(d){var m=d.split('/');return m.length===3?m[2]+m[1]+m[0]:''}
+function iso(d){var m=d.split('/');return m[2]+'-'+m[1]+'-'+m[0]}
+function unIso(s){var m=s.split('-');return m[2]+'/'+m[1]+'/'+m[0]}
+function cong(r){return num(r['Công chính'])+num(r['Công đào tạo'])+num(r['Công công tác'])+num(r['Công nghỉ hưởng lương'])+num(r['Công nghỉ BHXH'])}
+function stt(r){return r?(cong(r)>=1?'Đủ công':'Không công'):'—'}
+function stc(r){return r?(cong(r)>=1?'d':'k'):'n'}
+
+function refreshTeams(){
+  var t={};drv.forEach(function(r){var x=String(r['Tổ']||'').trim();if(x&&(!att.length||bySap.has(r['Mã SAP'])))t[x]=1});
+  var dl=$('teams');dl.innerHTML='';Object.keys(t).sort().forEach(function(x){var o=document.createElement('option');o.value=x;dl.appendChild(o)});
+}
+/* điều hướng */
+var names={home:'Trang chủ',team:'Tra cứu theo Tổ',sap:'Chi tiết theo Mã SAP'};
+function go(p){
+  ['home','team','sap'].forEach(function(x){$('p-'+x).hidden=x!==p});
+  [].forEach.call(document.querySelectorAll('.nav'),function(n){n.classList.toggle('on',n.dataset.p===p)});
+  $('crumb').textContent=names[p];
+}
+document.addEventListener('click',function(e){var t=e.target.closest('[data-p]');if(t)go(t.dataset.p)});
+$('home').onclick=function(){go('home')};$('reload').onclick=function(){location.reload()};
+$('sq').addEventListener('input',function(){var q=this.value.toLowerCase();[].forEach.call(document.querySelectorAll('aside .nav'),function(n){n.style.display=n.textContent.toLowerCase().indexOf(q)>-1?'':'none'})});
+
+/* nạp file */
+function readX(f,cb){var r=new FileReader();r.onload=function(e){try{var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});cb(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))}catch(x){alert('Không đọc được file: '+x.message)}};r.readAsArrayBuffer(f)}
+function drop(card,input,fn){
+  $(input).addEventListener('change',function(){if(this.files[0])fn(this.files[0])});
+  var c=$(card);c.addEventListener('dragover',function(e){e.preventDefault()});
+  c.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])});
+}
+drop('cAtt','fAtt',function(f){
+  $('iAtt').textContent='Đang đọc…';
+  readX(f,function(rows){
+    att=rows.filter(function(r){return r['Mã SAP']!==''&&r['Ngày phân công']!==''});bySap=new Map();var ds={};
+    att.forEach(function(r){r['Ngày phân công']=nd(r['Ngày phân công']);var s=String(r['Mã SAP']).trim();r['Mã SAP']=s;if(!bySap.has(s))bySap.set(s,new Map());bySap.get(s).set(r['Ngày phân công'],r);ds[r['Ngày phân công']]=1});
+    all=Object.keys(ds).sort(function(a,b){return key(a)<key(b)?-1:1});
+    $('iAtt').textContent=f.name+' · '+att.length.toLocaleString('en-US')+' dòng · '+bySap.size.toLocaleString('en-US')+' tài xế · '+all.length+' ngày';
+    $('cAtt').classList.add('ok');refreshTeams();
+    if(all.length){[].forEach.call(document.querySelectorAll('.dF,.dT'),function(i){i.min=iso(all[0]);i.max=iso(all[all.length-1])});
+      [].forEach.call(document.querySelectorAll('.dT'),function(i){i.value=iso(all[all.length-1])});
+      [].forEach.call(document.querySelectorAll('.dF'),function(i){i.value=iso(all[Math.max(0,all.length-7)])})}
+  });
+});
+drop('cDrv','fDrv',function(f){
+  $('iDrv').textContent='Đang đọc…';
+  readX(f,function(rows){
+    drv=rows.filter(function(r){return String(r['Mã SAP']).trim()!==''}).map(function(r){r['Mã SAP']=String(r['Mã SAP']).trim();return r});
+    var t={};drv.forEach(function(r){var x=String(r['Tổ']||'').trim();if(x)t[x]=1});
+    $('iDrv').textContent=f.name+' · '+drv.length.toLocaleString('en-US')+' tài xế · '+Object.keys(t).length+' tổ';$('cDrv').classList.add('ok');
+    refreshTeams();
+  });
+});
+/* đồng bộ ô ngày giữa 2 tab */
+document.addEventListener('change',function(e){var c=e.target.classList;if(c.contains('dF')||c.contains('dT')){var k=c.contains('dF')?'.dF':'.dT';[].forEach.call(document.querySelectorAll(k),function(i){i.value=e.target.value});if(lastT)runT();if(lastS)runS()}});
+function range(){
+  if(!all.length)return null;var f=document.querySelector('.dF').value,t=document.querySelector('.dT').value;if(!f||!t)return null;
+  var a=key(unIso(f)),b=key(unIso(t));return all.filter(function(d){var k=key(d);return k>=a&&k<=b}).reverse();
+}
+
+/* tra cứu theo Tổ: chỉ số liệu, mỗi tài xế 1 dòng */
+var DH=['Mã SAP','Họ & tên','Tổ','Ngày','Doanh số','Tỉ lệ nhận chuyến','Tỉ lệ huỷ chuyến','Tỷ lệ đáp ứng','Số cuốc xe hoàn thành','Số km vận doanh','Thời gian online','Thời gian vận doanh','Hệ thống chấm công','Tổng công','Trạng thái công'];
+function runT(){
+  var out=$('oT'),q=$('qT').value.trim().toUpperCase();lastT=null;$('xT').disabled=true;
+  if(!att.length||!drv.length){out.innerHTML='<div class="msg">Hãy tải đủ file chấm công và file tài xế ở Trang chủ.</div>';return}
+  if(!q){out.innerHTML='<div class="msg">Nhập mã Tổ, ví dụ BDU.DOIXE01.01</div>';return}
+  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày không có dữ liệu.</div>';return}
+  var mem=drv.filter(function(r){var t=String(r['Tổ']||'').trim().toUpperCase(),d=String(r['Đội']||'').trim().toUpperCase();return t===q||d===q||t.indexOf(q+'.')===0});
+  if(!mem.length){out.innerHTML='<div class="msg">Không tìm thấy tài xế thuộc “'+esc(q)+'” trong file driver.</div>';return}
+  var rows=mem.map(function(m){var map=bySap.get(m['Mã SAP'])||new Map(),cs=ds.map(function(d){return map.get(d)||null}),rev=0,dy=0,have=0;
+    cs.forEach(function(r){if(r){have++;rev+=num(r['Tổng giá trị cuốc xe']);if(cong(r)>=1)dy++}});
+    return{sap:m['Mã SAP'],name:m['Họ & tên']||'',to:m['Tổ']||'',cs:cs,rev:rev,dy:dy,have:have}}).sort(function(a,b){return a.to<b.to?-1:a.to>b.to?1:(a.name<b.name?-1:1)});
+  var hid=0;if(!$('showAll').checked){var n0=rows.length;rows=rows.filter(function(r){return r.have>0});hid=n0-rows.length}
+  if(!rows.length){out.innerHTML='<div class="msg">Không có tài xế nào của “'+esc(q)+'” có dữ liệu chấm công trong khoảng ngày này.</div>';return}
+  var tot=0,td=0,dsum=ds.map(function(){return 0});
+  rows.forEach(function(r){tot+=r.rev;td+=r.dy;r.cs.forEach(function(c,i){if(c)dsum[i]+=num(c['Tổng giá trị cuốc xe'])})});
+  var h=hid?'<div class="msg">Đã ẩn '+hid+' tài xế có trong file driver nhưng không có dữ liệu chấm công trong khoảng ngày này (nghỉ lâu / chưa vận hành). Tick “Hiện cả tài xế không có dữ liệu” để xem.</div>':'';
+  h+='<div class="sum"><div class="st"><b>'+rows.length+'</b><span>Tài xế</span></div><div class="st"><b>'+fmt(tot)+'</b><span>Doanh số tổ</span></div><div class="st"><b>'+td+'</b><span>Tổng ngày đủ công</span></div></div>';
+  h+='<div class="sc"><table class="x"><thead><tr><th>Tài xế</th>'+ds.map(function(d){return'<th>'+d+'</th>'}).join('')+'<th>Tổng doanh số</th><th>Ngày đủ công</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    h+='<tr><td class="nm"><b>'+esc(r.name)+'</b><small>'+esc(r.sap)+' · '+esc(r.to)+'</small></td>'+r.cs.map(function(c){return'<td class="'+stc(c)+'">'+(c?num(c['Tổng giá trị cuốc xe']).toLocaleString('en-US'):'—')+'</td>'}).join('')+'<td><b>'+fmt(r.rev)+'</b></td><td><b>'+r.dy+'</b> / '+ds.length+'</td></tr>';
+  });
+  h+='<tr><td class="l"><b>TỔNG</b></td>'+dsum.map(function(v){return'<td><b>'+fmt(v)+'</b></td>'}).join('')+'<td><b>'+fmt(tot)+'</b></td><td><b>'+td+'</b></td></tr>';
+  out.innerHTML=h+'</tbody></table></div><div class="rule" style="margin-top:0">Số xanh = Đủ công · số đỏ = Không công · — = không có dữ liệu. Excel xuất ra có thêm sheet “Chi tiết”.</div>';
+  var a=[['Mã SAP','Họ & tên','Tổ'].concat(ds.map(function(d){return d+' - Doanh số'}),ds.map(function(d){return d+' - Công'}),['Tổng doanh số','Số ngày đủ công'])];
+  var det=[DH];
+  rows.forEach(function(r){
+    a.push([r.sap,r.name,r.to].concat(r.cs.map(function(c){return c?num(c['Tổng giá trị cuốc xe']):''}),r.cs.map(stt),[r.rev,r.dy]));
+    r.cs.forEach(function(c,i){if(!c)return;det.push([r.sap,r.name,r.to,ds[i],num(c['Tổng giá trị cuốc xe']),dec(c['Tỉ lệ nhận chuyến']),dec(c['Tỉ lệ huỷ chuyến']),dec(c['Tỷ lệ đáp ứng']),dec(c['Số cuốc xe hoàn thành']),dec(c['Số km vận doanh']),c['Thời gian online'],c['Thời gian vận doanh'],c['Hệ thống chấm công'],cong(c),stt(c)])});
+  });
+  a.push(['','TỔNG '+q,''].concat(dsum,ds.map(function(){return ''}),[tot,td]));
+  lastT={sheets:[['Tổng hợp',a],['Chi tiết',det]],n:'cong_'+q};$('xT').disabled=false;
+}
+
+/* chi tiết theo SAP: bảng 1 (doanh số) + bảng 2 ("chi tiết") như 2 ảnh mẫu */
+var MET=[['Tỉ lệ nhận chuyến',dec],['Tỉ lệ huỷ chuyến',dec],['Tỷ lệ đáp ứng',dec],['Số cuốc xe hoàn thành',dec],['Số km vận doanh',dec],['Thời gian online',raw],['Thời gian vận doanh',raw]];
+function runS(){
+  var out=$('oS'),q=$('qS').value.trim();lastS=null;$('xS').disabled=true;
+  if(!att.length){out.innerHTML='<div class="msg">Hãy tải file chấm công ở Trang chủ.</div>';return}
+  if(!q){out.innerHTML='<div class="msg">Nhập Mã SAP.</div>';return}
+  var map=bySap.get(q);if(!map){out.innerHTML='<div class="msg">Không có Mã SAP “'+esc(q)+'” trong file chấm công.</div>';return}
+  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày không có dữ liệu.</div>';return}
+  var any=map.values().next().value,d=drv.filter(function(r){return r['Mã SAP']===q})[0],name=(d&&d['Họ & tên'])||any['Họ & tên']||'',to=d?d['Tổ']:'';
+  var cs=ds.map(function(x){return map.get(x)||null}),rev=0,dy=0;cs.forEach(function(r){if(r){rev+=num(r['Tổng giá trị cuốc xe']);if(cong(r)>=1)dy++}});
+  var head='<tr>';
+  var h='<div class="sum"><div class="st"><b style="font-size:16px">'+esc(name)+'</b><span>'+esc(q)+(to?' · '+esc(to):'')+'</span></div><div class="st"><b>'+fmt(rev)+'</b><span>Tổng doanh số</span></div><div class="st"><b>'+dy+' / '+ds.length+'</b><span>Ngày đủ công</span></div></div>';
+  var ths=ds.map(function(x){return'<th>'+x+'</th>'}).join('');
+  h+='<div class="sc"><table class="x"><thead><tr><th>'+esc(name)+'</th>'+ths+'</tr></thead><tbody><tr><td class="l">Doanh số</td>'+cs.map(function(c){return'<td>'+(c?num(c['Tổng giá trị cuốc xe']).toLocaleString('en-US'):'—')+'</td>'}).join('')+'</tr></tbody></table></div>';
+  var a=[[name+' ('+q+')'].concat(ds),['Doanh số'].concat(cs.map(function(c){return c?num(c['Tổng giá trị cuốc xe']):''})),[],['chi tiết'].concat(ds)];
+  h+='<div class="sc"><table class="x"><thead><tr><th>chi tiết</th>'+ths+'</tr></thead><tbody>';
+  MET.forEach(function(m){h+='<tr><td class="l">'+m[0]+'</td>'+cs.map(function(c){return'<td>'+(c?esc(m[1](c[m[0]])):'—')+'</td>'}).join('')+'</tr>';a.push([m[0]].concat(cs.map(function(c){return c?m[1](c[m[0]]):''})))});
+  h+='<tr><td class="l">Tổng công</td>'+cs.map(function(c){return'<td>'+(c?cong(c):'—')+'</td>'}).join('')+'</tr>';
+  h+='<tr><td class="l"><b>Trạng thái công</b></td>'+cs.map(function(c){return'<td class="'+stc(c)+'">'+stt(c)+'</td>'}).join('')+'</tr></tbody></table></div>';
+  a.push(['Tổng công'].concat(cs.map(function(c){return c?cong(c):''})));a.push(['Trạng thái công'].concat(cs.map(stt)));
+  out.innerHTML=h;lastS={sheets:[['Kết quả',a]],n:'chitiet_'+q};$('xS').disabled=false;
+}
+function xl(o){var wb=XLSX.utils.book_new();o.sheets.forEach(function(sh){var ws=XLSX.utils.aoa_to_sheet(sh[1]);Object.keys(ws).forEach(function(k){if(k[0]!=='!'&&ws[k].t==='n')ws[k].z='#,##0'});XLSX.utils.book_append_sheet(wb,ws,sh[0])});XLSX.writeFile(wb,o.n+'.xlsx')}
+$('gT').onclick=runT;$('showAll').onchange=runT;$('gS').onclick=runS;
+$('qT').addEventListener('keydown',function(e){if(e.key==='Enter')runT()});$('qS').addEventListener('keydown',function(e){if(e.key==='Enter')runS()});
+$('xT').onclick=function(){if(lastT)xl(lastT)};$('xS').onclick=function(){if(lastS)xl(lastS)};
+})();
+</script>
+</body>
+</html>
