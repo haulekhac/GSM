@@ -135,8 +135,8 @@ select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid va
     <p class="lead">Chạy ngoại tuyến trên trình duyệt, dữ liệu không gửi đi đâu. Tải 2 file Excel rồi chọn công cụ.</p>
     <div class="sec">Dữ liệu đầu vào</div>
     <div class="cards">
-      <label class="card" id="cAtt"><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg></div><div><b>File chấm công</b><span id="iAtt">statistic_attendance_tracking · bấm hoặc kéo thả .xlsx</span></div><input type="file" accept=".xlsx,.xls" id="fAtt"></label>
-      <label class="card" id="cDrv"><div class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></div><div><b>File tài xế (driver)</b><span id="iDrv">Lấy cột Tổ · bấm hoặc kéo thả .xlsx</span></div><input type="file" accept=".xlsx,.xls" id="fDrv"></label>
+      <label class="card" id="cAtt"><div class="ico"><svg class="i" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6"/></svg></div><div><b>File chấm công</b><span id="iAtt">statistic_attendance_tracking · chọn nhiều file được, tải thêm sẽ gộp vào</span></div><input type="file" accept=".xlsx,.xls" id="fAtt" multiple></label>
+      <label class="card" id="cDrv"><div class="ico"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg></div><div><b>File tài xế (driver)</b><span id="iDrv">Lấy cột Đội/Tổ · chọn nhiều file được, tải thêm sẽ gộp vào</span></div><input type="file" accept=".xlsx,.xls" id="fDrv" multiple></label>
     </div>
     <div class="sec">Công cụ</div>
     <div class="cards">
@@ -149,10 +149,11 @@ select{font:inherit;color:var(--ink);background:var(--panel);border:1px solid va
   </section>
 
   <section id="p-team" hidden>
-    <h2>Tra cứu theo Tổ</h2><p class="lead">Nhập mã Tổ (hoặc Đội) để xem doanh số và công của từng tài xế.</p>
+    <h2>Tra cứu theo Tổ</h2><p class="lead">Nhập mã <b>Đội</b> để xem cả đội (tất cả các tổ), hoặc mã <b>Tổ</b> để xem riêng tổ đó.</p>
     <div class="bar" data-bar>
-      <div><label>Tổ / Đội</label><input type="text" id="qT" list="teams" placeholder="BDU.DOIXE01.01" autocomplete="off"></div>
+      <div><label>Đội (BDU.DOIXE01) hoặc Tổ (BDU.DOIXE01.07)</label><input type="text" id="qT" list="teams" placeholder="BDU.DOIXE01 hoặc BDU.DOIXE01.07" autocomplete="off"></div>
       <div><label>Từ ngày</label><input type="date" class="dF"></div><div><label>Đến ngày</label><input type="date" class="dT"></div>
+      <div><label>Sắp xếp</label><select id="sT"><option value="rev_desc">Tổng doanh thu: cao → thấp</option><option value="rev_asc">Tổng doanh thu: thấp → cao</option><option value="team">Theo Tổ</option><option value="days">Ngày đủ công nhiều → ít</option><option value="name">Tên A → Z</option></select></div>
       <label style="display:flex;gap:6px;align-items:center;margin:0 0 8px;color:var(--ink);font-size:13px"><input type="checkbox" id="showAll" style="min-width:0">Hiện cả tài xế không có dữ liệu</label><button class="btn" id="gT">Tra cứu</button><button class="btn g" id="xT" disabled>Xuất Excel</button>
     </div><datalist id="teams"></datalist><div id="oT"></div>
   </section>
@@ -210,8 +211,19 @@ function cong(r){return num(r['Công chính'])+num(r['Công đào tạo'])+num(r
 function stt(r){return r?(cong(r)>=1?'Đủ công':'Không công'):'—'}
 function stc(r){return r?(cong(r)>=1?'d':'k'):'n'}
 
+function ncode(s){return String(s==null?'':s).replace(/\s+/g,'').toUpperCase()}
+function inScope(r,q){var t=ncode(r['Tổ']),d=ncode(r['Đội']);return t===q||d===q||t.indexOf(q+'.')===0||d.indexOf(q+'.')===0}
+function attRange(){return all.length?all[0]+' → '+all[all.length-1]:'(chưa có)'}
+function emptyMsg(q){
+  var mem=drv.filter(function(r){return inScope(r,q)});
+  if(!mem.length){var dois={};drv.forEach(function(r){var d=String(r['Đội']||'').trim();if(d)dois[d]=1});var L=Object.keys(dois).sort();
+    return 'Không tìm thấy tài xế thuộc “'+esc(q)+'” trong file driver.'+(L.length?' Đội đang có trong file driver: '+esc(L.slice(0,20).join(', '))+(L.length>20?'…':'')+'.':'')+' Nếu đội này chưa có, hãy tải thêm file driver của đội đó ở Trang chủ.'}
+  var inAtt=mem.filter(function(m){return bySap.has(m['Mã SAP'])}).length;
+  if(!inAtt)return 'Có '+mem.length+' tài xế thuộc “'+esc(q)+'” trong file driver, nhưng <b>file chấm công chưa có dữ liệu của họ</b>. Hãy tải thêm file chấm công của đội này ở Trang chủ (chọn được nhiều file, dữ liệu sẽ được gộp).';
+  return inAtt+'/'+mem.length+' tài xế của “'+esc(q)+'” có trong file chấm công nhưng không có dòng nào trong khoảng ngày đã chọn. File chấm công hiện có dữ liệu từ '+attRange()+'.';
+}
 function refreshTeams(){
-  var t={};drv.forEach(function(r){var x=String(r['Tổ']||'').trim();if(x&&(!att.length||bySap.has(r['Mã SAP'])))t[x]=1});
+  var t={};drv.forEach(function(r){if(att.length&&!bySap.has(r['Mã SAP']))return;['Đội','Tổ'].forEach(function(c){var x=String(r[c]||'').trim();if(x)t[x]=1})});
   var dl=$('teams');dl.innerHTML='';Object.keys(t).sort().forEach(function(x){var o=document.createElement('option');o.value=x;dl.appendChild(o)});
 }
 /* điều hướng */
@@ -226,31 +238,37 @@ $('home').onclick=function(){go('home')};$('reload').onclick=function(){location
 $('sq').addEventListener('input',function(){var q=this.value.toLowerCase();[].forEach.call(document.querySelectorAll('aside .nav'),function(n){n.style.display=n.textContent.toLowerCase().indexOf(q)>-1?'':'none'})});
 
 /* nạp file */
-function readX(f,cb){var r=new FileReader();r.onload=function(e){try{var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});cb(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))}catch(x){alert('Không đọc được file: '+x.message)}};r.readAsArrayBuffer(f)}
+function readX(f,cb){var r=new FileReader();r.onload=function(e){try{var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});cb(XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''}))}catch(x){alert('Không đọc được file '+f.name+': '+x.message);cb([])}};r.readAsArrayBuffer(f)}
+var nAtt=0,nDrv=0,dsAll={},drvMap=new Map(),datesInit=false;
 function drop(card,input,fn){
-  $(input).addEventListener('change',function(){if(this.files[0])fn(this.files[0])});
+  $(input).addEventListener('change',function(){if(this.files.length){fn([].slice.call(this.files))}this.value=''});
   var c=$(card);c.addEventListener('dragover',function(e){e.preventDefault()});
-  c.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files[0])fn(e.dataTransfer.files[0])});
+  c.addEventListener('drop',function(e){e.preventDefault();if(e.dataTransfer.files.length)fn([].slice.call(e.dataTransfer.files))});
 }
-drop('cAtt','fAtt',function(f){
-  $('iAtt').textContent='Đang đọc…';
-  readX(f,function(rows){
-    att=rows.filter(function(r){return r['Mã SAP']!==''&&r['Ngày phân công']!==''});bySap=new Map();var ds={};
-    att.forEach(function(r){r['Ngày phân công']=nd(r['Ngày phân công']);var s=String(r['Mã SAP']).trim();r['Mã SAP']=s;if(!bySap.has(s))bySap.set(s,new Map());bySap.get(s).set(r['Ngày phân công'],r);ds[r['Ngày phân công']]=1});
-    all=Object.keys(ds).sort(function(a,b){return key(a)<key(b)?-1:1});
-    $('iAtt').textContent=f.name+' · '+att.length.toLocaleString('en-US')+' dòng · '+bySap.size.toLocaleString('en-US')+' tài xế · '+all.length+' ngày';
+function readAll(files,cb){var out=[],i=0;(function next(){if(i>=files.length)return cb(out);var f=files[i++];readX(f,function(rows){out.push({name:f.name,rows:rows});next()})})()}
+drop('cAtt','fAtt',function(files){
+  $('iAtt').textContent='Đang đọc '+files.length+' file…';
+  readAll(files,function(batch){
+    batch.forEach(function(b){nAtt++;b.rows.forEach(function(r){
+      if(r['Mã SAP']===''||r['Ngày phân công']==='')return;
+      r['Ngày phân công']=nd(r['Ngày phân công']);var s=String(r['Mã SAP']).trim();r['Mã SAP']=s;
+      if(!bySap.has(s))bySap.set(s,new Map());bySap.get(s).set(r['Ngày phân công'],r);dsAll[r['Ngày phân công']]=1;att.push(r)})});
+    all=Object.keys(dsAll).sort(function(a,b){return key(a)<key(b)?-1:1});
+    var rows=0;bySap.forEach(function(m){rows+=m.size});
+    $('iAtt').textContent=nAtt+' file · '+rows.toLocaleString('en-US')+' dòng · '+bySap.size.toLocaleString('en-US')+' tài xế · '+all.length+' ngày ('+attRange()+')';
     $('cAtt').classList.add('ok');refreshTeams();
     if(all.length){[].forEach.call(document.querySelectorAll('.dF,.dT'),function(i){i.min=iso(all[0]);i.max=iso(all[all.length-1])});
-      [].forEach.call(document.querySelectorAll('.dT'),function(i){i.value=iso(all[all.length-1])});
-      [].forEach.call(document.querySelectorAll('.dF'),function(i){i.value=iso(all[Math.max(0,all.length-7)])})}
+      if(!datesInit){datesInit=true;
+        [].forEach.call(document.querySelectorAll('.dT'),function(i){i.value=iso(all[all.length-1])});
+        [].forEach.call(document.querySelectorAll('.dF'),function(i){i.value=iso(all[Math.max(0,all.length-7)])})}}
   });
 });
-drop('cDrv','fDrv',function(f){
-  $('iDrv').textContent='Đang đọc…';
-  readX(f,function(rows){
-    drv=rows.filter(function(r){return String(r['Mã SAP']).trim()!==''}).map(function(r){r['Mã SAP']=String(r['Mã SAP']).trim();return r});
-    var t={};drv.forEach(function(r){var x=String(r['Tổ']||'').trim();if(x)t[x]=1});
-    $('iDrv').textContent=f.name+' · '+drv.length.toLocaleString('en-US')+' tài xế · '+Object.keys(t).length+' tổ';$('cDrv').classList.add('ok');
+drop('cDrv','fDrv',function(files){
+  $('iDrv').textContent='Đang đọc '+files.length+' file…';
+  readAll(files,function(batch){
+    batch.forEach(function(b){nDrv++;b.rows.forEach(function(r){var s=String(r['Mã SAP']).trim();if(!s)return;r['Mã SAP']=s;drvMap.set(s,r)})});
+    drv=Array.from(drvMap.values());var t={},d={};drv.forEach(function(r){var x=String(r['Tổ']||'').trim(),y=String(r['Đội']||'').trim();if(x)t[x]=1;if(y)d[y]=1});
+    $('iDrv').textContent=nDrv+' file · '+drv.length.toLocaleString('en-US')+' tài xế · '+Object.keys(d).length+' đội · '+Object.keys(t).length+' tổ';$('cDrv').classList.add('ok');
     refreshTeams();
   });
 });
@@ -261,38 +279,54 @@ function range(){
   var a=key(unIso(f)),b=key(unIso(t));return all.filter(function(d){var k=key(d);return k>=a&&k<=b}).reverse();
 }
 
-/* tra cứu theo Tổ: chỉ số liệu, mỗi tài xế 1 dòng */
+/* tra cứu theo Đội / Tổ */
 var DH=['Mã SAP','Họ & tên','Tổ','Ngày','Doanh số','Tỉ lệ nhận chuyến','Tỉ lệ huỷ chuyến','Tỷ lệ đáp ứng','Số cuốc xe hoàn thành','Số km vận doanh','Thời gian online','Thời gian vận doanh','Hệ thống chấm công','Tổng công','Trạng thái công'];
+function sortRows(rows,m){rows.sort(function(a,b){
+  if(m==='rev_asc')return a.rev-b.rev||(a.name<b.name?-1:1);
+  if(m==='team')return a.to<b.to?-1:a.to>b.to?1:b.rev-a.rev;
+  if(m==='name')return a.name<b.name?-1:a.name>b.name?1:0;
+  if(m==='days')return b.dy-a.dy||b.rev-a.rev;
+  return b.rev-a.rev||(a.name<b.name?-1:1)})}
 function runT(){
-  var out=$('oT'),q=$('qT').value.trim().toUpperCase();lastT=null;$('xT').disabled=true;
+  var out=$('oT'),raw0=$('qT').value.trim(),q=ncode(raw0);lastT=null;$('xT').disabled=true;
   if(!att.length||!drv.length){out.innerHTML='<div class="msg">Hãy tải đủ file chấm công và file tài xế ở Trang chủ.</div>';return}
-  if(!q){out.innerHTML='<div class="msg">Nhập mã Tổ, ví dụ BDU.DOIXE01.01</div>';return}
-  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày không có dữ liệu.</div>';return}
-  var mem=drv.filter(function(r){var t=String(r['Tổ']||'').trim().toUpperCase(),d=String(r['Đội']||'').trim().toUpperCase();return t===q||d===q||t.indexOf(q+'.')===0});
-  if(!mem.length){out.innerHTML='<div class="msg">Không tìm thấy tài xế thuộc “'+esc(q)+'” trong file driver.</div>';return}
+  if(!q){out.innerHTML='<div class="msg">Nhập mã Đội (BDU.DOIXE01) hoặc mã Tổ (BDU.DOIXE01.07).</div>';return}
+  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày đã chọn không có dữ liệu. File chấm công có dữ liệu từ '+attRange()+'.</div>';return}
+  var mem=drv.filter(function(r){return inScope(r,q)});
+  if(!mem.length){out.innerHTML='<div class="msg">'+emptyMsg(q)+'</div>';return}
   var rows=mem.map(function(m){var map=bySap.get(m['Mã SAP'])||new Map(),cs=ds.map(function(d){return map.get(d)||null}),rev=0,dy=0,have=0;
-    cs.forEach(function(r){if(r){have++;rev+=num(r['Tổng giá trị cuốc xe']);if(cong(r)>=1)dy++}});
-    return{sap:m['Mã SAP'],name:m['Họ & tên']||'',to:m['Tổ']||'',cs:cs,rev:rev,dy:dy,have:have}}).sort(function(a,b){return a.to<b.to?-1:a.to>b.to?1:(a.name<b.name?-1:1)});
+    cs.forEach(function(r){if(r){have++;rev+=num(r[REV]);if(cong(r)>=1)dy++}});
+    return{sap:m['Mã SAP'],name:m['Họ & tên']||'',to:m['Tổ']||'',cs:cs,rev:rev,dy:dy,have:have}});
   var hid=0;if(!$('showAll').checked){var n0=rows.length;rows=rows.filter(function(r){return r.have>0});hid=n0-rows.length}
-  if(!rows.length){out.innerHTML='<div class="msg">Không có tài xế nào của “'+esc(q)+'” có dữ liệu chấm công trong khoảng ngày này.</div>';return}
-  var tot=0,td=0,dsum=ds.map(function(){return 0});
-  rows.forEach(function(r){tot+=r.rev;td+=r.dy;r.cs.forEach(function(c,i){if(c)dsum[i]+=num(c['Tổng giá trị cuốc xe'])})});
+  if(!rows.length){out.innerHTML='<div class="msg">'+emptyMsg(q)+'</div>';return}
+  var byRev=rows.slice().sort(function(a,b){return b.rev-a.rev});byRev.forEach(function(r,i){r.rank=i&&byRev[i-1].rev===r.rev?byRev[i-1].rank:i+1});
+  sortRows(rows,$('sT').value);
+  var tot=0,td=0,dsum=ds.map(function(){return 0}),G={};
+  rows.forEach(function(r){tot+=r.rev;td+=r.dy;r.cs.forEach(function(c,i){if(c)dsum[i]+=num(c[REV])});var g=G[r.to]||(G[r.to]={to:r.to,n:0,rev:0,dy:0});g.n++;g.rev+=r.rev;g.dy+=r.dy});
+  var gl=Object.keys(G).map(function(k){return G[k]}).sort(function(a,b){return b.rev-a.rev});
   var h=hid?'<div class="msg">Đã ẩn '+hid+' tài xế có trong file driver nhưng không có dữ liệu chấm công trong khoảng ngày này (nghỉ lâu / chưa vận hành). Tick “Hiện cả tài xế không có dữ liệu” để xem.</div>':'';
-  h+='<div class="sum"><div class="st"><b>'+rows.length+'</b><span>Tài xế</span></div><div class="st"><b>'+fmt(tot)+'</b><span>Doanh số tổ</span></div><div class="st"><b>'+td+'</b><span>Tổng ngày đủ công</span></div></div>';
-  h+='<div class="sc"><table class="x"><thead><tr><th>Tài xế</th>'+ds.map(function(d){return'<th>'+d+'</th>'}).join('')+'<th>Tổng doanh số</th><th>Ngày đủ công</th></tr></thead><tbody>';
+  h+='<div class="sum"><div class="st"><b>'+esc(raw0.toUpperCase())+'</b><span>'+(gl.length>1?'Đội · '+gl.length+' tổ':'Tổ / phạm vi tra cứu')+'</span></div><div class="st"><b>'+rows.length+'</b><span>Tài xế</span></div><div class="st"><b>'+fmt(tot)+'</b><span>Tổng doanh số</span></div><div class="st"><b>'+td+'</b><span>Tổng ngày đủ công</span></div></div>';
+  if(gl.length>1){
+    h+='<div class="sec">Tổng hợp theo Tổ</div><div class="sc"><table class="x"><thead><tr><th>Hạng</th><th>Tổ</th><th>Tài xế</th><th>Tổng doanh số</th><th>TB / tài xế</th><th>Ngày đủ công</th></tr></thead><tbody>';
+    gl.forEach(function(g,i){h+='<tr><td class="l"><b>'+(i+1)+'</b></td><td class="l"><b>'+esc(g.to)+'</b></td><td>'+g.n+'</td><td><b>'+fmt(g.rev)+'</b></td><td>'+fmt(g.rev/g.n)+'</td><td>'+g.dy+'</td></tr>'});
+    h+='</tbody></table></div><div class="sec">Chi tiết từng tài xế</div>';
+  }
+  h+='<div class="sc"><table class="x"><thead><tr><th>Hạng</th><th>Tài xế</th>'+ds.map(function(d){return'<th>'+d+'</th>'}).join('')+'<th>Tổng doanh số</th><th>Ngày đủ công</th></tr></thead><tbody>';
   rows.forEach(function(r){
-    h+='<tr><td class="nm"><b>'+esc(r.name)+'</b><small>'+esc(r.sap)+' · '+esc(r.to)+'</small></td>'+r.cs.map(function(c){return'<td class="'+stc(c)+'">'+(c?num(c['Tổng giá trị cuốc xe']).toLocaleString('en-US'):'—')+'</td>'}).join('')+'<td><b>'+fmt(r.rev)+'</b></td><td><b>'+r.dy+'</b> / '+ds.length+'</td></tr>';
+    h+='<tr><td class="l"><b>'+r.rank+'</b></td><td class="nm"><b>'+esc(r.name)+'</b><small>'+esc(r.sap)+' · '+esc(r.to)+'</small></td>'+r.cs.map(function(c){return'<td class="'+stc(c)+'">'+(c?num(c[REV]).toLocaleString('en-US'):'—')+'</td>'}).join('')+'<td><b>'+fmt(r.rev)+'</b></td><td><b>'+r.dy+'</b> / '+ds.length+'</td></tr>';
   });
-  h+='<tr><td class="l"><b>TỔNG</b></td>'+dsum.map(function(v){return'<td><b>'+fmt(v)+'</b></td>'}).join('')+'<td><b>'+fmt(tot)+'</b></td><td><b>'+td+'</b></td></tr>';
-  out.innerHTML=h+'</tbody></table></div><div class="rule" style="margin-top:0">Số xanh = Đủ công · số đỏ = Không công · — = không có dữ liệu. Excel xuất ra có thêm sheet “Chi tiết”.</div>';
-  var a=[['Mã SAP','Họ & tên','Tổ'].concat(ds.map(function(d){return d+' - Doanh số'}),ds.map(function(d){return d+' - Công'}),['Tổng doanh số','Số ngày đủ công'])];
+  h+='<tr><td class="l" colspan="2"><b>TỔNG</b></td>'+dsum.map(function(v){return'<td><b>'+fmt(v)+'</b></td>'}).join('')+'<td><b>'+fmt(tot)+'</b></td><td><b>'+td+'</b></td></tr>';
+  out.innerHTML=h+'</tbody></table></div><div class="rule" style="margin-top:0">Số xanh = Đủ công · số đỏ = Không công · — = không có dữ liệu. Hạng tính theo tổng doanh số. Excel xuất ra có sheet “Tổng hợp”, “Chi tiết”'+(gl.length>1?' và “Theo Tổ”':'')+'.</div>';
+  var a=[['Hạng','Mã SAP','Họ & tên','Tổ'].concat(ds.map(function(d){return d+' - Doanh số'}),ds.map(function(d){return d+' - Công'}),['Tổng doanh số','Số ngày đủ công'])];
   var det=[DH];
   rows.forEach(function(r){
-    a.push([r.sap,r.name,r.to].concat(r.cs.map(function(c){return c?num(c['Tổng giá trị cuốc xe']):''}),r.cs.map(stt),[r.rev,r.dy]));
-    r.cs.forEach(function(c,i){if(!c)return;det.push([r.sap,r.name,r.to,ds[i],num(c['Tổng giá trị cuốc xe']),dec(c['Tỉ lệ nhận chuyến']),dec(c['Tỉ lệ huỷ chuyến']),dec(c['Tỷ lệ đáp ứng']),dec(c['Số cuốc xe hoàn thành']),dec(c['Số km vận doanh']),c['Thời gian online'],c['Thời gian vận doanh'],c['Hệ thống chấm công'],cong(c),stt(c)])});
+    a.push([r.rank,r.sap,r.name,r.to].concat(r.cs.map(function(c){return c?num(c[REV]):''}),r.cs.map(stt),[r.rev,r.dy]));
+    r.cs.forEach(function(c,i){if(!c)return;det.push([r.sap,r.name,r.to,ds[i],num(c[REV]),dec(c['Tỉ lệ nhận chuyến']),dec(c['Tỉ lệ huỷ chuyến']),dec(c['Tỷ lệ đáp ứng']),dec(c['Số cuốc xe hoàn thành']),dec(c['Số km vận doanh']),c['Thời gian online'],c['Thời gian vận doanh'],c['Hệ thống chấm công'],cong(c),stt(c)])});
   });
-  a.push(['','TỔNG '+q,''].concat(dsum,ds.map(function(){return ''}),[tot,td]));
-  lastT={sheets:[['Tổng hợp',a],['Chi tiết',det]],n:'cong_'+q};$('xT').disabled=false;
+  a.push(['','','TỔNG '+q,''].concat(dsum,ds.map(function(){return ''}),[tot,td]));
+  var sh=[['Tổng hợp',a],['Chi tiết',det]];
+  if(gl.length>1)sh.push(['Theo Tổ',[['Hạng','Tổ','Số tài xế','Tổng doanh số','TB / tài xế','Số ngày đủ công']].concat(gl.map(function(g,i){return[i+1,g.to,g.n,g.rev,Math.round(g.rev/g.n),g.dy]}))]);
+  lastT={sheets:sh,n:'cong_'+q};$('xT').disabled=false;
 }
 
 /* xếp hạng doanh thu */
@@ -301,17 +335,17 @@ function pnum(v){return num(String(v).replace(/[,.\s]/g,''))}
 function calcRank(q,out,abs,hi,lo){
   if(!att.length){out.innerHTML='<div class="msg">Hãy tải file chấm công ở Trang chủ.</div>';return null}
   if(q&&!drv.length){out.innerHTML='<div class="msg">Lọc theo Tổ/Đội cần file tài xế (driver). Hãy tải file driver hoặc để trống ô Tổ/Đội.</div>';return null}
-  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày không có dữ liệu.</div>';return null}
+  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày đã chọn không có dữ liệu. File chấm công có dữ liệu từ '+attRange()+'.</div>';return null}
   var tm={};drv.forEach(function(r){tm[r['Mã SAP']]=r});var rows=[];
   bySap.forEach(function(map,sap){
     var d=tm[sap],to=d?String(d['Tổ']||''):'',dv=d?String(d['Đội']||''):'';
-    if(q){if(!d)return;var T=to.toUpperCase(),D=dv.toUpperCase();if(!(T===q||D===q||T.indexOf(q+'.')===0))return}
+    if(q){if(!d||!inScope(d,q))return}
     var rev=0,dy=0,tr=0,have=0;
     ds.forEach(function(x){var r=map.get(x);if(r){have++;rev+=num(r[REV]);tr+=num(r['Số cuốc xe hoàn thành']);if(cong(r)>=1)dy++}});
     if(!have)return;var any=map.values().next().value;
     rows.push({sap:sap,name:(d&&d['Họ & tên'])||any['Họ & tên']||'',to:to,rev:rev,tr:tr,dy:dy,nc:have-dy,avg:rev/ds.length});
   });
-  if(!rows.length){out.innerHTML='<div class="msg">Không có tài xế nào có dữ liệu trong phạm vi này.</div>';return null}
+  if(!rows.length){out.innerHTML='<div class="msg">'+(q?emptyMsg(q):'Không có tài xế nào có dữ liệu trong phạm vi này.')+'</div>';return null}
   rows.sort(function(a,b){return b.rev-a.rev||(a.name<b.name?-1:1)});
   var n=rows.length,k=Math.ceil(n*.3);
   rows.forEach(function(r,i){r.rank=i&&rows[i-1].rev===r.rev?rows[i-1].rank:i+1;
@@ -319,7 +353,7 @@ function calcRank(q,out,abs,hi,lo){
   return{rows:rows,ds:ds,q:q};
 }
 function runR(){
-  var out=$('oR'),q=$('qR').value.trim().toUpperCase();lastR=null;RK=null;$('xR').disabled=true;
+  var out=$('oR'),q=ncode($('qR').value);lastR=null;RK=null;$('xR').disabled=true;
   var K=calcRank(q,out,$('mR').value==='abs',pnum($('hR').value),pnum($('lR').value));if(!K)return;
   RK=K;lastR=1;$('xR').disabled=false;
   var h='<div class="pod">';
@@ -328,7 +362,7 @@ function runR(){
   out.innerHTML=h+'</div><div id="listR"></div>';renderR();
 }
 function run3(){
-  var out=$('o3'),q=$('q3').value.trim().toUpperCase();last3=null;disposePod();
+  var out=$('o3'),q=ncode($('q3').value);last3=null;disposePod();
   var K=calcRank(q,out,false,0,0);if(!K)return;last3=1;
   var h='<div id="podR"></div><div class="sum"><div class="st"><b>'+K.rows.length+'</b><span>Tài xế · '+K.ds.length+' ngày</span></div><div class="st"><b>'+fmt(K.rows.reduce(function(t,r){return t+r.rev},0))+'</b><span>Tổng doanh thu</span></div></div>';
   var rest=K.rows.filter(function(r){return r.rank>3}).slice(0,7);
@@ -394,8 +428,8 @@ function countUp(el,to){
   var t0=performance.now(),d=1500;(function f(n){var k=Math.min(1,(n-t0)/d),e=1-Math.pow(1-k,3);el.textContent=fmt(to*e);if(k<1)requestAnimationFrame(f)})(t0);
 }
 function ini(n){var w=String(n).trim().split(/\s+/);return((w[w.length-2]||'')[0]||'')+(w[w.length-1]||'')[0]||'?'}
-function drawPod(){
-  disposePod();var rows=RK.rows,ds=RK.ds,el=$('podR'),COL={1:0xf2b705,2:0xcfd8e0,3:0xcd7f32};
+function drawPod(K){
+  disposePod();var rows=K.rows,ds=K.ds,el=$('podR'),COL={1:0xf2b705,2:0xcfd8e0,3:0xcd7f32};
   var top=[1,0,2].map(function(i){return rows[i]}).filter(function(r){return r&&r.rank<=3});
   var h='<div class="stage"><canvas class="cf" id="cfv"></canvas><button class="celeb" id="celeb">🎉 Ăn mừng</button>';
   top.forEach(function(r,i){h+='<div class="slot s'+r.rank+'"><div class="tilt"><canvas class="tc"></canvas><div class="av">'+esc(ini(r.name))+'<i>'+r.rank+'</i></div><b>'+esc(r.name)+'</b><small>'+esc(r.sap)+' · '+esc(r.to)+'</small><div class="v" data-to="'+r.rev+'">0</div><div class="s">TB/ngày '+fmt(r.avg)+' · '+r.dy+'/'+ds.length+' ngày đủ công</div></div><div class="ped">'+r.rank+'</div></div>'});
@@ -425,7 +459,7 @@ function runS(){
   if(!att.length){out.innerHTML='<div class="msg">Hãy tải file chấm công ở Trang chủ.</div>';return}
   if(!q){out.innerHTML='<div class="msg">Nhập Mã SAP.</div>';return}
   var map=bySap.get(q);if(!map){out.innerHTML='<div class="msg">Không có Mã SAP “'+esc(q)+'” trong file chấm công.</div>';return}
-  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày không có dữ liệu.</div>';return}
+  var ds=range();if(!ds||!ds.length){out.innerHTML='<div class="msg">Khoảng ngày đã chọn không có dữ liệu. File chấm công có dữ liệu từ '+attRange()+'.</div>';return}
   var any=map.values().next().value,d=drv.filter(function(r){return r['Mã SAP']===q})[0],name=(d&&d['Họ & tên'])||any['Họ & tên']||'',to=d?d['Tổ']:'';
   var cs=ds.map(function(x){return map.get(x)||null}),rev=0,dy=0;cs.forEach(function(r){if(r){rev+=num(r['Tổng giá trị cuốc xe']);if(cong(r)>=1)dy++}});
   var head='<tr>';
@@ -441,7 +475,7 @@ function runS(){
   out.innerHTML=h;lastS={sheets:[['Kết quả',a]],n:'chitiet_'+q};$('xS').disabled=false;
 }
 function xl(o){var wb=XLSX.utils.book_new();o.sheets.forEach(function(sh){var ws=XLSX.utils.aoa_to_sheet(sh[1]);Object.keys(ws).forEach(function(k){if(k[0]!=='!'&&ws[k].t==='n')ws[k].z='#,##0'});XLSX.utils.book_append_sheet(wb,ws,sh[0])});XLSX.writeFile(wb,o.n+'.xlsx')}
-$('gR').onclick=runR;$('g3').onclick=run3;$('q3').addEventListener('keydown',function(e){if(e.key==='Enter')run3()});$('xR').onclick=exportR;$('qR').addEventListener('keydown',function(e){if(e.key==='Enter')runR()});$('gT').onclick=runT;$('showAll').onchange=runT;$('gS').onclick=runS;
+$('gR').onclick=runR;$('g3').onclick=run3;$('q3').addEventListener('keydown',function(e){if(e.key==='Enter')run3()});$('xR').onclick=exportR;$('qR').addEventListener('keydown',function(e){if(e.key==='Enter')runR()});$('gT').onclick=runT;$('showAll').onchange=runT;$('sT').onchange=runT;$('gS').onclick=runS;
 $('qT').addEventListener('keydown',function(e){if(e.key==='Enter')runT()});$('qS').addEventListener('keydown',function(e){if(e.key==='Enter')runS()});
 $('xT').onclick=function(){if(lastT)xl(lastT)};$('xS').onclick=function(){if(lastS)xl(lastS)};
 })();
