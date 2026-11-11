@@ -49,9 +49,19 @@ input:focus{outline:2px solid var(--t);outline-offset:-1px}
 .msg{padding:9px 12px;border-radius:8px;background:var(--warn);color:var(--warnk);margin:0 0 12px;font-size:13px}
 .rule{font-size:12px;color:var(--muted);margin-top:14px}
 .sc{overflow-x:auto;margin-bottom:16px}
-table.x{border-collapse:collapse;min-width:100%}
-.x th,.x td{border:1px solid var(--grid);padding:6px 12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
-.x th{background:var(--thd);font-weight:600}
+.sc{overflow:auto;max-height:calc(100vh - 340px);min-height:260px;margin-bottom:16px}
+table.x{border-collapse:separate;border-spacing:0;min-width:100%}
+.x th,.x td{border:0;border-right:1px solid var(--grid);border-bottom:1px solid var(--grid);padding:6px 12px;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.x th{background:var(--thd);font-weight:600;border-top:1px solid var(--grid)}
+.x th:first-child,.x td:first-child{border-left:1px solid var(--grid)}
+/* tiêu đề dính trên, cột đầu dính trái */
+.x thead th{position:sticky;top:0;z-index:3}
+.x th:first-child,.x td:first-child{position:sticky;left:0;z-index:2;background:var(--panel)}
+.x thead th:first-child{z-index:4;background:var(--thd)}
+/* bảng chi tiết tài xế: dính thêm cột Tài xế */
+.x.f2 th:first-child,.x.f2 td:first-child{min-width:56px;width:56px}
+.x.f2 td.nm,.x.f2 th.nmh{position:sticky;left:56px;z-index:2;background:var(--panel);text-align:left}
+.x.f2 th.nmh{z-index:4;background:var(--thd)}
 .x th:first-child,.x td:first-child,.x .l{text-align:left}
 .x .nm b{font-weight:600}.x .nm small{color:var(--muted);display:block;font-size:11.5px}
 .x tr.cg td{font-size:12.5px}
@@ -311,7 +321,7 @@ function runT(){
     gl.forEach(function(g,i){h+='<tr><td class="l"><b>'+(i+1)+'</b></td><td class="l"><b>'+esc(g.to)+'</b></td><td>'+g.n+'</td><td><b>'+fmt(g.rev)+'</b></td><td>'+fmt(g.rev/g.n)+'</td><td>'+g.dy+'</td></tr>'});
     h+='</tbody></table></div><div class="sec">Chi tiết từng tài xế</div>';
   }
-  h+='<div class="sc"><table class="x"><thead><tr><th>Hạng</th><th>Tài xế</th>'+ds.map(function(d){return'<th>'+d+'</th>'}).join('')+'<th>Tổng doanh số</th><th>Ngày đủ công</th></tr></thead><tbody>';
+  h+='<div class="sc"><table class="x f2"><thead><tr><th>Hạng</th><th class="nmh">Tài xế</th>'+ds.map(function(d){return'<th>'+d+'</th>'}).join('')+'<th>Tổng doanh số</th><th>Ngày đủ công</th></tr></thead><tbody>';
   rows.forEach(function(r){
     h+='<tr><td class="l"><b>'+r.rank+'</b></td><td class="nm"><b>'+esc(r.name)+'</b><small>'+esc(r.sap)+' · '+esc(r.to)+'</small></td>'+r.cs.map(function(c){return'<td class="'+stc(c)+'">'+(c?num(c[REV]).toLocaleString('en-US'):'—')+'</td>'}).join('')+'<td><b>'+fmt(r.rev)+'</b></td><td><b>'+r.dy+'</b> / '+ds.length+'</td></tr>';
   });

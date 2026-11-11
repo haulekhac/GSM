@@ -1,4 +1,3 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <title>Báo cáo D/S Ratio</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -210,9 +209,15 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   <section class="kpis" id="kpis" aria-label="Tổng quan"></section>
 
   <div class="controls" aria-label="Tùy chỉnh">
-    <label for="warn">Căng thẳng từ <input type="number" id="warn" value="70" min="1" max="500" step="1" inputmode="numeric"> %</label>
-    <label for="crit">Thiếu xe nặng từ <input type="number" id="crit" value="100" min="2" max="500" step="1" inputmode="numeric"> %</label>
-    <span class="ax">Trục
+    <span class="ax">Hiển thị
+      <span class="seg" role="group" aria-label="Chỉ số hiển thị">
+        <button type="button" id="mt-ds" data-mt="ds" aria-pressed="true">D/S Ratio</button>
+        <button type="button" id="mt-demand" data-mt="demand" aria-pressed="false">Chỉ Demand</button>
+      </span>
+    </span>
+    <label id="lw" for="warn">Căng thẳng từ <input type="number" id="warn" value="70" min="1" max="500" step="1" inputmode="numeric"> %</label>
+    <label id="lc" for="crit">Thiếu xe nặng từ <input type="number" id="crit" value="100" min="2" max="500" step="1" inputmode="numeric"> %</label>
+    <span class="ax" id="lax">Trục
       <span class="seg" role="group" aria-label="Thang trục">
         <button type="button" id="ax-auto" data-ax="auto" aria-pressed="true">Tự động</button>
         <button type="button" id="ax-fixed" data-ax="fixed" aria-pressed="false">0–150%</button>
@@ -287,7 +292,7 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   }
   var HASH = { hcm: 'hcm', bd: 'binh-duong' };
   var STATUS = { crit: 'Thiếu xe nặng', warn: 'Căng thẳng', ok: 'Ổn định' };
-  var state = { view: 'hcm', warn: 70, crit: 100, axis: 'auto' };
+  var state = { view: 'hcm', warn: 70, crit: 100, axis: 'auto', metric: 'ds' };
   var current = [];
 
   var $ = function (s) { return document.querySelector(s); };
@@ -310,6 +315,7 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
       return { name: x[0], d: d, s: s, r: r, st: st };
     });
     rows.sort(function (a, b) {
+      if (state.metric === 'demand') return b.d - a.d;
       var ua = a.r === Infinity ? 1 : 0, ub = b.r === Infinity ? 1 : 0;
       if (ua !== ub) return ua - ub;
       return b.d - a.d;
@@ -339,6 +345,15 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   function renderKpis(rows) {
     var D = 0, S = 0, cnt = { crit: 0, warn: 0, ok: 0 };
     rows.forEach(function (x) { D += x.d; S += x.s; cnt[x.st]++; });
+    if (state.metric === 'demand') {
+      var busy = rows.filter(function (x) { return x.d > 0; }).length;
+      var top1 = rows.length && rows[0].d > 0 ? rows[0] : null;
+      $('#kpis').innerHTML =
+        '<div class="kpi"><span class="k">Demand</span><span class="v">' + nf.format(D) + '</span><span class="s">Tổng nhu cầu</span></div>' +
+        '<div class="kpi wide"><span class="k">Đông khách nhất</span><span class="v" style="font-size:20px">' + (top1 ? top1.name : '—') + '</span><span class="s">' + (top1 ? nf.format(top1.d) + ' Demand' : 'Chưa có dữ liệu') + '</span></div>' +
+        '<div class="kpi"><span class="k">Khu vực có khách</span><span class="v">' + busy + '/' + rows.length + '</span><span class="s">Demand lớn hơn 0</span></div>';
+      return { D: D, S: S, cnt: cnt };
+    }
     var tot = S > 0 ? f1(D / S * 100) : (rows.length ? '∞' : '—');
     var totSub = S > 0 ? (nf.format(D) + ' / ' + nf.format(S)) : (rows.length ? 'Supply = 0' : 'Chưa có dữ liệu');
     $('#kpis').innerHTML =
@@ -353,6 +368,10 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   }
 
   function noteText(rows, sums) {
+    if (state.metric === 'demand') {
+      var tp = rows.filter(function (x) { return x.d > 0; }).slice(0, 3);
+      return tp.length ? 'Đông khách nhất: ' + tp.map(function (x) { return x.name; }).join(', ') + '.' : 'Chưa có Demand.';
+    }
     var parts = [];
     if (rows.length) {
       var hi = rows.reduce(function (m, x) { return x.d > m.d ? x : m; }, rows[0]);
@@ -375,12 +394,29 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
     return parts.join(' ');
   }
 
+  function renderDemand(rows, sums) {
+    var mx = Math.max.apply(null, rows.map(function (x) { return x.d; })) || 1;
+    var rowsHtml = rows.map(function (x, i) {
+      var st = x.d > 150 ? 'crit' : (x.d >= 60 ? 'warn' : 'ok');
+      var bar = x.d > 0 ? '<i class="bar" style="width:' + (x.d / mx * 100) + '%;min-width:2px;background:var(--' + st + ')"></i>' : '';
+      return '<div class="row" tabindex="0" role="listitem" data-i="' + i + '" aria-label="' + x.name + ': Demand ' + x.d + '">' +
+             '<span class="name">' + x.name + '</span><div class="track">' + bar + '</div></div>';
+    }).join('');
+    $('#chartcard').innerHTML =
+      '<div class="card-head"><div><h2>Khu vực đông khách (Demand)</h2><p class="sub">' + DATA[state.view].label + ' · ' + rows.length +
+      ' quận/huyện, sắp xếp theo Demand giảm dần</p></div><div class="legend"><span class="pill crit">Trên 150 Rất đông</span><span class="pill warn">60–150 Cảnh báo</span><span class="pill ok">Dưới 60 Ổn</span></div></div>' +
+      '<div class="chart" style="padding-bottom:6px"><div class="grid" style="bottom:6px"><i class="gl base" style="left:0"></i></div>' +
+      '<div class="rows" role="list">' + rowsHtml + '</div></div>' +
+      '<p class="note">' + noteText(rows, sums) + '</p>';
+  }
+
   function renderChart(rows, sums) {
     if (!rows.length) {
       $('#chartcard').innerHTML = '<div class="card-head"><div><h2>D/S Ratio (%) Breakdown by District</h2><p class="sub">' +
         DATA[state.view].label + '</p></div></div><p class="note">Chưa có dữ liệu cho khu vực này. Kiểm tra dữ liệu đã nạp hoặc danh sách khu vực thuộc Bình Dương.</p>';
       return;
     }
+    if (state.metric === 'demand') { renderDemand(rows, sums); return; }
     var t = thresholds(), ax = axisFor(rows);
     var ticks = [];
     for (var v = 0; v <= ax.max + 1e-9; v += ax.step) ticks.push(v);
@@ -415,6 +451,14 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   }
 
   function renderTable(rows, sums) {
+    if (state.metric === 'demand') {
+      var rt = 'style="text-align:right;padding-right:0"';
+      $('#table').innerHTML =
+        '<table style="min-width:0"><thead><tr><th>Quận/Huyện</th><th ' + rt + '>Demand</th></tr></thead><tbody>' +
+        rows.map(function (x) { return '<tr><td>' + x.name + '</td><td ' + rt + '>' + nf.format(x.d) + '</td></tr>'; }).join('') +
+        '</tbody><tfoot><tr><td>Tổng ' + DATA[state.view].label + '</td><td ' + rt + '>' + nf.format(sums.D) + '</td></tr></tfoot></table>';
+      return;
+    }
     var body = rows.map(function (x) {
       var inf = x.r === Infinity;
       return '<tr><td>' + x.name + '</td><td>' + nf.format(x.d) + '</td><td>' + nf.format(x.s) + '</td><td>' +
@@ -440,6 +484,10 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
     document.querySelectorAll('[data-ax]').forEach(function (b) {
       b.setAttribute('aria-pressed', String(b.dataset.ax === state.axis));
     });
+    document.querySelectorAll('[data-mt]').forEach(function (b) {
+      b.setAttribute('aria-pressed', String(b.dataset.mt === state.metric));
+    });
+    ['lw', 'lc', 'lax'].forEach(function (id) { $('#' + id).hidden = state.metric === 'demand'; });
   }
 
   /* Tooltip */
@@ -457,7 +505,8 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
     var r = current[+row.dataset.i];
     if (!r) return;
     var inf = r.r === Infinity;
-    tip.innerHTML = '<b>' + r.name + '</b><span class="t">Demand ' + nf.format(r.d) + ' · Supply ' + nf.format(r.s) + '</span><br>' +
+    if (state.metric === 'demand') { tip.innerHTML = '<b>' + r.name + '</b><span class="t">Demand ' + nf.format(r.d) + '</span>'; }
+    else tip.innerHTML = '<b>' + r.name + '</b><span class="t">Demand ' + nf.format(r.d) + ' · Supply ' + nf.format(r.s) + '</span><br>' +
       'D/S ' + (inf ? 'không xác định' : f1(r.r)) + ' · ' + STATUS[r.st];
     tip.hidden = false;
     placeTip(x, y);
@@ -535,6 +584,9 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   document.querySelectorAll('[data-ax]').forEach(function (b) {
     b.addEventListener('click', function () { state.axis = b.dataset.ax; render(); });
   });
+  document.querySelectorAll('[data-mt]').forEach(function (b) {
+    b.addEventListener('click', function () { state.metric = b.dataset.mt; render(); });
+  });
   document.querySelectorAll('[data-view]').forEach(function (b) {
     b.addEventListener('click', function () { location.hash = HASH[b.dataset.view]; });
   });
@@ -546,5 +598,3 @@ tbody tr:last-child td { border-bottom: 1px solid var(--axis); }
   syncHash();
 })();
 </script>
-
-</body></html>
